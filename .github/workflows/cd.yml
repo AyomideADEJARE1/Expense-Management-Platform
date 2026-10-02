@@ -45,7 +45,7 @@ jobs:
       # The exact commit that CI tested (falls back to the current commit on a manual run).
       COMMIT_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ env.COMMIT_SHA }}
 
@@ -66,10 +66,10 @@ jobs:
           echo "name=ghcr.io/${GITHUB_REPOSITORY,,}-${{ matrix.service }}" >> "$GITHUB_OUTPUT"
           echo "short_sha=${COMMIT_SHA::7}" >> "$GITHUB_OUTPUT"
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
         if: steps.dockerfile.outputs.present == 'true'
 
-      - uses: docker/login-action@v3
+      - uses: docker/login-action@v4
         if: steps.dockerfile.outputs.present == 'true'
         with:
           registry: ghcr.io
@@ -79,7 +79,7 @@ jobs:
       - name: Image metadata
         if: steps.dockerfile.outputs.present == 'true'
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ steps.image.outputs.name }}
           tags: |
@@ -88,7 +88,7 @@ jobs:
 
       - name: Build and push
         if: steps.dockerfile.outputs.present == 'true'
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ${{ matrix.service }}
           push: true
@@ -107,7 +107,7 @@ jobs:
       url: ${{ vars.APP_URL }}
     steps:
       - name: Pull images and restart services
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.AZURE_VM_HOST }}
           username: ${{ secrets.AZURE_VM_USER }}
