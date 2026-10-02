@@ -245,7 +245,7 @@ jobs:
             echo "No Dockerfile for ${{ matrix.service }} yet - skipping."
           fi
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
         if: steps.dockerfile.outputs.present == 'true'
 
       - name: Build image (no push)
