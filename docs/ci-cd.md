@@ -33,7 +33,7 @@ CD starts **only after CI has passed on `main`**. If CI fails after a merge, not
 |---|---|---|
 | CI | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) | Pull requests into `main`, pushes to `main`, manual run |
 | CD | [`.github/workflows/cd.yml`](../.github/workflows/cd.yml) | After CI succeeds on `main` (merged PRs), manual run |
-| Dependabot | [`.github/dependabot.yml`](../.github/dependabot.yml) | Weekly dependency update PRs |
+| Dependabot | [`.github/dependabot.yml`](../.github/dependabot.yml) | One grouped update PR per ecosystem every Monday (Actions, pip, npm) |
 
 ## CI jobs
 
