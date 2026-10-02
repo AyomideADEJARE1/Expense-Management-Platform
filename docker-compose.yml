@@ -1,0 +1,16 @@
+services:
+  frontend-mock:
+    image: nginx:alpine
+    volumes:
+      - ./frontend-mock:/usr/share/nginx/html:ro
+
+  backend-mock:
+    build: ./backend-mock
+
+  nginx:
+    build: ./nginx
+    ports:
+      - "8080:80"
+    depends_on:
+      - frontend-mock
+      - backend-mock
