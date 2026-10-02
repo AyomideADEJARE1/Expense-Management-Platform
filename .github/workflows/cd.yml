@@ -1,6 +1,7 @@
 # Continuous Delivery
 #
-# Runs after changes are merged into main.
+# Runs only after the CI workflow has finished successfully on main, so the
+# pipeline follows the order: Test -> Build -> Docker Build -> Deploy -> Health Check.
 #   1. publish - builds the backend and frontend Docker images and pushes them
 #                to GitHub Container Registry (ghcr.io). Services without a
 #                Dockerfile yet are skipped.
@@ -11,12 +12,14 @@
 name: CD
 
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
 
 concurrency:
-  group: cd-${{ github.ref }}
+  group: cd-main
   cancel-in-progress: false
 
 permissions:
@@ -25,6 +28,11 @@ permissions:
 jobs:
   publish:
     name: Publish image (${{ matrix.service }})
+    # Continue only when CI passed for a push to main (a merged PR), or on a manual run.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -33,8 +41,13 @@ jobs:
       fail-fast: false
       matrix:
         service: [backend, frontend]
+    env:
+      # The exact commit that CI tested (falls back to the current commit on a manual run).
+      COMMIT_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.COMMIT_SHA }}
 
       - name: Check for Dockerfile
         id: dockerfile
@@ -49,7 +62,9 @@ jobs:
       - name: Lowercase image name
         if: steps.dockerfile.outputs.present == 'true'
         id: image
-        run: echo "name=ghcr.io/${GITHUB_REPOSITORY,,}-${{ matrix.service }}" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "name=ghcr.io/${GITHUB_REPOSITORY,,}-${{ matrix.service }}" >> "$GITHUB_OUTPUT"
+          echo "short_sha=${COMMIT_SHA::7}" >> "$GITHUB_OUTPUT"
 
       - uses: docker/setup-buildx-action@v3
         if: steps.dockerfile.outputs.present == 'true'
@@ -68,8 +83,8 @@ jobs:
         with:
           images: ${{ steps.image.outputs.name }}
           tags: |
-            type=sha,prefix=sha-
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=sha-${{ steps.image.outputs.short_sha }}
+            type=raw,value=latest
 
       - name: Build and push
         if: steps.dockerfile.outputs.present == 'true'
