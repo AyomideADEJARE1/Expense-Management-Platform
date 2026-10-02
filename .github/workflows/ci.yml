@@ -36,7 +36,7 @@ jobs:
       frontend: ${{ steps.check.outputs.frontend }}
       docker: ${{ steps.check.outputs.docker }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Check which components exist
         id: check
@@ -63,7 +63,7 @@ jobs:
     name: Secret scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -106,7 +106,7 @@ jobs:
       PGPASSWORD: ci_password
       PGDATABASE: expense_management_test
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Apply migrations in order
         run: |
@@ -158,7 +158,7 @@ jobs:
       JWT_SECRET: ci-test-jwt-secret
       DATABASE_URL: postgresql://ci_user:ci_password@localhost:5432/expense_management_test
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-python@v5
         with:
@@ -197,7 +197,7 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v4
         with:
@@ -233,7 +233,7 @@ jobs:
       matrix:
         service: [backend, frontend]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Check for Dockerfile
         id: dockerfile
