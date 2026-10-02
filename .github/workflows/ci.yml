@@ -1,0 +1,274 @@
+# Continuous Integration
+#
+# Runs on every pull request into main and every push to main.
+# Jobs for the backend, frontend and Docker images activate automatically
+# once those parts of the project exist in the repository, so this file
+# does not need to be edited as the project grows.
+#
+# Branch protection should require only the `ci-success` check.
+
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "20"
+
+jobs:
+  detect:
+    name: Detect project components
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.check.outputs.backend }}
+      frontend: ${{ steps.check.outputs.frontend }}
+      docker: ${{ steps.check.outputs.docker }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check which components exist
+        id: check
+        run: |
+          has() { [ -f "$1" ] && echo true || echo false; }
+          backend=$(has backend/requirements.txt)
+          frontend=$(has frontend/package.json)
+          if [ -f backend/Dockerfile ] || [ -f frontend/Dockerfile ]; then docker=true; else docker=false; fi
+          {
+            echo "backend=$backend"
+            echo "frontend=$frontend"
+            echo "docker=$docker"
+          } >> "$GITHUB_OUTPUT"
+          {
+            echo "### Detected components"
+            echo "| Component | Present |"
+            echo "|---|---|"
+            echo "| backend (backend/requirements.txt) | $backend |"
+            echo "| frontend (frontend/package.json) | $frontend |"
+            echo "| Dockerfiles | $docker |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Block committed .env files
+        run: |
+          tracked=$(git ls-files | grep -E '(^|/)\.env(\..*)?$' | grep -v -E '(^|/)\.env\.example$' || true)
+          if [ -n "$tracked" ]; then
+            echo "::error::Environment files must not be committed:"
+            echo "$tracked"
+            exit 1
+          fi
+          echo "No .env files are tracked."
+
+      - name: Scan for secrets with gitleaks
+        run: |
+          docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.21.2 \
+            git /repo --redact --verbose --exit-code 1
+
+  database:
+    name: Database migrations
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: expense_management_test
+          POSTGRES_USER: ci_user
+          POSTGRES_PASSWORD: ci_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci_user -d expense_management_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: ci_user
+      PGPASSWORD: ci_password
+      PGDATABASE: expense_management_test
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Apply migrations in order
+        run: |
+          shopt -s nullglob
+          files=(database/migrations/*.sql)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No migrations found."
+            exit 0
+          fi
+          for f in "${files[@]}"; do
+            echo "Applying $f"
+            psql -v ON_ERROR_STOP=1 -q -f "$f"
+          done
+
+      - name: Verify expected tables exist
+        run: |
+          expected="budgets expense_categories expenses monthly_expense_summary users"
+          actual=$(psql -tA -c "SELECT string_agg(table_name, ' ' ORDER BY table_name) FROM information_schema.tables WHERE table_schema = 'public';")
+          echo "Tables found: $actual"
+          for t in $expected; do
+            echo " $actual " | grep -q " $t " || { echo "::error::Missing table: $t"; exit 1; }
+          done
+
+  backend:
+    name: Backend (lint & test)
+    needs: detect
+    if: needs.detect.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: expense_management_test
+          POSTGRES_USER: ci_user
+          POSTGRES_PASSWORD: ci_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci_user -d expense_management_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      FLASK_ENV: testing
+      SECRET_KEY: ci-test-secret
+      JWT_SECRET: ci-test-jwt-secret
+      DATABASE_URL: postgresql://ci_user:ci_password@localhost:5432/expense_management_test
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+          pip install flake8 pytest
+
+      - name: Lint
+        run: flake8 . --count --show-source --statistics --exclude .venv,venv,migrations
+
+      - name: Test
+        run: |
+          set +e
+          pytest -v
+          status=$?
+          # Exit code 5 means "no tests collected" - allowed while the backend is being scaffolded.
+          if [ $status -eq 5 ]; then
+            echo "::warning::No backend tests found yet."
+            exit 0
+          fi
+          exit $status
+
+  frontend:
+    name: Frontend (lint, test & build)
+    needs: detect
+    if: needs.detect.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint --if-present
+
+      - name: Test
+        run: npm test --if-present
+        env:
+          CI: true
+
+      - name: Build
+        run: npm run build
+
+  docker-build:
+    name: Docker build (${{ matrix.service }})
+    needs: [detect, backend, frontend]
+    if: >-
+      always() &&
+      needs.detect.outputs.docker == 'true' &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled')
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check for Dockerfile
+        id: dockerfile
+        run: |
+          if [ -f "${{ matrix.service }}/Dockerfile" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "No Dockerfile for ${{ matrix.service }} yet - skipping."
+          fi
+
+      - uses: docker/setup-buildx-action@v4
+        if: steps.dockerfile.outputs.present == 'true'
+
+      - name: Build image (no push)
+        if: steps.dockerfile.outputs.present == 'true'
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ matrix.service }}
+          push: false
+          tags: expense-${{ matrix.service }}:ci
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
+  ci-success:
+    name: ci-success
+    needs: [detect, secret-scan, database, backend, frontend, docker-build]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check results of all CI jobs
+        run: |
+          echo '${{ toJSON(needs) }}'
+          if ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}; then
+            echo "::error::One or more CI jobs failed."
+            exit 1
+          fi
+          echo "All required CI jobs passed (skipped jobs are expected for components not yet present)."

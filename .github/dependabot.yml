@@ -1,0 +1,39 @@
+# Dependabot opens at most one grouped PR per ecosystem each week,
+# instead of one PR per dependency.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    labels: [ci-cd, dependencies]
+    commit-message:
+      prefix: ci
+    groups:
+      github-actions:
+        patterns: ["*"]
+
+  - package-ecosystem: pip
+    directory: /backend
+    schedule:
+      interval: weekly
+      day: monday
+    labels: [backend, dependencies]
+    commit-message:
+      prefix: chore
+    groups:
+      python-dependencies:
+        patterns: ["*"]
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+      day: monday
+    labels: [frontend, dependencies]
+    commit-message:
+      prefix: chore
+    groups:
+      npm-dependencies:
+        patterns: ["*"]
