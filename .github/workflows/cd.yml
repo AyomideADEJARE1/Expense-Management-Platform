@@ -92,7 +92,7 @@ jobs:
       url: ${{ vars.APP_URL }}
     steps:
       - name: Pull images and restart services
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.AZURE_VM_HOST }}
           username: ${{ secrets.AZURE_VM_USER }}
