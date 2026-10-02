@@ -8,18 +8,31 @@ How code moves from a developer's branch to the Azure deployment. The team's Git
 flowchart LR
     D[Developer] --> B[Working branch]
     B --> PR[Pull Request into main]
-    PR --> CI[CI workflow<br/>tests, lint, build]
-    CI --> R[Review + approval]
+    PR --> CI1[CI on PR<br/>tests, build, Docker build]
+    CI1 --> R[Review + approval]
     R --> M[Merge to main]
-    M --> P[CD: build & publish<br/>Docker images to ghcr.io]
+    M --> CI2[CI on main<br/>tests, build, Docker build]
+    CI2 -->|only if CI passes| P[CD: publish<br/>Docker images to ghcr.io]
     P --> DEP[Deploy to Azure VM]
     DEP --> H[Health check /health]
 ```
 
+This matches the order required by the project specification (Phase 10):
+
+| Spec step | Where it happens |
+|---|---|
+| **Test** | CI: secret scan, database migrations, backend `pytest`, frontend `npm test` |
+| **Build** | CI: frontend `npm run build`, backend dependency install and lint |
+| **Docker Build** | CI: `docker-build` checks the images build; CD: `publish` builds and pushes them |
+| **Deploy** | CD: `deploy` runs `docker compose pull` and `up -d` on the Azure VM |
+| **Health Check** | CD: `deploy` calls `<APP_URL>/health` and fails if it does not respond |
+
+CD starts **only after CI has passed on `main`**. If CI fails after a merge, nothing is published or deployed.
+
 | Workflow | File | Runs on |
 |---|---|---|
 | CI | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) | Pull requests into `main`, pushes to `main`, manual run |
-| CD | [`.github/workflows/cd.yml`](../.github/workflows/cd.yml) | Pushes to `main` (merged PRs), manual run |
+| CD | [`.github/workflows/cd.yml`](../.github/workflows/cd.yml) | After CI succeeds on `main` (merged PRs), manual run |
 | Dependabot | [`.github/dependabot.yml`](../.github/dependabot.yml) | Weekly dependency update PRs |
 
 ## CI jobs
@@ -48,7 +61,7 @@ So their work is picked up by CI automatically:
 
 | Job | What it does |
 |---|---|
-| Publish image | For each service with a Dockerfile, builds and pushes `ghcr.io/ayomideadejare1/expense-management-platform-<service>` tagged `latest` and `sha-<commit>` |
+| Publish image | Runs only if CI passed. For each service with a Dockerfile, builds the exact commit CI tested and pushes `ghcr.io/ayomideadejare1/expense-management-platform-<service>` tagged `latest` and `sha-<commit>` |
 | Deploy to Azure VM | Connects to the VM over SSH, runs `git pull`, `docker compose pull` and `docker compose up -d`, then checks `<APP_URL>/health` |
 
 Images are published to GitHub Container Registry using the built-in `GITHUB_TOKEN`, so no registry secrets are needed.
@@ -99,5 +112,5 @@ The `develop` branch and some area branches still point at the initial commit an
 | Secret scan fails | Remove the secret, rotate it, and tell the team. Deleting it in a new commit does not remove it from Git history |
 | Database job fails | A migration has a SQL error. Run it locally with `psql -v ON_ERROR_STOP=1 -f <file>` |
 | `npm ci` fails | Commit `frontend/package-lock.json` and keep it in sync with `package.json` |
-| Deploy job skipped | `DEPLOY_ENABLED` is not `true`, or the run was not on `main` |
+| CD did not run or was skipped | CI failed on `main` (fix CI first), `DEPLOY_ENABLED` is not `true`, or the run was not on `main` |
 | Health check fails after deploy | SSH to the VM and run `docker compose ps` and `docker compose logs` |
