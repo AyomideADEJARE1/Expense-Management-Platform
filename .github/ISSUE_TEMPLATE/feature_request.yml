@@ -1,0 +1,39 @@
+name: Task / feature request
+description: Propose a feature or a piece of work for the project
+labels: [enhancement]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [frontend, backend, database, docker, nginx, ci-cd, azure, security, qa, documentation]
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What should be achieved and why?
+    validations:
+      required: true
+  - type: textarea
+    id: responsibilities
+    attributes:
+      label: Tasks
+      placeholder: |
+        - [ ] ...
+        - [ ] ...
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: How will we know this is done?
+    validations:
+      required: true
+  - type: input
+    id: depends
+    attributes:
+      label: Depends on
+      placeholder: "#3, #4"
