@@ -1,31 +1,80 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Mail, Lock, User, LogIn, UserPlus, ShieldCheck } from 'lucide-react';
 import { useToast } from './context/ToastContext';
-
-const CURRENT_USER_KEY = 'expense_tracker_current_user';
-const DB_USERS_KEY = 'expense_tracker_registered_users';
+import { api, getAuthToken, setAuthToken, removeAuthToken } from './services/api';
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  // Retrieve active session
-  const [user, setUser] = useState(() => {
-    try {
-      const saved = localStorage.getItem(CURRENT_USER_KEY);
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const { showToast } = useToast();
 
-  // Retrieve database of registered users
-  const getRegisteredUsers = () => {
-    try {
-      const saved = localStorage.getItem(DB_USERS_KEY);
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
+  const fetchCurrentUser = useCallback(async () => {
+    const token = getAuthToken();
+    if (!token) {
+      setLoading(false);
+      return;
     }
+
+    try {
+      setLoading(true);
+      const userData = await api.get('/auth/me');
+      setUser(userData);
+    } catch (err) {
+      removeAuthToken();
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCurrentUser();
+
+    const handleUnauthorized = () => {
+      setUser(null);
+      showToast('Session expired. Please log in again.', 'info');
+    };
+
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
+  }, [fetchCurrentUser, showToast]);
+
+  const login = async (email, password) => {
+    try {
+      const data = await api.post('/auth/login', { email, password });
+      const token = data.access_token || data.token;
+      setAuthToken(token);
+      await fetchCurrentUser();
+      showToast('Logged in successfully!', 'success');
+      return true;
+    } catch (err) {
+      showToast(err.message || 'Invalid email or password.', 'error');
+      return false;
+    }
+  };
+
+  const register = async (firstName, lastName, email, password) => {
+    try {
+      await api.post('/auth/register', {
+        first_name: firstName,
+        last_name: lastName,
+        email,
+        password,
+      });
+      showToast('Account created successfully! Logging you in...', 'success');
+      return await login(email, password);
+    } catch (err) {
+      showToast(err.message || 'Registration failed. Try again.', 'error');
+      return false;
+    }
+  };
+
+  const logout = () => {
+    removeAuthToken();
+    setUser(null);
+    showToast('You have been logged out successfully.', 'info');
   };
 
   const getGreeting = () => {
@@ -40,89 +89,19 @@ export function AuthProvider({ children }) {
   };
 
   const getInitials = (firstName = '', lastName = '') => {
-    const f = firstName.trim().charAt(0).toUpperCase();
-    const l = lastName.trim().charAt(0).toUpperCase();
+    const f = (firstName || user?.first_name || '').trim().charAt(0).toUpperCase();
+    const l = (lastName || user?.last_name || '').trim().charAt(0).toUpperCase();
     return `${f}${l}` || 'U';
-  };
-
-  const register = (firstName, lastName, email, password) => {
-    const registeredUsers = getRegisteredUsers();
-
-    // Check if user already exists
-    const existing = registeredUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
-    if (existing) {
-      showToast('An account with this email already exists. Please log in.', 'error');
-      return false;
-    }
-
-    const newProfile = {
-      id: Date.now().toString(),
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      email: email.trim().toLowerCase(),
-      password: password, // In production, never store plain text passwords
-      phone: '+234 812 345 6789',
-      currency: 'NGN (₦)',
-      dateFormat: 'YYYY-MM-DD',
-      budgetThreshold: 85,
-      notifications: true,
-      emailAlerts: true,
-      twoFactor: false,
-    };
-
-    // Save to users database
-    const updatedDb = [...registeredUsers, newProfile];
-    localStorage.setItem(DB_USERS_KEY, JSON.stringify(updatedDb));
-
-    // Log user in automatically
-    setUser(newProfile);
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(newProfile));
-    showToast('Account created successfully!', 'success');
-    return true;
-  };
-
-  const login = (email, password) => {
-    const registeredUsers = getRegisteredUsers();
-    const foundUser = registeredUsers.find(
-      (u) => u.email.toLowerCase() === email.trim().toLowerCase() && u.password === password
-    );
-    
-    if (!foundUser) {
-      showToast('Invalid email or password. Please register if you do not have an account.', 'error');
-      return false;
-    }
-
-    setUser(foundUser);
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(foundUser));
-    return true;
-  };
-
-  const updateUserProfile = (updatedProfile) => {
-    setUser(updatedProfile);
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedProfile));
-    // Also update in registered users list
-    const registeredUsers = getRegisteredUsers();
-    const updatedDb = registeredUsers.map((u) =>
-      u.id === updatedProfile.id || u.email === updatedProfile.email ? updatedProfile : u
-    );
-    localStorage.setItem(DB_USERS_KEY, JSON.stringify(updatedDb));
-    showToast('Profile updated successfully!', 'success');
-  };
-
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem(CURRENT_USER_KEY);
-    showToast('You have been logged out successfully.', 'info');
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
+        loading,
         login,
         register,
         logout,
-        updateUserProfile,
         greeting: getGreeting(),
         currentMonthYear: getCurrentMonthYear(),
         getInitials,
@@ -136,12 +115,12 @@ export function AuthProvider({ children }) {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    showToast('An error occurred while accessing authentication.', 'error');
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
 
-// Authentication Modal Component
+// Modal remains intact and connected to new auth logic
 export function AuthModal({ isDarkMode }) {
   const { login, register } = useAuth();
   const [isRegistering, setIsRegistering] = useState(false);

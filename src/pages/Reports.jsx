@@ -1,21 +1,34 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  Calendar, 
-  TrendingUp, 
-  TrendingDown, 
-  Wallet, 
-  PieChart as PieIcon, 
-  FileText, 
-  Download, 
-  Eye, 
-  ChevronRight,
-  X 
+  Calendar, TrendingUp, TrendingDown, PieChart as PieIcon, Download, Eye, X 
 } from 'lucide-react';
 
-export default function Reports({ transactions = [], budgets = [] }) {
+const API_BASE_URL = 'http://127.0.0.1:5000/api';
+
+export default function Reports() {
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [selectedMonthKey, setSelectedMonthKey] = useState(null);
 
-  // Group transactions by "YYYY-MM"
+  // Fetch Transactions from Flask
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`${API_BASE_URL}/transactions`);
+        if (!response.ok) throw new Error('Failed to fetch transactions');
+        const data = await response.json();
+        setTransactions(data);
+      } catch (err) {
+        console.error('Error loading report transactions:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTransactions();
+  }, []);
+
   const monthlyData = useMemo(() => {
     const groups = {};
 
@@ -44,36 +57,12 @@ export default function Reports({ transactions = [], budgets = [] }) {
         groups[monthKey].totalIncome += amt;
       } else {
         groups[monthKey].totalExpense += amt;
-        
-        // Track category breakdown for expenses
         const catName = tx.category || 'Uncategorized';
         groups[monthKey].categories[catName] = (groups[monthKey].categories[catName] || 0) + amt;
       }
 
       groups[monthKey].transactions.push(tx);
     });
-
-    // Fallback default months if no transaction history exists yet
-    if (Object.keys(groups).length === 0) {
-      return {
-        '2026-09': {
-          key: '2026-09',
-          label: 'September 2026',
-          totalIncome: 250000,
-          totalExpense: 112000,
-          transactions: [],
-          categories: { 'Food & Dining': 40000, 'Transportation': 25000, 'Shopping': 35000, 'Utilities': 12000 },
-        },
-        '2026-08': {
-          key: '2026-08',
-          label: 'August 2026',
-          totalIncome: 200000,
-          totalExpense: 85000,
-          transactions: [],
-          categories: { 'Food & Dining': 35000, 'Transportation': 20000, 'Shopping': 30000 },
-        }
-      };
-    }
 
     return groups;
   }, [transactions]);
@@ -83,79 +72,83 @@ export default function Reports({ transactions = [], budgets = [] }) {
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-      </div>
+      {loading ? (
+        <div className="text-center py-12 text-gray-500">Loading reports...</div>
+      ) : monthKeys.length === 0 ? (
+        <div className="bg-white rounded-2xl p-12 text-center border border-gray-100 shadow-sm">
+          <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+          <h3 className="text-lg font-bold text-gray-800">No Reports Available</h3>
+          <p className="text-xs text-gray-500 mt-1">Add transactions to generate monthly reports.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {monthKeys.map((mKey) => {
+            const report = monthlyData[mKey];
+            const netSavings = report.totalIncome - report.totalExpense;
+            const savingsRate = report.totalIncome > 0 
+              ? ((netSavings / report.totalIncome) * 100).toFixed(1) 
+              : '0';
 
-      {/* Monthly Report Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {monthKeys.map((mKey) => {
-          const report = monthlyData[mKey];
-          const netSavings = report.totalIncome - report.totalExpense;
-          const savingsRate = report.totalIncome > 0 
-            ? ((netSavings / report.totalIncome) * 100).toFixed(1) 
-            : '0';
-
-          return (
-            <div 
-              key={mKey} 
-              className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
-                      <Calendar className="w-5 h-5" />
-                    </div>
-                    <h2 className="font-bold text-gray-800">{report.label}</h2>
-                  </div>
-                  <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${
-                    netSavings >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'
-                  }`}>
-                    {netSavings >= 0 ? `+${savingsRate}% saved` : 'Deficit'}
-                  </span>
-                </div>
-
-                <div className="space-y-3 my-4">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500 flex items-center gap-1.5">
-                      <TrendingUp className="w-4 h-4 text-emerald-500" /> Income
-                    </span>
-                    <span className="font-semibold text-emerald-600">+₦{report.totalIncome.toLocaleString()}</span>
-                  </div>
-
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500 flex items-center gap-1.5">
-                      <TrendingDown className="w-4 h-4 text-red-500" /> Expenses
-                    </span>
-                    <span className="font-semibold text-red-600">-₦{report.totalExpense.toLocaleString()}</span>
-                  </div>
-
-                  <div className="pt-2 border-t border-gray-100 flex justify-between text-sm font-bold">
-                    <span className="text-gray-700">Net Savings</span>
-                    <span className={netSavings >= 0 ? 'text-gray-900' : 'text-red-600'}>
-                      ₦{netSavings.toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setSelectedMonthKey(mKey)}
-                className="w-full mt-4 py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-colors"
+            return (
+              <div 
+                key={mKey} 
+                className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between"
               >
-                <Eye className="w-4 h-4" /> View Full Report
-              </button>
-            </div>
-          );
-        })}
-      </div>
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
+                        <Calendar className="w-5 h-5" />
+                      </div>
+                      <h2 className="font-bold text-gray-800">{report.label}</h2>
+                    </div>
+                    <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${
+                      netSavings >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'
+                    }`}>
+                      {netSavings >= 0 ? `+${savingsRate}% saved` : 'Deficit'}
+                    </span>
+                  </div>
+
+                  <div className="space-y-3 my-4">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500 flex items-center gap-1.5">
+                        <TrendingUp className="w-4 h-4 text-emerald-500" /> Income
+                      </span>
+                      <span className="font-semibold text-emerald-600">+₦{report.totalIncome.toLocaleString()}</span>
+                    </div>
+
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500 flex items-center gap-1.5">
+                        <TrendingDown className="w-4 h-4 text-red-500" /> Expenses
+                      </span>
+                      <span className="font-semibold text-red-600">-₦{report.totalExpense.toLocaleString()}</span>
+                    </div>
+
+                    <div className="pt-2 border-t border-gray-100 flex justify-between text-sm font-bold">
+                      <span className="text-gray-700">Net Savings</span>
+                      <span className={netSavings >= 0 ? 'text-gray-900' : 'text-red-600'}>
+                        ₦{netSavings.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setSelectedMonthKey(mKey)}
+                  className="w-full mt-4 py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-colors"
+                >
+                  <Eye className="w-4 h-4" /> View Full Report
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Detailed Report Modal */}
       {activeReport && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 space-y-6 shadow-2xl">
-            {/* Modal Header */}
             <div className="flex items-center justify-between border-b pb-4">
               <div>
                 <h2 className="text-xl font-bold text-gray-900">{activeReport.label} Monthly Summary</h2>
@@ -169,7 +162,6 @@ export default function Reports({ transactions = [], budgets = [] }) {
               </button>
             </div>
 
-            {/* Top Stat Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="bg-emerald-50/60 p-4 rounded-xl border border-emerald-100">
                 <p className="text-xs font-semibold text-emerald-700 uppercase">Total Income</p>
@@ -189,7 +181,6 @@ export default function Reports({ transactions = [], budgets = [] }) {
               </div>
             </div>
 
-            {/* Expense Breakdown by Category */}
             <div>
               <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide mb-3 flex items-center gap-2">
                 <PieIcon className="w-4 h-4 text-blue-600" /> Expense Breakdown
@@ -221,7 +212,6 @@ export default function Reports({ transactions = [], budgets = [] }) {
               </div>
             </div>
 
-            {/* Modal Actions */}
             <div className="flex justify-end gap-3 border-t pt-4">
               <button 
                 onClick={() => window.print()} 
