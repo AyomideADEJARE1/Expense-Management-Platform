@@ -1,4 +1,3 @@
-import React from 'react';
 import SummaryCards from '../Components/Dashboard/SummaryCards';
 import IncomeVsExpensesChart from '../Components/Dashboard/IncomeVsExpensesChart';
 import CategoryDonutChart from '../Components/Dashboard/CategoryDonutChart';
@@ -9,7 +8,6 @@ export default function Dashboard({
   budgets = [], 
   incomes = [], 
   transactions = [], 
-  toggleMobileSidebar 
 }) {
   return (
     <div className="p-4 sm:p-6 lg:p-8 w-full min-h-screen">

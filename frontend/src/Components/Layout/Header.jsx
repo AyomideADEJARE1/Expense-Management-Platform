@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Search, Bell, Sun, Moon, Menu, ArrowUpRight, ArrowDownRight, Folder, PieChart, X } from 'lucide-react';
 import { useAuth } from "../../Auth";
 

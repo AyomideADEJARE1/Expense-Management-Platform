@@ -1,4 +1,3 @@
-import React from 'react';
 import { PieChart } from 'lucide-react';
 
 export default function BudgetOverview({ budgets = [] }) {

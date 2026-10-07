@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 
 export default function IncomeVsExpensesChart({ incomes = [], transactions = [] }) {
   // Current month totals calculation

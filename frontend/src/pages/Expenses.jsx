@@ -1,8 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import ConfirmationModal from '../Components/ConfirmationModal';
 import { useToast } from '../context/ToastContext';
 import { api } from '../services/api';
-import { Plus, Search, Filter, Edit3, Trash2, X, TrendingDown, CreditCard, Calendar, Download } from 'lucide-react';
+import { Plus, Search, Filter, Edit3, Trash2, X, TrendingDown, Download } from 'lucide-react';
 
 export default function Expenses({ categories = [], expenses = [], setExpenses, loadAppData }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -99,19 +99,18 @@ export default function Expenses({ categories = [], expenses = [], setExpenses, 
       document.body.appendChild(a);
       a.click();
       a.remove();
-    } catch (err) {
+    } catch {
       showToast('Failed to export CSV', 'error');
     }
   };
 
   const filteredExpenses = useMemo(() => {
     return expenses.filter((item) => {
-      const catName = categoryMap[item.category_id] || '';
       const matchesSearch = item.description?.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = selectedCategory === 'All' || String(item.category_id) === String(selectedCategory);
       return matchesSearch && matchesCategory;
     });
-  }, [expenses, searchQuery, selectedCategory, categoryMap]);
+  }, [expenses, searchQuery, selectedCategory]);
 
   const totalExpenseSum = useMemo(() => {
     return expenses.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);

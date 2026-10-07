@@ -1,4 +1,3 @@
-import React from 'react';
 
 export default function RecentTransactions({ transactions = [] }) {
   const recentList = transactions.slice(0, 5);
@@ -24,8 +23,8 @@ export default function RecentTransactions({ transactions = [] }) {
                 </td>
               </tr>
             ) : (
-              recentList.map((tx) => (
-                <tr key={tx.id || Math.random()}>
+              recentList.map((tx, index) => (
+                <tr key={tx.id || `transaction-${index}`}>
                   <td className="py-3.5 px-4 font-semibold text-gray-900">{tx.desc || tx.source}</td>
                   <td className="py-3.5 px-4">
                     <span className="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-md text-xs">

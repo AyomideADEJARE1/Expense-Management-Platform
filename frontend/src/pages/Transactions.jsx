@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Search, Filter, ArrowDownRight, ArrowUpRight, Trash2, Plus, Edit3, X } from 'lucide-react';
 import ConfirmationModal from '../Components/ConfirmationModal';
 import { useToast } from '../context/ToastContext';
@@ -26,11 +26,14 @@ export default function Transactions({ categories = [], onTransactionChange }) {
   });
 
   // 1. GET: Fetch transactions from Flask API
+useEffect(() => {
   const fetchTransactions = async () => {
     setLoading(true);
+
     try {
       const response = await fetch(`${API_BASE_URL}/transactions`);
       if (!response.ok) throw new Error('Failed to fetch transactions');
+
       const data = await response.json();
       setTransactions(data);
     } catch (err) {
@@ -42,9 +45,8 @@ export default function Transactions({ categories = [], onTransactionChange }) {
     }
   };
 
-  useEffect(() => {
-    fetchTransactions();
-  }, []);
+  fetchTransactions();
+}, [showToast]);
 
   // Filtered list memo
   const filteredTransactions = useMemo(() => {

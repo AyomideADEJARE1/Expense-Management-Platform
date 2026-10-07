@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { 
-  User, Mail, Bell, Shield, Save, Check, 
-  Phone, Globe, Sliders, AlertTriangle 
+  User, Mail, Bell, Save, Check, 
+  Phone, Sliders 
 } from 'lucide-react';
 import { useAuth } from '../Auth';
 
@@ -24,6 +24,8 @@ export default function Settings({ isDarkMode }) {
 
   useEffect(() => {
     if (user) {
+      // Synchronize editable from state when authenticated user data changes.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setUserProfile((prev) => ({
         ...prev,
         firstName: user.firstName || '',

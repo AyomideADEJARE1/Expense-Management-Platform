@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Mail, Lock, User, LogIn, UserPlus, ShieldCheck } from 'lucide-react';
 import { useToast } from './context/ToastContext';
 import { api, getAuthToken, setAuthToken, removeAuthToken } from './services/api';
@@ -21,7 +21,7 @@ export function AuthProvider({ children }) {
       setLoading(true);
       const userData = await api.get('/auth/me');
       setUser(userData);
-    } catch (err) {
+    } catch {
       removeAuthToken();
       setUser(null);
     } finally {
@@ -30,7 +30,9 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    fetchCurrentUser();
+    const timer = setTimeout(() => {
+      fetchCurrentUser();
+    }, 0);
 
     const handleUnauthorized = () => {
       setUser(null);
@@ -38,7 +40,12 @@ export function AuthProvider({ children }) {
     };
 
     window.addEventListener('auth:unauthorized', handleUnauthorized);
-    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
+
+    return () => {
+
+      clearTimeout(timer);
+      window.removeEventListener('auth:unauthorized', handleUnauthorized);
+    };
   }, [fetchCurrentUser, showToast]);
 
   const login = async (email, password) => {
@@ -112,6 +119,7 @@ export function AuthProvider({ children }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

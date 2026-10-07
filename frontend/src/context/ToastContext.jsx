@@ -1,15 +1,18 @@
-import React, { createContext, useContext, useState } from 'react';
-import { CheckCircle, AlertTriangle, X, Info, Trash2 } from 'lucide-react';
+import { createContext, useContext, useState, useRef } from 'react';
+import { CheckCircle, X, Info, Trash2 } from 'lucide-react';
 
 const ToastContext = createContext();
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useToast = () => useContext(ToastContext);
 
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
 
+  const toastIdRef = useRef(0);
+
   const showToast = (message, type = 'success') => {
-    const id = Date.now();
+    const id = ++toastIdRef.current;
     setToasts((prev) => [...prev, { id, message, type, isExiting: false }]);
 
     // Start exit transition 300ms before removing
