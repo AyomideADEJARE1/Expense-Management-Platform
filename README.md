@@ -304,3 +304,4 @@ Client → Nginx → Flask → PostgreSQL
 ```
 
 This setup provides the foundation for further deployment to Azure and production-oriented CI/CD workflows.
+CI test: nginx branch workflow trigger verification.
