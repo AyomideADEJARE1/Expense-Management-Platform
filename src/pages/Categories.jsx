@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ConfirmationModal from '../Components/ConfirmationModal';
 import { useToast } from '../context/ToastContext';
+import { api } from '../services/api';
 import { 
   Plus, Edit3, Trash2, X, Lock, CheckCircle2,
   Utensils, Car, ShoppingBag, Wifi, Film,
@@ -30,8 +31,6 @@ const COLOR_PALETTE = [
   { name: 'Red', bg: 'bg-red-50', text: 'text-red-600', border: 'border-red-200', hex: '#EF4444' },
 ];
 
-const API_BASE_URL = 'http://127.0.0.1:5000/api'; // Adjust Flask API URL as needed
-
 export default function Categories({ categories = [], setCategories }) {
   const [activeFilter, setActiveFilter] = useState('All');
   const [loading, setLoading] = useState(false);
@@ -49,14 +48,21 @@ export default function Categories({ categories = [], setCategories }) {
     description: '',
   });
 
-  // Fetch Categories from Flask backend on component mount
+  // Preserve UI-only fields when integrating with database properties
+  const formatCategoryFromBackend = (cat) => ({
+    ...cat,
+    type: cat.type || 'Expense',
+    icon: cat.icon || 'Utensils',
+    color: cat.color || 'Blue',
+    editable: cat.editable ?? true,
+  });
+
+  // Fetch Categories from Flask API using api service
   const fetchCategories = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/categories`);
-      if (!response.ok) throw new Error('Failed to fetch categories');
-      const data = await response.json();
-      setCategories(data);
+      const data = await api.get('/categories');
+      setCategories(data.map(formatCategoryFromBackend));
     } catch (err) {
       showToast(err.message || 'Error connecting to backend', 'error');
     } finally {
@@ -109,39 +115,30 @@ export default function Categories({ categories = [], setCategories }) {
     setIsModalOpen(true);
   };
 
-  // Create or Update Category via Flask API
+  // Create or Update Category sending database expected payload
   const handleSave = async (e) => {
     e.preventDefault();
     if (!formData.name.trim()) return;
 
+    const payload = {
+      name: formData.name,
+      description: formData.description,
+    };
+
     try {
       if (editingCategory) {
-        // PUT Request
-        const response = await fetch(`${API_BASE_URL}/categories/${editingCategory.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData),
-        });
-
-        if (!response.ok) throw new Error('Failed to update category');
-        const updatedCat = await response.json();
+        const updatedCat = await api.put(`/categories/${editingCategory.id}`, payload);
+        const formatted = formatCategoryFromBackend({ ...updatedCat, ...formData });
 
         setCategories((prev) =>
-          prev.map((c) => (c.id === editingCategory.id ? updatedCat : c))
+          prev.map((c) => (c.id === editingCategory.id ? formatted : c))
         );
         showToast('Category updated successfully!', 'success');
       } else {
-        // POST Request
-        const response = await fetch(`${API_BASE_URL}/categories`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...formData, isSystem: false, editable: true }),
-        });
+        const newCat = await api.post('/categories', payload);
+        const formatted = formatCategoryFromBackend({ ...newCat, ...formData });
 
-        if (!response.ok) throw new Error('Failed to create category');
-        const newCat = await response.json();
-
-        setCategories((prev) => [...prev, newCat]);
+        setCategories((prev) => [...prev, formatted]);
         showToast('Category created successfully!', 'success');
       }
       setIsModalOpen(false);
@@ -150,7 +147,7 @@ export default function Categories({ categories = [], setCategories }) {
     }
   };
 
-  // Delete Category via Flask API
+  // Delete Category
   const handleDelete = async () => {
     if (!itemToDelete) return;
 
@@ -162,12 +159,7 @@ export default function Categories({ categories = [], setCategories }) {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/categories/${itemToDelete}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) throw new Error('Failed to delete category');
-
+      await api.delete(`/categories/${itemToDelete}`);
       setCategories((prev) => prev.filter((cat) => cat.id !== itemToDelete));
       showToast('Category deleted successfully!', 'delete');
     } catch (err) {

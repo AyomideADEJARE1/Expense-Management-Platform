@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useToast } from '../context/ToastContext';
 import ConfirmationModal from '../Components/ConfirmationModal';
+import { api } from '../services/api';
 
 import { 
   Plus, Edit3, Trash2, X, Utensils, Car, ShoppingBag, 
@@ -12,8 +13,6 @@ const ICON_MAP = {
   Utensils, Car, ShoppingBag, Wifi, Film, Briefcase, HeartPulse, BookOpen, DollarSign, Gift
 };
 
-const API_BASE_URL = 'http://127.0.0.1:5000/api';
-
 export default function Budgets({ categories = [], budgets = [], setBudgets }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBudget, setEditingBudget] = useState(null);
@@ -22,22 +21,33 @@ export default function Budgets({ categories = [], budgets = [], setBudgets }) {
   const [itemToDelete, setItemToDelete] = useState(null);
 
   const expenseCategories = categories.filter((c) => c.type === 'Expense');
-  const defaultExpenseCat = expenseCategories.length > 0 ? expenseCategories[0].name : '';
+  const defaultExpenseCatId = expenseCategories.length > 0 ? expenseCategories[0].id : '';
 
   const [formData, setFormData] = useState({
-    category: defaultExpenseCat,
+    categoryId: defaultExpenseCatId,
     limit: '',
-    spent: '0',
+    month: new Date().toISOString().slice(0, 7), // YYYY-MM
   });
 
-  // Fetch Budgets from Backend
+  // Helper to map backend format (category_id, amount, month) to local component state
+  const formatBudgetFromBackend = (b) => {
+    const matchedCategory = categories.find((c) => c.id === b.category_id || c.name === b.category);
+    return {
+      id: b.id,
+      categoryId: b.category_id,
+      category: matchedCategory ? matchedCategory.name : (b.category || 'Uncategorized'),
+      limit: Number(b.amount || b.limit || 0),
+      spent: Number(b.spent || 0),
+      month: b.month || new Date().toISOString().slice(0, 7),
+    };
+  };
+
+  // Fetch Budgets using centralized API service
   const fetchBudgets = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/budgets`);
-      if (!response.ok) throw new Error('Failed to fetch budgets');
-      const data = await response.json();
-      setBudgets(data);
+      const data = await api.get('/budgets');
+      setBudgets(data.map(formatBudgetFromBackend));
     } catch (err) {
       showToast(err.message || 'Error fetching budgets', 'error');
     } finally {
@@ -47,7 +57,7 @@ export default function Budgets({ categories = [], budgets = [], setBudgets }) {
 
   useEffect(() => {
     fetchBudgets();
-  }, []);
+  }, [categories]);
 
   const totalLimit = budgets.reduce((acc, b) => acc + Number(b.limit || 0), 0);
   const totalSpent = budgets.reduce((acc, b) => acc + Number(b.spent || 0), 0);
@@ -64,68 +74,44 @@ export default function Budgets({ categories = [], budgets = [], setBudgets }) {
     if (budget) {
       setEditingBudget(budget);
       setFormData({
-        category: budget.category,
+        categoryId: budget.categoryId,
         limit: budget.limit,
-        spent: budget.spent,
+        month: budget.month || new Date().toISOString().slice(0, 7),
       });
     } else {
       setEditingBudget(null);
       setFormData({
-        category: expenseCategories.length > 0 ? expenseCategories[0].name : '',
+        categoryId: expenseCategories.length > 0 ? expenseCategories[0].id : '',
         limit: '',
-        spent: '0',
+        month: new Date().toISOString().slice(0, 7),
       });
     }
     setIsModalOpen(true);
   };
 
-  // Save Budget via Flask API
+  // Save Budget using backend payload contract (category_id, amount, month)
   const handleSave = async (e) => {
     e.preventDefault();
-    if (!formData.limit || !formData.category) return;
-
-    const limitVal = parseFloat(formData.limit);
-    const spentVal = parseFloat(formData.spent || 0);
+    if (!formData.limit || !formData.categoryId) return;
 
     const payload = {
-      category: formData.category,
-      limit: limitVal,
-      spent: spentVal,
+      category_id: parseInt(formData.categoryId, 10),
+      amount: parseFloat(formData.limit),
+      month: formData.month,
     };
 
     try {
       if (editingBudget) {
-        // PUT Request
-        const response = await fetch(`${API_BASE_URL}/budgets/${editingBudget.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
+        const updated = await api.put(`/budgets/${editingBudget.id}`, payload);
+        const formatted = formatBudgetFromBackend(updated);
 
-        if (!response.ok) throw new Error('Failed to update budget');
-        const updated = await response.json();
-
-        setBudgets((prev) => prev.map((b) => (b.id === editingBudget.id ? updated : b)));
+        setBudgets((prev) => prev.map((b) => (b.id === editingBudget.id ? formatted : b)));
         showToast('Budget updated successfully!', 'success');
       } else {
-        // Prevent duplicate check client-side first
-        const exists = budgets.find((b) => b.category.toLowerCase() === formData.category.toLowerCase());
-        if (exists) {
-          showToast(`A budget for ${formData.category} already exists!`, 'error');
-          return;
-        }
+        const created = await api.post('/budgets', payload);
+        const formatted = formatBudgetFromBackend(created);
 
-        // POST Request
-        const response = await fetch(`${API_BASE_URL}/budgets`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-
-        if (!response.ok) throw new Error('Failed to create budget');
-        const created = await response.json();
-
-        setBudgets((prev) => [...prev, created]);
+        setBudgets((prev) => [...prev, formatted]);
         showToast('Budget created successfully!', 'success');
       }
       setIsModalOpen(false);
@@ -134,17 +120,12 @@ export default function Budgets({ categories = [], budgets = [], setBudgets }) {
     }
   };
 
-  // Delete Budget via Flask API
+  // Delete Budget via API service
   const handleDelete = async () => {
     if (!itemToDelete) return;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/budgets/${itemToDelete}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) throw new Error('Failed to delete budget');
-
+      await api.delete(`/budgets/${itemToDelete}`);
       setBudgets((prev) => prev.filter((b) => b.id !== itemToDelete));
       showToast('Budget deleted successfully!', 'delete');
     } catch (err) {
@@ -216,7 +197,7 @@ export default function Budgets({ categories = [], budgets = [], setBudgets }) {
                       </div>
                       <div>
                         <h3 className="font-bold text-gray-900 text-lg">{b.category}</h3>
-                        <p className="text-xs text-gray-400 font-medium">Monthly Limit</p>
+                        <p className="text-xs text-gray-400 font-medium">Monthly Limit ({b.month})</p>
                       </div>
                     </div>
 
@@ -315,15 +296,15 @@ export default function Budgets({ categories = [], budgets = [], setBudgets }) {
                 <label className="block text-xs font-semibold text-gray-600 mb-1">Category</label>
                 <select
                   disabled={Boolean(editingBudget)}
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  value={formData.categoryId}
+                  onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 disabled:opacity-60"
                 >
                   {expenseCategories.length === 0 ? (
                     <option value="">No expense categories available</option>
                   ) : (
                     expenseCategories.map((cat) => (
-                      <option key={cat.id || cat.name} value={cat.name}>
+                      <option key={cat.id || cat.name} value={cat.id}>
                         {cat.name}
                       </option>
                     ))
@@ -344,12 +325,12 @@ export default function Budgets({ categories = [], budgets = [], setBudgets }) {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">Amount Already Spent (₦)</label>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Month</label>
                 <input
-                  type="number"
-                  placeholder="0"
-                  value={formData.spent}
-                  onChange={(e) => setFormData({ ...formData, spent: e.target.value })}
+                  type="month"
+                  required
+                  value={formData.month}
+                  onChange={(e) => setFormData({ ...formData, month: e.target.value })}
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 />
               </div>
