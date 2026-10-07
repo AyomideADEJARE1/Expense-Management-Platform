@@ -4,7 +4,7 @@
 
 The backend of the Expense Management Platform provides the REST API and server-side functionality for managing users, expenses, categories, budgets, and expense summaries.
 
-The backend is built with Flask and PostgreSQL and communicates with the frontend through REST API endpoints.
+The backend is built with **Flask, SQLAlchemy, Psycopg, and PostgreSQL** and is accessed by the React frontend through the Nginx reverse proxy.
 
 ---
 
@@ -14,7 +14,7 @@ The backend is built with Flask and PostgreSQL and communicates with the fronten
 - Flask
 - Flask-SQLAlchemy
 - SQLAlchemy
-- PostgreSQL
+- PostgreSQL 16
 - Psycopg
 - Flask-JWT-Extended
 - Flask-Limiter
@@ -50,23 +50,73 @@ The backend is responsible for:
 The backend is part of the following application architecture:
 
 ```text
-React Frontend
-      |
-      | HTTP / REST API
-      v
-Nginx Reverse Proxy
-      |
-      v
-Flask REST API
-      |
-      | SQLAlchemy / Psycopg
-      v
-PostgreSQL Database
+Browser
+   |
+   v
+Nginx Reverse Proxy :8080
+   |
+   +----------------------+
+   |                      |
+   v                      v
+React Frontend         Flask REST API
+                           |
+                           | SQLAlchemy / Psycopg
+                           v
+                     PostgreSQL 16
+                         :5432
+```
 
-The frontend communicates with the Flask REST API, while the Flask backend communicates with PostgreSQL.
+The frontend communicates with the Flask REST API through Nginx.
 
-The frontend does not communicate directly with the PostgreSQL database.
-Project Structure
+The Flask backend communicates with PostgreSQL through SQLAlchemy and Psycopg.
+
+The frontend does not communicate directly with PostgreSQL.
+
+### API Routing
+
+Nginx exposes the backend through:
+
+```text
+/api/*
+```
+
+For example:
+
+```text
+/api/auth/login
+/api/auth/me
+/api/categories
+/api/expenses
+/api/budgets
+/api/summaries/monthly
+```
+
+The backend itself exposes:
+
+```text
+/health
+/health/db
+```
+
+Nginx maps:
+
+```text
+/api/health
+```
+
+to:
+
+```text
+/health
+```
+
+on the Flask backend.
+
+---
+
+## Project Structure
+
+```text
 backend/
 │
 ├── docs/
@@ -93,328 +143,553 @@ backend/
 ├── app.py
 ├── extensions.py
 ├── requirements.txt
+├── .env.example
 └── README.md
-Directory Responsibilities
-Directory/File	Purpose
-models/	SQLAlchemy database models
-routes/	REST API endpoints
-utils/	Shared backend utilities
-docs/	Development and troubleshooting documentation
-app.py	Flask application configuration and application entry point
-extensions.py	Flask-SQLAlchemy and Flask-Limiter extensions
-requirements.txt	Python dependencies
-README.md	Backend documentation
+```
 
-1. Clone the Repository
-git clone https://github.com/AyomideADEJARE1/Expense-Management-Platform.git
+### Directory Responsibilities
 
-Move into the backend directory:
+| Directory/File | Purpose |
+|---|---|
+| `models/` | SQLAlchemy database models |
+| `routes/` | REST API endpoints |
+| `utils/` | Shared backend utilities |
+| `docs/` | Backend development and troubleshooting documentation |
+| `app.py` | Flask application configuration and entry point |
+| `extensions.py` | Flask-SQLAlchemy and Flask-Limiter extensions |
+| `requirements.txt` | Python dependencies |
+| `.env.example` | Example environment configuration |
+| `README.md` | Backend documentation |
 
-cd Expense-Management-Platform/backend
-2. Create a Virtual Environment
+---
 
-Create a Python virtual environment:
-
-python -m venv .venv
-Windows PowerShell
-
-Activate the virtual environment:
-
-.\.venv\Scripts\Activate.ps1
-
-If PowerShell blocks the activation script, run:
-
-Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
-
-Then activate the environment again:
-
-.\.venv\Scripts\Activate.ps1
-3. Install Dependencies
-
-Install the backend dependencies:
-
-python -m pip install -r requirements.txt
-Environment Configuration
+## Environment Configuration
 
 The backend uses environment variables for application configuration and database credentials.
 
-Create a .env file for local development.
+For local development, create a `.env` file in the `backend/` directory.
 
 Example:
 
-FLASK_ENV=development
-FLASK_DEBUG=false
-SECRET_KEY=your-secret-key
+```text
+SECRET_KEY=your-local-development-secret
 
-POSTGRES_DB=expense_management
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
 POSTGRES_USER=expense_user
 POSTGRES_PASSWORD=your-database-password
+POSTGRES_DB=expense_db
+```
 
-Do not place real passwords, secret keys, or other credentials in this README.
+When running through Docker Compose, the database connection is configured for the PostgreSQL service:
 
-The .env file should not be committed to Git.
+```text
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_USER=expense_user
+POSTGRES_PASSWORD=expense_password
+POSTGRES_DB=expense_db
+```
 
-A .env.example file is provided as a template for the required configuration variables.
+The Docker Compose database configuration is intended for local development and integration testing.
 
-Database
+Do not use development credentials in production.
 
-The backend uses PostgreSQL as its relational database.
+> Never commit real passwords, secret keys, tokens, or other credentials to Git.
 
-The main database entities include:
+The `.env` file should remain excluded from version control.
 
-Users
-Expense categories
-Expenses
-Budgets
-Monthly expense summaries
+A `.env.example` file is provided as a template.
+
+---
+
+## Database
+
+The backend uses **PostgreSQL 16**.
+
+The current Docker Compose database configuration is:
+
+```text
+Host: postgres
+Port: 5432
+Database: expense_db
+User: expense_user
+```
 
 The Flask application communicates with PostgreSQL through SQLAlchemy and Psycopg.
 
-Financial amounts are stored using PostgreSQL's NUMERIC(12,2) type.
+The main database entities include:
 
-Running the Backend
+- Users
+- Expense categories
+- Expenses
+- Budgets
+- Monthly expense summaries
 
-From the backend directory, make sure the virtual environment is activated and run:
+Financial amounts use PostgreSQL numeric types to preserve monetary precision.
 
-python .\app.py
+### Database Initialization
 
-The Flask development server runs locally at:
+The Docker Compose configuration mounts:
 
+```text
+database/migrations/001_initial_schema.sql
+```
+
+into PostgreSQL's initialization directory.
+
+When a new PostgreSQL volume is created, PostgreSQL automatically executes this migration during database initialization.
+
+To recreate the local development database from the initial schema:
+
+```bash
+docker compose down -v
+docker compose up --build -d
+```
+
+> `docker compose down -v` removes the PostgreSQL Docker volume and deletes existing local database data.
+
+---
+
+## Running the Backend Locally
+
+From the backend directory, create and activate a Python virtual environment.
+
+### Create Virtual Environment
+
+```bash
+python -m venv .venv
+```
+
+### Windows PowerShell
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+If PowerShell blocks script execution:
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+```
+
+Then activate the environment again:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+### Linux / WSL
+
+```bash
+source .venv/bin/activate
+```
+
+### Install Dependencies
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+### Start the Flask Development Server
+
+```bash
+python app.py
+```
+
+The development server runs at:
+
+```text
 http://127.0.0.1:5000
-API Endpoints
-Authentication
-Register
+```
+
+> When the complete application is running through Docker Compose, the backend is normally accessed through Nginx at `http://localhost:8080/api/...` rather than directly from the browser.
+
+---
+
+## Running with Docker Compose
+
+From the project root:
+
+```bash
+docker compose up --build -d
+```
+
+Check the backend container:
+
+```bash
+docker compose ps backend
+```
+
+View backend logs:
+
+```bash
+docker compose logs backend
+```
+
+The backend container listens internally on:
+
+```text
+5000
+```
+
+Nginx forwards `/api/*` requests to the backend container.
+
+---
+
+# API Endpoints
+
+## Authentication
+
+### Register
+
+```text
 POST /api/auth/register
+```
 
 Creates a new user account.
 
-Login
+### Login
+
+```text
 POST /api/auth/login
+```
 
 Authenticates a user and returns a JWT access token.
 
-Current User
+### Current User
+
+```text
 GET /api/auth/me
+```
 
 Returns information about the currently authenticated user.
 
-Categories
-Method	Endpoint	Description
-GET	/api/categories	Get all categories
-POST	/api/categories	Create a category
-GET	/api/categories/<category_id>	Get one category
-PUT	/api/categories/<category_id>	Update a category
-DELETE	/api/categories/<category_id>	Delete a category
-Expenses
-Method	Endpoint	Description
-GET	/api/expenses	Get authenticated user's expenses
-POST	/api/expenses	Create an expense
-GET	/api/expenses/<expense_id>	Get one expense
-PUT	/api/expenses/<expense_id>	Update an expense
-DELETE	/api/expenses/<expense_id>	Delete an expense
-GET	/api/expenses/export	Export expenses as CSV
-Expense Filtering
+---
+
+## Categories
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/categories` | Get categories |
+| POST | `/api/categories` | Create a category |
+| GET | `/api/categories/<category_id>` | Get one category |
+| PUT | `/api/categories/<category_id>` | Update a category |
+| DELETE | `/api/categories/<category_id>` | Delete a category |
+
+---
+
+## Expenses
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/expenses` | Get authenticated user's expenses |
+| POST | `/api/expenses` | Create an expense |
+| GET | `/api/expenses/<expense_id>` | Get one expense |
+| PUT | `/api/expenses/<expense_id>` | Update an expense |
+| DELETE | `/api/expenses/<expense_id>` | Delete an expense |
+| GET | `/api/expenses/export` | Export expenses as CSV |
+
+### Expense Filtering
 
 Expenses can be filtered by category or month.
 
 Example:
 
+```text
 GET /api/expenses?category_id=1
+```
 
 Example:
 
+```text
 GET /api/expenses?month=2026-10
-Budgets
-Method	Endpoint	Description
-GET	/api/budgets	Get authenticated user's budgets
-POST	/api/budgets	Create a budget
-GET	/api/budgets/<budget_id>	Get one budget
-PUT	/api/budgets/<budget_id>	Update a budget
-DELETE	/api/budgets/<budget_id>	Delete a budget
+```
 
-Budgets can be created for an entire month or for a specific expense category.
+---
 
-Expense Summaries
-Monthly Summary
+## Budgets
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/budgets` | Get authenticated user's budgets |
+| POST | `/api/budgets` | Create a budget |
+| GET | `/api/budgets/<budget_id>` | Get one budget |
+| PUT | `/api/budgets/<budget_id>` | Update a budget |
+| DELETE | `/api/budgets/<budget_id>` | Delete a budget |
+
+Budgets can be associated with an entire month or a specific expense category.
+
+---
+
+## Expense Summaries
+
+### Monthly Summary
+
+```text
 GET /api/summaries/monthly
+```
 
 Example:
 
+```text
 GET /api/summaries/monthly?month=2026-10
+```
 
 Returns the total expenses for the specified month.
 
-Category Summary
+### Category Summary
+
+```text
 GET /api/summaries/category
+```
 
 Example:
 
+```text
 GET /api/summaries/category?month=2026-10
+```
 
 Returns expenses grouped by category.
 
-Health Checks
-Application Health
+---
+
+# Health Checks
+
+## Application Health
+
+```text
 GET /health
+```
 
-Used to verify that the Flask application is running.
+Returns a successful response when the Flask application is running.
 
-Database Health
+Through Nginx, the same health check is available at:
+
+```text
+GET /api/health
+```
+
+Example:
+
+```bash
+curl http://localhost:8080/api/health
+```
+
+Expected response:
+
+```json
+{
+    "status": "ok"
+}
+```
+
+## Database Health
+
+```text
 GET /health/db
+```
 
-Used to verify that the backend can communicate with PostgreSQL.
+Checks whether the Flask backend can communicate with PostgreSQL.
 
-Authentication
+Through Nginx:
+
+```text
+GET /api/health/db
+```
+
+---
+
+# Authentication
 
 The backend uses JWT-based authentication.
 
 Available authentication endpoints:
 
+```text
 POST /api/auth/register
 POST /api/auth/login
 GET /api/auth/me
+```
 
-Protected endpoints require an Authorization header:
+Protected endpoints require:
 
+```text
 Authorization: Bearer <access_token>
+```
 
 The backend handles:
 
-Missing authentication tokens
-Invalid authentication tokens
-Expired authentication tokens
+- Missing authentication tokens
+- Invalid authentication tokens
+- Expired authentication tokens
 
 Passwords are hashed before being stored in the database.
 
-Validation
+There is currently no server-side logout endpoint because JWT authentication is stateless.
+
+Client-side logout is performed by removing the stored authentication token.
+
+---
+
+# Validation
 
 The backend validates incoming data before storing it in the database.
 
-Examples include:
+Validation includes:
 
-Required fields
-Email values
-Category IDs
-Monetary amounts
-Expense dates
-Budget months
-Duplicate budgets
-Authentication data
-Monetary Validation
+- Required fields
+- Email values
+- Category IDs
+- Monetary amounts
+- Expense dates
+- Budget months
+- Duplicate budget conditions
+- Authentication data
+
+## Monetary Validation
 
 Expense and budget amounts must:
 
-Be valid numbers
-Be greater than zero
-Contain no more than two decimal places
+- Be valid numbers
+- Be greater than zero
+- Contain no more than two decimal places
 
 For example:
 
+```text
 1500.50
+```
 
-is accepted.
+is valid.
 
 While:
 
+```text
 1500.567
+```
 
 is rejected.
 
-Security
+---
+
+# Security
 
 Security measures implemented in the backend include:
 
-Password hashing
-JWT authentication
-Authentication-protected endpoints
-User-specific data access
-Environment-based secrets
-.env excluded from Git
-Authentication rate limiting
-Input validation
-Database transaction rollback on errors
+- Password hashing
+- JWT authentication
+- Authentication-protected endpoints
+- User-specific data access
+- Environment-based secrets
+- `.env` excluded from Git
+- Authentication rate limiting
+- Input validation
+- Database transaction rollback on errors
 
-Users can only access their own expenses and budgets through authenticated requests.
+Users can only access their own authenticated expense and budget data.
 
-API Response Format
+---
+
+# API Response Format
 
 The backend uses a consistent response structure.
 
-Successful Response
+### Successful Response
+
+```json
 {
     "success": true,
     "message": "Operation successful",
     "data": {}
 }
-Error Response
+```
+
+### Error Response
+
+```json
 {
     "success": false,
     "message": "Error message",
     "data": null
 }
-Testing
+```
 
-The backend was tested during development for:
+---
 
-Application health
-Database connectivity
-User registration
-User login
-JWT authentication
-Invalid authentication tokens
-Expired authentication tokens
-Rate limiting
-Category CRUD operations
-Expense CRUD operations
-Expense filtering
-CSV export
-Budget CRUD operations
-Duplicate budget validation
-Monthly summaries
-Category summaries
-Input validation
+# Testing and Verification
 
-Python source files were also checked using:
+The backend and integrated application have been verified during development for:
 
-python -m compileall .\routes .\models .\utils .\app.py .\extensions.py
+- Application health
+- Database connectivity
+- User registration
+- User login
+- JWT authentication
+- Authentication protection
+- Category CRUD operations
+- Expense CRUD operations
+- Expense filtering
+- CSV export
+- Budget operations
+- Monthly summaries
+- Category summaries
+- Input validation
 
-No compilation errors were reported.
+The backend source can also be checked for Python compilation errors using:
 
-Development Workflow
+```bash
+python -m compileall routes models utils app.py extensions.py
+```
 
-Backend development is performed on the:
+The complete Docker Compose environment has also been verified through the Nginx entry point.
 
-backend-development
+---
 
-branch.
+# Development Workflow
 
-The development workflow is:
+Backend changes should be developed through feature branches and pull requests.
 
-Create / update backend
+Typical workflow:
+
+```text
+Create feature branch
         |
         v
-Test changes
+Implement backend change
+        |
+        v
+Test locally
         |
         v
 Commit changes
         |
         v
-Push backend-development
+Push branch
         |
         v
-Create Pull Request
+Open Pull Request
         |
         v
-Code Review
+CI validation
         |
         v
-Merge into main
+Code review
+        |
+        v
+Merge into the appropriate integration branch
+```
 
-Changes should not be pushed directly to main.
+Changes should not be pushed directly to protected branches.
 
-Development Documentation
+---
 
-A detailed record of development problems, troubleshooting steps, solutions, verification, and lessons learned is available in:
+# Troubleshooting
 
-Backend Troubleshooting Log
+Backend troubleshooting information is maintained in:
 
+```text
+backend/docs/troubleshooting.md
+```
+
+The troubleshooting documentation contains development problems, investigation steps, solutions, verification results, and lessons learned.
