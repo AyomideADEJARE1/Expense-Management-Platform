@@ -194,7 +194,8 @@ def delete_category(category_id):
         db.session.rollback()
 
         return error_response(
-            "Category cannot be deleted because it is being used by an expense",
+            "Category cannot be deleted because it is being used by "
+            "an expense",
             409
         )
 
