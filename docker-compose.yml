@@ -1,16 +1,38 @@
 services:
-  frontend-mock:
-    image: nginx:alpine
-    volumes:
-      - ./frontend-mock:/usr/share/nginx/html:ro
+  frontend:
+    build: ./frontend
+    container_name: expense-frontend
 
-  backend-mock:
-    build: ./backend-mock
+  backend:
+    build: ./backend
+    container_name: expense-backend
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: expense_user
+      POSTGRES_PASSWORD: expense_password
+      POSTGRES_DB: expense_db
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: expense-postgres
+    environment:
+      POSTGRES_USER: expense_user
+      POSTGRES_PASSWORD: expense_password
+      POSTGRES_DB: expense_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
   nginx:
     build: ./nginx
+    container_name: expense-nginx
     ports:
       - "8080:80"
     depends_on:
-      - frontend-mock
-      - backend-mock
+      - frontend
+      - backend
+
+volumes:
+  postgres_data:
