@@ -177,4 +177,3 @@ def get_current_user():
             "email": user.email
         }
     )
-          

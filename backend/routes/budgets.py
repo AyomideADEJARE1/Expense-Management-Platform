@@ -111,7 +111,8 @@ def create_budget():
 
     if parsed_month.day != 1:
         return error_response(
-            "Month must be the first day of the month, for example 2026-10-01",
+            "Month must be the first day of the month, for example "
+            "2026-10-01",
             400
         )
 
@@ -363,7 +364,8 @@ def update_budget(budget_id):
 
         if parsed_month.day != 1:
             return error_response(
-                "Month must be the first day of the month, for example 2026-10-01",
+                "Month must be the first day of the month, for example "
+                "2026-10-01",
                 400
             )
 
