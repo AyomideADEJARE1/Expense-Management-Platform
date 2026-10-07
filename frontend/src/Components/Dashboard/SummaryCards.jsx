@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Wallet, ArrowDownRight, ArrowUpRight, PieChart } from 'lucide-react';
 
 export default function SummaryCards({ incomes = [], transactions = [], budgets = [] }) {

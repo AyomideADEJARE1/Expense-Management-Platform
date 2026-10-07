@@ -1,12 +1,10 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { AuthProvider, useAuth, AuthModal } from './Auth';
 import Sidebar from './Components/Layout/Sidebar';
 import Header from './Components/Layout/Header';
 import Dashboard from './pages/Dashboard';
-import Transactions from './pages/Transactions';
 import Budgets from './pages/Budgets';
 import Categories from './pages/Categories';
-import Income from './pages/Income';
 import Expenses from './pages/Expenses';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
@@ -37,14 +35,14 @@ function MainAppContent() {
   const [categories, setCategories] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [budgets, setBudgets] = useState([]);
+  const [incomes] = useState([]);
   const [monthlySummary, setMonthlySummary] = useState(null);
   const [categorySummary, setCategorySummary] = useState([]);
-  const [incomes, setIncomes] = useState([]);
-  const [transactions, setTransactions] = useState([]);
 
   // Fetch data on load or auth change
   const loadAppData = useCallback(async () => {
     if (!user) return;
+
     try {
       const [catsRes, expsRes, bdgtsRes, mSumRes, cSumRes] = await Promise.all([
         api.get('/categories'),
@@ -59,14 +57,19 @@ function MainAppContent() {
       setBudgets(bdgtsRes || []);
       setMonthlySummary(mSumRes);
       setCategorySummary(cSumRes || []);
-    } catch (err) {
+    } catch {
       showToast('Failed to load application data', 'error');
     }
   }, [user, showToast]);
 
   useEffect(() => {
+    const timeoutId = setTimeout(() => {
     loadAppData();
+    }, 0);
+
+    return () => clearTimeout(timeoutId);
   }, [loadAppData]);
+
 
   // Global Search Engine
   const searchResults = useMemo(() => {

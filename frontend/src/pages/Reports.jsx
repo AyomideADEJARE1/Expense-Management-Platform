@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
   Calendar, TrendingUp, TrendingDown, PieChart as PieIcon, Download, Eye, X 
 } from 'lucide-react';

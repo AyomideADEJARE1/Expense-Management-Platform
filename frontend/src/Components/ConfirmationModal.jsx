@@ -1,40 +1,23 @@
-import React, { useEffect, useState } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 
-export default function ConfirmationModal({ 
-  isOpen, 
-  onClose, 
-  onConfirm, 
-  title = "Are you sure?", 
+export default function ConfirmationModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  title = "Are you sure?",
   message = "This action cannot be undone.",
   confirmText = "Delete",
   cancelText = "Cancel"
 }) {
-  const [render, setRender] = useState(isOpen);
-  const [active, setActive] = useState(false);
-
-  useEffect(() => {
-    if (isOpen) {
-      setRender(true);
-      // Small timeout to trigger CSS transition frame
-      const timer = setTimeout(() => setActive(true), 10);
-      return () => clearTimeout(timer);
-    } else {
-      setActive(false);
-      const timer = setTimeout(() => setRender(false), 200); // match transition duration
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen]);
-
-  if (!render) return null;
+  const active = isOpen;
 
   return (
-    <div 
+    <div
       className={`fixed inset-0 z-50 flex items-center justify-center bg-slate-900/20 backdrop-blur-md p-4 transition-opacity duration-200 ease-out ${
-        active ? 'opacity-100' : 'opacity-0'
+        active ? 'opacity-100' : 'opacity-0 pointer-events-none'
       }`}
     >
-      <div 
+      <div
         className={`bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl border border-gray-100/80 relative text-center flex flex-col items-center overflow-hidden shrink-0 transition-all duration-200 ease-out transform ${
           active ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-2'
         }`}
@@ -87,7 +70,6 @@ export default function ConfirmationModal({
             {confirmText}
           </button>
         </div>
-
       </div>
     </div>
   );

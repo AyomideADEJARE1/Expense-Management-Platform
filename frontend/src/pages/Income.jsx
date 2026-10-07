@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useToast } from '../context/ToastContext';
 import ConfirmationModal from '../Components/ConfirmationModal';
 import { 
@@ -24,7 +24,7 @@ export default function Income({
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingIncome, setEditingIncome] = useState(null);
-  const { showToast, confirmAction } = useToast();
+  const { showToast } = useToast();
     const [itemToDelete, setItemToDelete] = useState(null);
 
   // Filter only Income categories
@@ -113,7 +113,7 @@ export default function Income({
     setIsModalOpen(false);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = () => {
    if (!itemToDelete) return;
 
     setIncomes((prev) => prev.filter((item) => item.id !== itemToDelete));

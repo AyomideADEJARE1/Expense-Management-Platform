@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from '../context/ToastContext';
 import ConfirmationModal from '../Components/ConfirmationModal';
 
@@ -31,11 +31,14 @@ export default function Budgets({ categories = [], budgets = [], setBudgets }) {
   });
 
   // Fetch Budgets from Backend
+useEffect(() => {
   const fetchBudgets = async () => {
     setLoading(true);
+
     try {
       const response = await fetch(`${API_BASE_URL}/budgets`);
       if (!response.ok) throw new Error('Failed to fetch budgets');
+
       const data = await response.json();
       setBudgets(data);
     } catch (err) {
@@ -45,9 +48,8 @@ export default function Budgets({ categories = [], budgets = [], setBudgets }) {
     }
   };
 
-  useEffect(() => {
-    fetchBudgets();
-  }, []);
+  fetchBudgets();
+}, [setBudgets, showToast]);
 
   const totalLimit = budgets.reduce((acc, b) => acc + Number(b.limit || 0), 0);
   const totalSpent = budgets.reduce((acc, b) => acc + Number(b.spent || 0), 0);

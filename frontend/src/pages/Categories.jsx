@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import ConfirmationModal from '../Components/ConfirmationModal';
 import { useToast } from '../context/ToastContext';
 import { 
@@ -50,11 +50,14 @@ export default function Categories({ categories = [], setCategories }) {
   });
 
   // Fetch Categories from Flask backend on component mount
+useEffect(() => {
   const fetchCategories = async () => {
     setLoading(true);
+
     try {
       const response = await fetch(`${API_BASE_URL}/categories`);
       if (!response.ok) throw new Error('Failed to fetch categories');
+
       const data = await response.json();
       setCategories(data);
     } catch (err) {
@@ -64,9 +67,8 @@ export default function Categories({ categories = [], setCategories }) {
     }
   };
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
+  fetchCategories();
+}, [setCategories, showToast]);
 
   const filteredCategories = categories.filter((cat) => {
     if (activeFilter === 'All') return true;
