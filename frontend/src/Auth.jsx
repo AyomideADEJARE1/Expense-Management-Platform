@@ -51,7 +51,7 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     try {
       const data = await api.post('/auth/login', { email, password });
-      const token = data.access_token || data.token;
+      const token = data.data?.access_token || data.data?.token;
       setAuthToken(token);
       await fetchCurrentUser();
       showToast('Logged in successfully!', 'success');
@@ -65,8 +65,7 @@ export function AuthProvider({ children }) {
   const register = async (firstName, lastName, email, password) => {
     try {
       await api.post('/auth/register', {
-        first_name: firstName,
-        last_name: lastName,
+        full_name: `${firstName} ${lastName}`.trim(),
         email,
         password,
       });
