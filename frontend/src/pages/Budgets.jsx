@@ -16,7 +16,6 @@ const ICON_MAP = {
 export default function Budgets({ categories = [], budgets = [], setBudgets }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBudget, setEditingBudget] = useState(null);
-  const [loading, setLoading] = useState(false);
   const { showToast } = useToast();
   const [itemToDelete, setItemToDelete] = useState(null);
 
@@ -206,10 +205,7 @@ export default function Budgets({ categories = [], budgets = [], setBudgets }) {
         </div>
       </div>
 
-      {loading ? (
-        <div className="text-center py-12 text-gray-500">Loading budgets...</div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {budgets.map((b) => {
             const pct = b.limit > 0 ? Math.round((b.spent / b.limit) * 100) : 0;
             const isExceeded = b.spent > b.limit;
@@ -296,7 +292,6 @@ export default function Budgets({ categories = [], budgets = [], setBudgets }) {
             );
           })}
         </div>
-      )}
 
       <ConfirmationModal
         isOpen={Boolean(itemToDelete)}
