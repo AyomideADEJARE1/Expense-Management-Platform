@@ -328,9 +328,7 @@ See [`docs/docker.md`](docs/docker.md) for detailed Docker and Compose documenta
 
 The frontend uses:
 
-```text
-VITE_API_BASE_URL=/api
-```
+The frontend defaults to `/api` for backend requests. The `VITE_API_BASE_URL` environment variable can be used to override this default when needed.
 
 This allows browser requests to use the same Nginx entry point as the frontend instead of connecting directly to the Flask container.
 
