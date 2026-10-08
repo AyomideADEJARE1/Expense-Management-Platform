@@ -8,6 +8,7 @@ export default defineConfig({
     tailwindcss(),
   ],
   preview: {
-    allowedHosts: ['expense-management-platform.onrender.com'],
+    host: '0.0.0.0',
+    allowedHosts: true,
   },
 })
