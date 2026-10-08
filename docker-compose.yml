@@ -51,7 +51,7 @@ services:
     build: ./nginx
     container_name: expense-nginx
     ports:
-      - "8080:80"
+      - "80:80"
     depends_on:
       frontend:
         condition: service_healthy
