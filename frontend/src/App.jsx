@@ -5,7 +5,7 @@ import Header from './Components/Layout/Header';
 import Dashboard from './pages/Dashboard';
 import Budgets from './pages/Budgets';
 import Categories from './pages/Categories';
-import Expenses from './pages/Expenses';
+import Transactions from './pages/Transactions';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import { ToastProvider, useToast } from './context/ToastContext';
@@ -35,7 +35,6 @@ function MainAppContent() {
   const [categories, setCategories] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [budgets, setBudgets] = useState([]);
-  const [incomes] = useState([]);
   const [monthlySummary, setMonthlySummary] = useState(null);
   const [categorySummary, setCategorySummary] = useState([]);
 
@@ -44,19 +43,55 @@ function MainAppContent() {
     if (!user) return;
 
     try {
+      const currentMonth = new Date().toISOString().slice(0, 7);
+
       const [catsRes, expsRes, bdgtsRes, mSumRes, cSumRes] = await Promise.all([
         api.get('/categories'),
         api.get('/expenses'),
         api.get('/budgets'),
-        api.get('/summaries/monthly').catch(() => null),
-        api.get('/summaries/category').catch(() => []),
+        api.get(`/summaries/monthly?month=${currentMonth}`).catch(() => null),
+        api.get(`/summaries/category?month=${currentMonth}`).catch(() => ({ data: [] })),
       ]);
 
-      setCategories(catsRes || []);
-      setExpenses(expsRes || []);
-      setBudgets(bdgtsRes || []);
-      setMonthlySummary(mSumRes);
-      setCategorySummary(cSumRes || []);
+      setCategories(catsRes?.data || []);
+      setExpenses(expsRes?.data || []);
+      
+      const expenseData = expsRes?.data || [];
+      const budgetData = bdgtsRes?.data || [];
+
+      setBudgets(
+        budgetData.map((budget) => {
+          const budgetMonth = String(budget.month || '').slice(0, 7);
+
+          const spent = expenseData
+            .filter((expense) => {
+              const expenseCategoryId =
+                expense.category_id ?? expense.category?.id;
+
+              const expenseDate =
+                expense.expense_date ?? expense.date;
+
+              return (
+                Number(expenseCategoryId) === Number(budget.category_id) &&
+                String(expenseDate || '').slice(0, 7) === budgetMonth
+              );
+            })
+            .reduce(
+              (total, expense) => total + Number(expense.amount || 0),
+              0
+            );
+
+          return {
+            ...budget,
+            limit: Number(budget.amount || 0),
+            spent,
+          };
+        })
+      );
+    
+
+      setMonthlySummary(mSumRes?.data || null);
+      setCategorySummary(cSumRes?.data || []);
     } catch {
       showToast('Failed to load application data', 'error');
     }
@@ -81,7 +116,7 @@ function MainAppContent() {
       if (exp.description?.toLowerCase().includes(query)) {
         results.push({
           sourceType: 'Expense',
-          tab: 'expenses',
+          tab: 'transcations',
           title: exp.description,
           subtitle: `Expense • ${exp.expense_date}`,
           amount: exp.amount,
@@ -152,22 +187,17 @@ function MainAppContent() {
         <div className="space-y-6">
           {activeTab === 'dashboard' && (
             <Dashboard 
-              budgets={budgets} 
-              incomes={incomes} 
+              budgets={budgets}  
               transactions={expenses} 
               monthlySummary={monthlySummary}
               categorySummary={categorySummary}
               isDarkMode={isDarkMode} 
             />
           )}
-          {activeTab === 'expenses' && (
-            <Expenses 
-              categories={categories} 
-              expenses={expenses} 
-              setExpenses={setExpenses} 
-              budgets={budgets} 
-              loadAppData={loadAppData}
-              isDarkMode={isDarkMode} 
+          {activeTab === 'transactions' && (
+            <Transactions
+              categories={categories}
+              onTransactionChange={loadAppData}
             />
           )}
           {activeTab === 'budgets' && (

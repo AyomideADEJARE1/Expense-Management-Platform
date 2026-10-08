@@ -1,8 +1,6 @@
 import { 
   LayoutDashboard, 
   Receipt, 
-  TrendingUp, 
-  TrendingDown, 
   PieChart, 
   FolderKanban, 
   FileText, 
@@ -16,8 +14,6 @@ import { useAuth } from "../../Auth";
 const menuItems = [
   { name: 'Dashboard', icon: LayoutDashboard, path: 'dashboard' },
   { name: 'Transactions', icon: Receipt, path: 'transactions' },
-  { name: 'Income', icon: TrendingUp, path: 'income' },
-  { name: 'Expenses', icon: TrendingDown, path: 'expenses' },
   { name: 'Budgets', icon: PieChart, path: 'budgets' },
   { name: 'Categories', icon: FolderKanban, path: 'categories' },
   { name: 'Reports', icon: FileText, path: 'reports' },

@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { api } from '../services/api';
+import { useState } from 'react';
 import { useToast } from '../context/ToastContext';
 import ConfirmationModal from '../Components/ConfirmationModal';
 
@@ -12,8 +13,6 @@ const ICON_MAP = {
   Utensils, Car, ShoppingBag, Wifi, Film, Briefcase, HeartPulse, BookOpen, DollarSign, Gift
 };
 
-const API_BASE_URL = 'http://127.0.0.1:5000/api';
-
 export default function Budgets({ categories = [], budgets = [], setBudgets }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBudget, setEditingBudget] = useState(null);
@@ -21,7 +20,7 @@ export default function Budgets({ categories = [], budgets = [], setBudgets }) {
   const { showToast } = useToast();
   const [itemToDelete, setItemToDelete] = useState(null);
 
-  const expenseCategories = categories.filter((c) => c.type === 'Expense');
+  const expenseCategories = categories;
   const defaultExpenseCat = expenseCategories.length > 0 ? expenseCategories[0].name : '';
 
   const [formData, setFormData] = useState({
@@ -29,27 +28,6 @@ export default function Budgets({ categories = [], budgets = [], setBudgets }) {
     limit: '',
     spent: '0',
   });
-
-  // Fetch Budgets from Backend
-useEffect(() => {
-  const fetchBudgets = async () => {
-    setLoading(true);
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/budgets`);
-      if (!response.ok) throw new Error('Failed to fetch budgets');
-
-      const data = await response.json();
-      setBudgets(data);
-    } catch (err) {
-      showToast(err.message || 'Error fetching budgets', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchBudgets();
-}, [setBudgets, showToast]);
 
   const totalLimit = budgets.reduce((acc, b) => acc + Number(b.limit || 0), 0);
   const totalSpent = budgets.reduce((acc, b) => acc + Number(b.spent || 0), 0);
@@ -84,52 +62,88 @@ useEffect(() => {
   // Save Budget via Flask API
   const handleSave = async (e) => {
     e.preventDefault();
-    if (!formData.limit || !formData.category) return;
 
-    const limitVal = parseFloat(formData.limit);
-    const spentVal = parseFloat(formData.spent || 0);
+    if (!formData.limit || !formData.category) {
+      showToast('Budget amount and category are required', 'error');
+      return;
+    }
+
+    const selectedCategory = expenseCategories.find(
+      (category) => category.name === formData.category
+    );
+
+    if (!selectedCategory) {
+      showToast('Selected category could not be found', 'error');
+      return;
+    }
+
+    const amount = parseFloat(formData.limit);
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      showToast('Budget amount must be greater than zero', 'error');
+      return;
+    }
+
+    // Backend requires the first day of the month.
+    const now = new Date();
+    const month = `${now.getFullYear()}-${String(
+      now.getMonth() + 1
+    ).padStart(2, '0')}-01`;
 
     const payload = {
-      category: formData.category,
-      limit: limitVal,
-      spent: spentVal,
+      category_id: selectedCategory.id,
+      amount,
+      month,
     };
 
     try {
       if (editingBudget) {
-        // PUT Request
-        const response = await fetch(`${API_BASE_URL}/budgets/${editingBudget.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
+        const response = await api.put(
+          `/budgets/${editingBudget.id}`,
+          payload
+        );
 
-        if (!response.ok) throw new Error('Failed to update budget');
-        const updated = await response.json();
+        const updated = {
+          ...response?.data,
+          limit: Number(response?.data?.amount || 0),
+          spent: Number(editingBudget.spent || 0),
+        };
 
-        setBudgets((prev) => prev.map((b) => (b.id === editingBudget.id ? updated : b)));
+        setBudgets((prev) =>
+          prev.map((budget) =>
+            budget.id === editingBudget.id ? updated : budget
+          )
+        );
+
         showToast('Budget updated successfully!', 'success');
       } else {
-        // Prevent duplicate check client-side first
-        const exists = budgets.find((b) => b.category.toLowerCase() === formData.category.toLowerCase());
+        const exists = budgets.find(
+          (budget) =>
+            budget.category_id === selectedCategory.id &&
+            budget.month === month
+        );
+
         if (exists) {
-          showToast(`A budget for ${formData.category} already exists!`, 'error');
+          showToast(
+            `A budget for ${formData.category} already exists this month!`,
+            'error'
+          );
           return;
         }
 
-        // POST Request
-        const response = await fetch(`${API_BASE_URL}/budgets`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
+        const response = await api.post('/budgets', payload);
 
-        if (!response.ok) throw new Error('Failed to create budget');
-        const created = await response.json();
+        const created = {
+          ...response?.data,
+          limit: Number(response?.data?.amount || 0),
+          spent: 0,
+        };
 
         setBudgets((prev) => [...prev, created]);
+
         showToast('Budget created successfully!', 'success');
       }
+
       setIsModalOpen(false);
     } catch (err) {
       showToast(err.message || 'Action failed', 'error');
@@ -141,11 +155,7 @@ useEffect(() => {
     if (!itemToDelete) return;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/budgets/${itemToDelete}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) throw new Error('Failed to delete budget');
+      await api.delete(`/budgets/${itemToDelete}`);
 
       setBudgets((prev) => prev.filter((b) => b.id !== itemToDelete));
       showToast('Budget deleted successfully!', 'delete');
