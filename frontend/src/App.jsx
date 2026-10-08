@@ -116,7 +116,7 @@ function MainAppContent() {
       if (exp.description?.toLowerCase().includes(query)) {
         results.push({
           sourceType: 'Expense',
-          tab: 'transcations',
+          tab: 'transactions',
           title: exp.description,
           subtitle: `Expense • ${exp.expense_date}`,
           amount: exp.amount,

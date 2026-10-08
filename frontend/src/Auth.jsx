@@ -19,8 +19,28 @@ export function AuthProvider({ children }) {
 
     try {
       setLoading(true);
-      const userData = await api.get('/auth/me');
-      setUser(userData);
+      const response = await api.get('/auth/me');
+      const userData = response.data || response;
+
+      const nameParts = (userData.full_name || '').trim().split(/\s+/);
+
+      const formatName = (name) =>
+        name
+          ? name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()
+          : '';
+
+      setUser({
+        ...userData,
+        first_name: userData.first_name
+          ? formatName(userData.first_name)
+          : formatName(nameParts[0]),
+        last_name: userData.last_name
+          ? formatName(userData.last_name)
+          : nameParts.slice(1).map(formatName).join(' '),
+      });
+
+
+
     } catch {
       removeAuthToken();
       setUser(null);
