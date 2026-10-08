@@ -87,6 +87,51 @@ export default function Reports() {
     ? monthlyData[selectedMonthKey]
     : null;
 
+  const exportReport = () => {
+    if (!activeReport) return;
+
+    const headers = [
+      'Date',
+      'Description',
+      'Category',
+      'Amount',
+    ];
+
+    const rows = activeReport.transactions.map((tx) => [
+      tx.expense_date || '',
+      tx.description || 'Expense',
+      tx.category?.name || tx.category || 'Uncategorized',
+      Number(tx.amount || 0),
+    ]);
+
+    const csvContent = [
+      headers,
+      ...rows,
+    ]
+      .map((row) =>
+        row
+          .map((value) => `"${String(value).replace(/"/g, '""')}"`)
+          .join(',')
+      )
+      .join('\n');
+
+    const blob = new Blob([csvContent], {
+      type: 'text/csv;charset=utf-8;',
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download = `${selectedMonthKey}-expense-report.csv`;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       {loading ? (
@@ -337,7 +382,7 @@ export default function Reports() {
             {/* Actions */}
             <div className="flex justify-end gap-3 border-t pt-4">
               <button
-                onClick={() => window.print()}
+                onClick={exportReport}
                 className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium flex items-center gap-2"
               >
                 <Download className="w-4 h-4" />
