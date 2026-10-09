@@ -78,9 +78,10 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     try {
       const response = await api.post('/auth/login', { email: email.trim(), password });
-      const payload = response?.data ?? response;
+      const envelope = response?.data ?? response;
+      const payload = envelope?.data ?? envelope;
       const token = payload?.access_token ?? payload?.token;
-      if (!token) throw new Error(response?.message || 'The server did not return an authentication token.');
+      if (!token) throw new Error(envelope?.message || response?.message || 'The server did not return an authentication token.');
 
       setAuthToken(token);
       const currentUser = payload.user
