@@ -1,74 +1,97 @@
-# Expense Tracker Web Application
+# Expense Management Platform
 
-A full-featured, responsive React-based financial management dashboard designed to track income, monitor expenses, create category spending limits, and generate monthly financial reports.
+A full-stack expense management application built with React, Flask, PostgreSQL, Docker, and Nginx.
 
-# Key Features
-Interactive Dashboard: Core financial overview with summary metrics, income vs. expense visual charts, category spending distributions, and quick view of recent transactions.
+## Current Architecture
 
-Income Management: Track earnings across custom categories, log dates, add custom notes, and filter income entries.   Expense 
+Internet -> Cloudflare / HTTPS -> AWS EC2 Ubuntu -> Docker Compose -> Nginx -> React/Flask -> PostgreSQL 16.
 
-Tracking & Linkage: Log daily expenses with custom titles, optional notes, category tags, and direct linkages to specific budgets.   
+The browser reaches the application through Nginx. PostgreSQL is internal to the Docker network.
 
-Budget Limits & Automated Over-Budget Alerts: Set spending caps per category with visual progress indicators and active alert notifications when limits are exceeded.
+## Main Features
 
-Dynamic Category Customization: Manage income and expense categories complete with color palettes, Lucide icons, and protected system default locks.   
+- User registration and JWT authentication
+- Password hashing and authorization
+- User-specific expense data
+- Expense CRUD operations
+- Expense categories and budgets
+- Monthly summaries and charts
+- Filtering and CSV export
+- Application/database health checks
+- API rate limiting
+- Dockerized application stack
+- Nginx reverse proxy
+- Production HTTPS access
 
-Centralized Transaction Ledger: Unified list showing all income and expense items with search, category filtering, and item deletion.   
+## Technology Stack
 
-Monthly Financial Reports: Automated grouping by month (e.g., YYYY-MM), savings rate calculations, category breakdowns, and export/print functionality.   
+- Frontend: React, Vite, Tailwind CSS, Lucide React
+- Backend: Python, Flask, SQLAlchemy, Psycopg, Flask-JWT-Extended, Flask-Limiter
+- Database: PostgreSQL 16
+- Infrastructure: Docker Compose, Nginx, AWS EC2, Cloudflare, Let's Encrypt/Certbot
 
-Global Search Engine: Real-time search across transactions, active budgets, and categories with instant navigation.   State 
+## Local Development
 
-Persistence & Dark Mode: Built-in dark mode toggle and localStorage persistence across sessions for all entities.   Authentication & Toast Feedback: User authentication context modal and toast system with confirmation modals for safe deletions.   
+    docker compose up -d --build
+    docker compose ps
 
-# System Architecture & Component Mapping
+The current Compose configuration publishes Nginx on host port 80:
 
-src/
-├── App.jsx                       # Main application state, search, notifications & dark mode
-├── Auth.jsx                      # User authentication provider and auth modal
-├── Components/
-│   ├── Layout/
-│   │   ├── Sidebar.jsx           # Main navigation drawer
-│   │   └── Header.jsx            # Top bar, notifications, search bar, theme toggle
-│   ├── Dashboard/
-│   │   ├── SummaryCards.jsx      # Metric cards (Total Income, Expenses, Net)
-│   │   ├── IncomeVsExpensesChart # Bar/Area financial comparison chart
-│   │   ├── CategoryDonutChart    # Category spending distribution chart
-│   │   ├── RecentTransactions    # Dashboard transaction preview table
-│   │   └── BudgetOverview        # Quick budget status widget
-│   └── ConfirmationModal.jsx     # Reusable deletion confirmation modal
-├── context/
-│   └── ToastContext.jsx          # Application-wide toast notifications
-└── pages/
-    ├── Dashboard.jsx             # Main dashboard view
-    ├── Income.jsx                # Income management page
-    ├── Expenses.jsx              # Expense management page
-    ├── Budgets.jsx               # Budget limits and progress tracker
-    ├── Categories.jsx            # Category setup and icon management
-    ├── Transactions.jsx          # Unified ledger page
-    └── Reports.jsx               # Monthly summaries & breakdown modal
-    
-# Code Base Highlights & Business Logic
+    http://localhost
 
-Automatic Budget Recalculation & Alert System (App.jsx & Budgets.jsx):
-When an expense is recorded, handleAddExpense automatically recalculates total spending for the matching budget category and fires a Budget Alert ⚠️ notification if the limit is exceeded.
+Health:
 
-Categorization & Custom Aesthetics (Categories.jsx):
-Categories support customized colors (Blue, Emerald, Orange, Purple, Pink, Amber, Red) and dynamic icon mapping (Lucide-react). System categories are locked against accidental modification or deletion.
+    curl http://localhost/api/health
+    curl http://localhost/api/health/db
 
-Data Persistency Layer (App.jsx):
-Uses React useEffect hooks synced with browser localStorage for zero-backend persistent state across sessions:   expense_tracker_transactions   
-expense_tracker_incomes
-expense_tracker_expenses
-expense_tracker_budgets
-expense_tracker_categories
+Older documentation referred to localhost:8080. That is no longer the current Compose port mapping.
 
-Monthly Reports Calculation (Reports.jsx)
-Dynamically aggregates transaction objects into monthly buckets (YYYY-MM), computing totalIncome, totalExpense, netSavings, savings percentage rates, and individual category spending breakdowns.
+## Production
 
-#Tech Stack
-Frontend Library: React (Hooks: useState, useEffect, useMemo)   
-Styling & UI: Tailwind CSS   
-Icons: Lucide React (lucide-react)   
-Build Tool: Vite   
-State Management: React Context API (AuthProvider, ToastProvider)
+The current production environment runs on AWS EC2 Ubuntu.
+
+Production domain: https://expense-tracker.live
+
+Cloudflare provides the public DNS/proxy layer. HTTPS is active and certificate management uses Let's Encrypt/Certbot in the deployment environment.
+
+The repository Docker Nginx configuration listens on port 80. Production domain/TLS handling is surrounding deployment infrastructure, not nginx/default.conf itself.
+
+### Updating the application
+
+Normal code changes do not require recreating the EC2 instance, domain, or TLS configuration.
+
+Typical update:
+
+    cd ~/Expense-Management-Platform
+    git pull --ff-only
+    docker compose build
+    docker compose up -d
+    docker compose ps
+    curl http://localhost/api/health
+
+Then verify the public site.
+
+## CI/CD
+
+GitHub Actions provides CI for secret scanning, database migration checks, backend checks, frontend checks/builds, and Docker builds.
+
+The CD workflow can publish images to GitHub Container Registry and contains a configurable Azure deployment job. Azure is not the current production environment. The actual production deployment is AWS EC2.
+
+A green CI run or image publication must not be described as proof of production deployment unless AWS deployment was performed and verified.
+
+## Health Endpoints
+
+- GET /health
+- GET /health/db
+- GET /api/health
+- GET /api/health/db
+
+## Security
+
+Never commit real .env files, passwords, JWT/Flask secrets, API keys, cloud credentials, or private keys.
+
+Development database credentials must not be reused as production secrets.
+
+## Documentation Source of Truth
+
+The main branch represents the current implemented application configuration. Documentation should describe implemented/current behavior and clearly label future or legacy configuration as such.
