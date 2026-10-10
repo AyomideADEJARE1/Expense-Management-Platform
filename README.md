@@ -91,7 +91,3 @@ A green CI run or image publication must not be described as proof of production
 Never commit real .env files, passwords, JWT/Flask secrets, API keys, cloud credentials, or private keys.
 
 Development database credentials must not be reused as production secrets.
-
-## Documentation Source of Truth
-
-The main branch represents the current implemented application configuration. Documentation should describe implemented/current behavior and clearly label future or legacy configuration as such.
