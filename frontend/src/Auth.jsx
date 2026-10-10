@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { Mail, Lock, User, LogIn, UserPlus, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, User, LogIn, UserPlus, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 import { useToast } from './context/ToastContext';
 import { api, getAuthToken, setAuthToken, removeAuthToken } from './services/api';
 
@@ -97,6 +97,80 @@ export function AuthProvider({ children }) {
     }
   };
 
+
+  const updateUserProfile = async (profile) => {
+    try {
+      const firstName = (
+        profile.firstName ??
+        profile.first_name ??
+        user?.first_name ??
+        ''
+      ).trim();
+
+      const lastName = (
+        profile.lastName ??
+        profile.last_name ??
+        user?.last_name ??
+        ''
+      ).trim();
+
+      const payload = {
+        first_name: firstName,
+        last_name: lastName,
+        email: profile.email ?? user?.email ?? '',
+        currency: profile.currency ?? user?.currency ?? 'NGN (₦)',
+        budget_threshold:
+          profile.budgetThreshold ??
+          profile.budget_threshold ??
+          user?.budget_threshold ??
+          85,
+        notifications_enabled:
+          profile.notifications ??
+          profile.notifications_enabled ??
+          user?.notifications_enabled ??
+          true,
+        email_alerts_enabled:
+          profile.emailAlerts ??
+          profile.email_alerts_enabled ??
+          user?.email_alerts_enabled ??
+          true,
+      };
+
+      const response = await api.put('/auth/me', payload);
+      const updated = response.data || response;
+
+      const nameParts = (updated.full_name || '').trim().split(/\s+/);
+      const formatName = (name) =>
+        name
+          ? name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()
+          : '';
+
+      const updatedFirstName = formatName(
+        updated.first_name || nameParts[0] || firstName
+      );
+
+      const updatedLastName = formatName(
+        updated.last_name ||
+          nameParts.slice(1).join(' ') ||
+          lastName
+      );
+
+      setUser((previousUser) => ({
+        ...previousUser,
+        ...updated,
+        first_name: updatedFirstName,
+        last_name: updatedLastName,
+      }));
+
+      showToast('Settings saved successfully.', 'success');
+      return true;
+    } catch (err) {
+      showToast(err.message || 'Failed to save settings.', 'error');
+      return false;
+    }
+  };
+
+
   const logout = () => {
     removeAuthToken();
     setUser(null);
@@ -127,6 +201,7 @@ export function AuthProvider({ children }) {
         loading,
         login,
         register,
+        updateUserProfile,
         logout,
         greeting: getGreeting(),
         currentMonthYear: getCurrentMonthYear(),
@@ -156,6 +231,7 @@ export function AuthModal({ isDarkMode }) {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -272,13 +348,25 @@ export function AuthModal({ isDarkMode }) {
             <div className="relative">
               <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3.5" />
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className={`w-full pl-9 pr-4 py-2.5 rounded-xl border text-xs sm:text-sm outline-none focus:ring-2 focus:ring-blue-500 ${inputBg}`}
+                className={`w-full pl-9 pr-10 py-2.5 rounded-xl border text-xs sm:text-sm outline-none focus:ring-2 focus:ring-blue-500 ${inputBg}`}
+                autoComplete={isRegistering ? 'new-password' : 'current-password'}
                 required
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword((visible) => !visible)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-pressed={showPassword}
+              >
+                {showPassword
+                  ? <EyeOff className="w-4 h-4" />
+                  : <Eye className="w-4 h-4" />}
+              </button>
             </div>
           </div>
 

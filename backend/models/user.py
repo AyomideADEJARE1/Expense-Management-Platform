@@ -38,6 +38,34 @@ class User(db.Model):
         server_default=db.func.current_timestamp()
     )
 
+    currency = db.Column(
+        db.String(20),
+        nullable=False,
+        default="NGN (₦)",
+        server_default="NGN (₦)"
+    )
+
+    budget_threshold = db.Column(
+        db.Integer,
+        nullable=False,
+        default=85,
+        server_default="85"
+    )
+
+    notifications_enabled = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=True,
+        server_default=db.true()
+    )
+
+    email_alerts_enabled = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=True,
+        server_default=db.true()
+    )
+
     # Relationships
     expenses = db.relationship(
         "Expense",

@@ -4,7 +4,31 @@ import { Search, Filter, ArrowUpRight, Trash2, Plus, Edit3, X } from 'lucide-rea
 import ConfirmationModal from '../Components/ConfirmationModal';
 import { useToast } from '../context/ToastContext';
 
-export default function Transactions({ categories = [], onTransactionChange }) {
+export default function Transactions({ categories = [], onTransactionChange, isDarkMode = false }) {
+
+  const modalBackground = isDarkMode
+    ? 'bg-slate-800 text-white'
+    : 'bg-white text-gray-900';
+
+  const modalInput = isDarkMode
+  ? '!bg-white !text-gray-900 border-gray-300 placeholder:!text-gray-500'
+  : 'bg-gray-50 text-gray-900 border-gray-200';
+
+  const modalLabel = isDarkMode
+    ? 'text-slate-300'
+    : 'text-gray-600';
+
+  const sectionStyle = isDarkMode
+    ? 'bg-slate-800 border-slate-700'
+    : 'bg-white border-gray-200/80';
+
+  const inputStyle = isDarkMode
+    ? 'bg-slate-700 text-slate-100 border-slate-600 placeholder:text-slate-400'
+    : 'bg-gray-50 text-gray-900 border-gray-200';
+
+  const primaryText = isDarkMode ? 'text-slate-100' : 'text-gray-900';
+  const secondaryText = isDarkMode ? 'text-slate-300' : 'text-gray-500';
+
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -209,10 +233,10 @@ export default function Transactions({ categories = [], onTransactionChange }) {
   };
 
   return (
-    <div className="w-full min-h-screen p-4 sm:p-6 lg:p-8 bg-[#F8FAFC]">
+    <div className={`w-full min-h-screen p-4 sm:p-6 lg:p-8 ${isDarkMode ? 'bg-slate-900 text-slate-100' : 'bg-[#F8FAFC] text-gray-900'}`}>
 
       {/* Action & Filter Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-gray-200/80 shadow-sm mb-6 flex flex-col md:flex-row gap-4 justify-between items-center">
+      <div className={`${sectionStyle} p-4 rounded-2xl border shadow-sm mb-6 flex flex-col md:flex-row gap-4 justify-between items-center`}>
 
         <button
           onClick={() => handleOpenModal()}
@@ -232,7 +256,7 @@ export default function Transactions({ categories = [], onTransactionChange }) {
               placeholder="Search description or category..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-gray-50 text-gray-900 placeholder-gray-400 pl-10 pr-4 py-2 text-sm rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              className={`w-full ${inputStyle} placeholder:opacity-70 pl-10 pr-4 py-2 text-sm rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500`}
             />
           </div>
 
@@ -242,7 +266,7 @@ export default function Transactions({ categories = [], onTransactionChange }) {
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="bg-gray-50 text-gray-800 text-sm border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 w-full sm:w-auto"
+              className={`${inputStyle} text-sm rounded-xl px-3 py-2 border focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 w-full sm:w-auto`}
             >
               <option value="All">All Transactions</option>
               <option value="Expense">Expense Only</option>
@@ -257,13 +281,13 @@ export default function Transactions({ categories = [], onTransactionChange }) {
           Loading transactions...
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
+        <div className={`${sectionStyle} rounded-2xl border shadow-sm overflow-hidden`}>
           <div className="overflow-x-auto">
 
             <table className="w-full text-left text-sm border-collapse">
 
               <thead>
-                <tr className="bg-gray-50/80 border-b border-gray-100 text-gray-400 text-xs uppercase tracking-wider font-semibold">
+                <tr className={`${isDarkMode ? 'bg-slate-700 border-slate-600 text-slate-300' : 'bg-gray-50/80 border-gray-100 text-gray-400'} border-b text-xs uppercase tracking-wider font-semibold`}>
                   <th className="py-3.5 px-6">Description</th>
                   <th className="py-3.5 px-6">Category</th>
                   <th className="py-3.5 px-6">Type</th>
@@ -273,13 +297,13 @@ export default function Transactions({ categories = [], onTransactionChange }) {
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-gray-100">
+              <tbody className={`divide-y ${isDarkMode ? 'divide-slate-700' : 'divide-gray-100'}`}>
 
                 {filteredTransactions.length === 0 ? (
                   <tr>
                     <td
                       colSpan="6"
-                      className="py-8 text-center text-gray-400 font-medium"
+                      className={`py-8 text-center ${secondaryText} font-medium`}
                     >
                       No transaction history recorded yet.
                     </td>
@@ -288,10 +312,10 @@ export default function Transactions({ categories = [], onTransactionChange }) {
                   filteredTransactions.map((tx) => (
                     <tr
                       key={tx.id}
-                      className="hover:bg-gray-50/60 transition"
+                      className={`transition ${isDarkMode ? 'hover:bg-slate-700/60' : 'hover:bg-gray-50/60'}`}
                     >
 
-                      <td className="py-4 px-6 font-semibold text-gray-900 whitespace-nowrap">
+                      <td className={`py-4 px-6 font-semibold ${primaryText} whitespace-nowrap`}>
                         <div className="flex items-center gap-3">
 
                           <div className="p-2 rounded-xl shrink-0 bg-rose-50 text-rose-600">
@@ -310,7 +334,7 @@ export default function Transactions({ categories = [], onTransactionChange }) {
                       </td>
 
                       <td className="py-4 px-6 whitespace-nowrap">
-                        <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-lg text-xs font-semibold">
+                        <span className={`${isDarkMode ? 'bg-slate-700 text-slate-200' : 'bg-gray-100 text-gray-700'} px-3 py-1 rounded-lg text-xs font-semibold`}>
                           {tx.category || 'General'}
                         </span>
                       </td>
@@ -321,7 +345,7 @@ export default function Transactions({ categories = [], onTransactionChange }) {
                         </span>
                       </td>
 
-                      <td className="py-4 px-6 text-gray-500 font-medium whitespace-nowrap">
+                      <td className={`py-4 px-6 ${secondaryText} font-medium whitespace-nowrap`}>
                         {tx.date}
                       </td>
 
@@ -374,21 +398,26 @@ export default function Transactions({ categories = [], onTransactionChange }) {
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
 
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+          <div className={`${modalBackground} rounded-2xl max-w-md w-full p-6 shadow-2xl relative`}>
 
-            <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-4">
+            <div className={`flex items-center justify-between pb-4 border-b ${isDarkMode ? 'border-slate-700' : 'border-gray-100'} mb-4`}>
 
-              <h3 className="text-lg font-bold text-gray-900">
+              <h3 className="text-lg font-bold">
                 {editingTx
                   ? 'Edit Transaction'
                   : 'Record New Transaction'}
               </h3>
 
               <button
+                type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100"
+                className={`px-4 py-2 text-sm font-semibold rounded-xl transition ${
+                  isDarkMode
+                    ? 'text-slate-300 hover:bg-slate-700'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
               >
-                <X className="w-5 h-5" />
+                Cancel
               </button>
 
             </div>
@@ -396,7 +425,7 @@ export default function Transactions({ categories = [], onTransactionChange }) {
             <form onSubmit={handleSave} className="space-y-4">
 
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">
+                <label className={`block text-xs font-semibold ${modalLabel} mb-1`}>
                   Description
                 </label>
 
@@ -411,24 +440,24 @@ export default function Transactions({ categories = [], onTransactionChange }) {
                       description: e.target.value,
                     })
                   }
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className={`w-full ${modalInput} rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500`}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">
+                  <label className={`block text-xs font-semibold ${modalLabel} mb-1`}>
                     Type
                   </label>
 
-                  <div className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2 text-sm text-rose-600 font-semibold">
+                  <div className={`w-full ${modalInput} rounded-xl px-3.5 py-2 text-sm text-rose-600 font-semibold`}>
                     Expense
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">
+                  <label className={`block text-xs font-semibold ${modalLabel} mb-1`}>
                     Amount (₦)
                   </label>
 
@@ -445,14 +474,14 @@ export default function Transactions({ categories = [], onTransactionChange }) {
                         amount: e.target.value,
                       })
                     }
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    className={`w-full ${modalInput} rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500`}
                   />
                 </div>
 
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">
+                <label className={`block text-xs font-semibold ${modalLabel} mb-1`}>
                   Category
                 </label>
 
@@ -464,7 +493,7 @@ export default function Transactions({ categories = [], onTransactionChange }) {
                       category: e.target.value,
                     })
                   }
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className={`w-full ${modalInput} rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500`}
                 >
                   {categories.map((c) => (
                     <option
@@ -478,7 +507,7 @@ export default function Transactions({ categories = [], onTransactionChange }) {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">
+                <label className={`block text-xs font-semibold ${modalLabel} mb-1`}>
                   Date
                 </label>
 
@@ -492,16 +521,15 @@ export default function Transactions({ categories = [], onTransactionChange }) {
                       date: e.target.value,
                     })
                   }
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className={`w-full ${modalInput} rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500`}
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 mt-6">
+              <div className={`flex items-center justify-end gap-3 pt-4 border-t ${isDarkMode ? 'border-slate-700' : 'border-gray-100'} mt-6`}>
 
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition"
                 >
                   Cancel
                 </button>

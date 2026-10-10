@@ -55,6 +55,10 @@ function MainAppContent() {
 
       setCategories(catsRes?.data || []);
       setExpenses(expsRes?.data || []);
+
+      console.log('Categories API:', catsRes);
+      console.log('Expenses API:', expsRes);
+      console.log('Budgets API:', bdgtsRes);
       
       const expenseData = expsRes?.data || [];
       const budgetData = bdgtsRes?.data || [];
@@ -187,17 +191,20 @@ function MainAppContent() {
         <div className="space-y-6">
           {activeTab === 'dashboard' && (
             <Dashboard 
-              budgets={budgets}  
+              budgets={budgets}
+              categories={categories}  
               transactions={expenses} 
               monthlySummary={monthlySummary}
               categorySummary={categorySummary}
-              isDarkMode={isDarkMode} 
+              isDarkMode={isDarkMode}
+              currency={user?.currency || 'NGN (₦)'} 
             />
           )}
           {activeTab === 'transactions' && (
             <Transactions
               categories={categories}
               onTransactionChange={loadAppData}
+              isDarkMode={isDarkMode}
             />
           )}
           {activeTab === 'budgets' && (

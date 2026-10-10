@@ -13,7 +13,29 @@ const ICON_MAP = {
   Utensils, Car, ShoppingBag, Wifi, Film, Briefcase, HeartPulse, BookOpen, DollarSign, Gift
 };
 
-export default function Budgets({ categories = [], budgets = [], setBudgets }) {
+export default function Budgets({
+  categories = [],
+  budgets = [],
+  setBudgets,
+  loadAppData,
+  isDarkMode = false,
+}) {
+
+  const pageStyle = isDarkMode
+    ? 'bg-slate-900 text-slate-100'
+    : 'bg-[#F8FAFC] text-gray-900';
+
+  const cardStyle = isDarkMode
+    ? 'bg-slate-800 border-slate-700'
+    : 'bg-white border-gray-200/80';
+
+  const primaryText = isDarkMode ? 'text-slate-100' : 'text-gray-900';
+  const secondaryText = isDarkMode ? 'text-slate-300' : 'text-gray-500';
+
+  const inputStyle = isDarkMode
+    ? 'bg-white text-gray-900 border-gray-300'
+    : 'bg-gray-50 text-gray-900 border-gray-200';
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBudget, setEditingBudget] = useState(null);
   const { showToast } = useToast();
@@ -166,7 +188,7 @@ export default function Budgets({ categories = [], budgets = [], setBudgets }) {
   };
 
   return (
-    <div className="w-full min-h-screen p-4 sm:p-6 lg:p-8 bg-[#F8FAFC]">
+    <div className={`w-full min-h-screen p-4 sm:p-6 lg:p-8 ${pageStyle}`}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <button
           onClick={() => handleOpenModal()}
@@ -178,17 +200,17 @@ export default function Budgets({ categories = [], budgets = [], setBudgets }) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-        <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-sm">
+        <div className={`${cardStyle} p-5 rounded-2xl border shadow-sm`}>
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Total Budget</p>
-          <h2 className="text-2xl font-extrabold text-gray-900 mt-2">₦{totalLimit.toLocaleString()}</h2>
+          <h2 className={`text-2xl font-extrabold ${primaryText} mt-2`}>₦{totalLimit.toLocaleString()}</h2>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-sm">
+        <div className={`${cardStyle} p-5 rounded-2xl border shadow-sm`}>
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Total Spent</p>
-          <h2 className="text-2xl font-extrabold text-gray-900 mt-2">₦{totalSpent.toLocaleString()}</h2>
+          <h2 className={`text-2xl font-extrabold ${primaryText} mt-2`}>₦{totalSpent.toLocaleString()}</h2>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-sm flex items-center justify-between">
+        <div className={`${cardStyle} p-6 rounded-2xl border shadow-sm flex flex-col justify-between hover:shadow-md transition`}>
           <div>
             <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">On Track</p>
             <h2 className="text-2xl font-extrabold text-emerald-600 mt-2">{totalOnTrack} Budgets</h2>
@@ -196,7 +218,7 @@ export default function Budgets({ categories = [], budgets = [], setBudgets }) {
           <CheckCircle2 className="w-8 h-8 text-emerald-500/20" />
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-sm flex items-center justify-between">
+        <div className={`${cardStyle} p-6 rounded-2xl border shadow-sm flex flex-col justify-between hover:shadow-md transition`}>
           <div>
             <p className="text-xs font-semibold text-red-500 uppercase tracking-wide">Exceeded</p>
             <h2 className="text-2xl font-extrabold text-red-500 mt-2">{totalExceeded} Budgets</h2>
@@ -214,7 +236,7 @@ export default function Budgets({ categories = [], budgets = [], setBudgets }) {
             return (
               <div
                 key={b.id}
-                className="bg-white p-6 rounded-2xl border border-gray-200/80 shadow-sm flex flex-col justify-between hover:shadow-md transition"
+                className={`${cardStyle} p-6 rounded-2xl border shadow-sm flex flex-col justify-between hover:shadow-md transition`}
               >
                 <div>
                   <div className="flex items-center justify-between mb-4">
@@ -223,7 +245,7 @@ export default function Budgets({ categories = [], budgets = [], setBudgets }) {
                         {renderCategoryIcon(b.category)}
                       </div>
                       <div>
-                        <h3 className="font-bold text-gray-900 text-lg">{b.category}</h3>
+                        <h3 className={`font-bold ${primaryText} text-lg`}>{b.category}</h3>
                         <p className="text-xs text-gray-400 font-medium">Monthly Limit</p>
                       </div>
                     </div>
@@ -246,7 +268,7 @@ export default function Budgets({ categories = [], budgets = [], setBudgets }) {
 
                   <div className="flex items-baseline justify-between mb-2">
                     <div>
-                      <span className="text-2xl font-extrabold text-gray-900">₦{b.spent.toLocaleString()}</span>
+                      <span className={`text-2xl font-extrabold ${primaryText}`}>₦{b.spent.toLocaleString()}</span>
                       <span className="text-sm font-semibold text-gray-400 ml-1">/ ₦{b.limit.toLocaleString()}</span>
                     </div>
                     <span
@@ -276,14 +298,14 @@ export default function Budgets({ categories = [], budgets = [], setBudgets }) {
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs">
+                <div className={`pt-3 border-t ${isDarkMode ? 'border-slate-700' : 'border-gray-100'} flex items-center justify-between text-xs`}>
                   {isExceeded ? (
                     <span className="text-red-500 font-semibold flex items-center gap-1">
                       <AlertTriangle className="w-3.5 h-3.5" /> Exceeded by ₦{Math.abs(remaining).toLocaleString()}
                     </span>
                   ) : (
-                    <span className="text-gray-500 font-medium">
-                      Remaining: <strong className="text-gray-800">₦{remaining.toLocaleString()}</strong>
+                    <span className={`font-medium ${secondaryText}`}>
+                      Remaining: <strong className={primaryText}>₦{remaining.toLocaleString()}</strong>
                     </span>
                   )}
                   <span className="text-gray-400">Monthly</span>
@@ -304,9 +326,9 @@ export default function Budgets({ categories = [], budgets = [], setBudgets }) {
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
-            <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-4">
-              <h3 className="text-lg font-bold text-gray-900">
+          <div className={`${cardStyle} rounded-2xl max-w-md w-full p-6 shadow-2xl relative`}>
+            <div className={`flex items-center justify-between pb-4 border-b ${isDarkMode ? 'border-slate-700' : 'border-gray-100'} mb-4`}>
+              <h3 className={`text-lg font-bold ${primaryText}`}>
                 {editingBudget ? 'Update Budget Limit' : 'Create New Budget'}
               </h3>
               <button
@@ -324,7 +346,7 @@ export default function Budgets({ categories = [], budgets = [], setBudgets }) {
                   disabled={Boolean(editingBudget)}
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 disabled:opacity-60"
+                  className={`w-full ${inputStyle} border rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 disabled:opacity-60`}
                 >
                   {expenseCategories.length === 0 ? (
                     <option value="">No expense categories available</option>
@@ -346,7 +368,7 @@ export default function Budgets({ categories = [], budgets = [], setBudgets }) {
                   placeholder="e.g. 50000"
                   value={formData.limit}
                   onChange={(e) => setFormData({ ...formData, limit: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className={`w-full ${inputStyle} border rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500`}
                 />
               </div>
 
@@ -357,11 +379,11 @@ export default function Budgets({ categories = [], budgets = [], setBudgets }) {
                   placeholder="0"
                   value={formData.spent}
                   onChange={(e) => setFormData({ ...formData, spent: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className={`w-full ${inputStyle} border rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500`}
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 mt-6">
+              <div className={`flex items-center justify-between pb-4 border-b ${isDarkMode ? 'border-slate-700' : 'border-gray-100'} mb-6`}>
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}

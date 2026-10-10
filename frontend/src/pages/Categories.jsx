@@ -4,7 +4,27 @@ import ConfirmationModal from '../Components/ConfirmationModal';
 import { useToast } from '../context/ToastContext';
 import { Plus, Edit3, Trash2, X, Folder } from 'lucide-react';
 
-export default function Categories({ categories = [], setCategories }) {
+export default function Categories({
+  categories = [],
+  setCategories,
+  loadAppData,
+  isDarkMode = false,
+}) {
+
+  const pageStyle = isDarkMode
+    ? 'bg-slate-900 text-slate-100'
+    : 'bg-[#F8FAFC] text-gray-900';
+
+  const cardStyle = isDarkMode
+    ? 'bg-slate-800 border-slate-700'
+    : 'bg-white border-gray-200';
+
+  const primaryText = isDarkMode ? 'text-slate-100' : 'text-gray-900';
+  const secondaryText = isDarkMode ? 'text-slate-300' : 'text-gray-500';
+
+  const inputStyle = isDarkMode
+    ? 'bg-white text-gray-900 border-gray-300'
+    : 'bg-gray-50 text-gray-900 border-gray-200';
   const [loading, setLoading] = useState(false);
   const { showToast } = useToast();
   const [itemToDelete, setItemToDelete] = useState(null);
@@ -128,11 +148,11 @@ export default function Categories({ categories = [], setCategories }) {
   };
 
   return (
-    <div className="w-full min-h-screen p-4 sm:p-6 lg:p-8 bg-[#F8FAFC]">
+    <div className={`w-full min-h-screen p-4 sm:p-6 lg:p-8 ${pageStyle}`}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Categories</h2>
-          <p className="text-sm text-gray-500 mt-1">
+          <h2 className={`text-2xl font-bold ${primaryText}`}>Categories</h2>
+          <p className={`text-sm ${secondaryText} mt-1`}>
             Organize your expenses into categories.
           </p>
         </div>
@@ -147,16 +167,16 @@ export default function Categories({ categories = [], setCategories }) {
       </div>
 
       {loading ? (
-        <div className="text-center py-12 text-gray-500">
+        <div className={`text-center py-12 ${secondaryText}`}>
           Loading categories...
         </div>
       ) : categories.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-2xl p-10 text-center">
+        <div className={`${cardStyle} border rounded-2xl p-10 text-center`}>
           <Folder className="w-10 h-10 mx-auto text-gray-300 mb-3" />
-          <h3 className="text-lg font-semibold text-gray-800">
+          <h3 className={`text-lg font-bold ${primaryText} mb-1`}>
             No categories yet
           </h3>
-          <p className="text-sm text-gray-500 mt-1 mb-5">
+          <p className={`text-xs ${secondaryText} line-clamp-2`}>
             Create your first expense category to get started.
           </p>
           <button
@@ -172,7 +192,7 @@ export default function Categories({ categories = [], setCategories }) {
           {categories.map((category) => (
             <div
               key={category.id}
-              className="bg-white p-6 rounded-2xl border border-gray-200/80 shadow-sm flex flex-col justify-between hover:shadow-md transition"
+              className={`${cardStyle} p-6 rounded-2xl border shadow-sm flex flex-col justify-between hover:shadow-md transition`}
             >
               <div>
                 <div className="flex items-start justify-between mb-4">
@@ -180,21 +200,21 @@ export default function Categories({ categories = [], setCategories }) {
                     <Folder className="w-6 h-6" />
                   </div>
 
-                  <span className="text-[11px] font-semibold px-2.5 py-1 rounded-md bg-gray-100 text-gray-600">
+                  <span className={`block text-xs font-semibold ${secondaryText} mb-1`}>
                     Expense
                   </span>
                 </div>
 
-                <h3 className="text-lg font-bold text-gray-900 mb-1">
+                <h3 className={`text-lg font-bold ${primaryText} mb-1`}>
                   {category.name}
                 </h3>
 
-                <p className="text-xs text-gray-500 line-clamp-2">
+                <p className={`text-xs ${secondaryText} line-clamp-2`}>
                   {category.description || 'No description added.'}
                 </p>
               </div>
 
-              <div className="pt-4 mt-4 border-t border-gray-100 flex items-center justify-end gap-1">
+              <div className={`pt-4 mt-4 border-t ${isDarkMode ? 'border-slate-700' : 'border-gray-100'} flex items-center justify-end gap-1`}>
                 <button
                   onClick={() => handleOpenModal(category)}
                   className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
@@ -227,9 +247,9 @@ export default function Categories({ categories = [], setCategories }) {
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
-            <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-4">
-              <h3 className="text-lg font-bold text-gray-900">
+          <div className={`${cardStyle} rounded-2xl max-w-md w-full p-6 shadow-2xl relative`}>
+            <div className={`flex items-center justify-between pb-4 border-b ${isDarkMode ? 'border-slate-700' : 'border-gray-100'} mb-4`}>
+              <h3 className={`text-lg font-bold ${primaryText}`}>
                 {editingCategory ? 'Edit Category' : 'Create New Category'}
               </h3>
 
@@ -259,7 +279,7 @@ export default function Categories({ categories = [], setCategories }) {
                       name: e.target.value,
                     })
                   }
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className={`w-full ${inputStyle} border rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500`}
                 />
               </div>
 
@@ -282,22 +302,30 @@ export default function Categories({ categories = [], setCategories }) {
                       description: e.target.value,
                     })
                   }
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none"
+                  className={`w-full ${inputStyle} border rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none`}
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 mt-6">
+              <div className={`flex items-center justify-end gap-3 pt-4 border-t ${isDarkMode ? 'border-slate-700' : 'border-gray-100'} mt-6`}>
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition"
+                  className={`px-4 py-2 text-sm font-semibold rounded-xl transition ${
+                    isDarkMode
+                      ? 'text-slate-200 hover:bg-slate-700'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
                 >
                   Cancel
                 </button>
 
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md shadow-blue-500/20 transition"
+                  className={`px-4 py-2 text-sm font-semibold rounded-xl transition ${
+                    isDarkMode
+                      ? 'text-slate-200 hover:bg-slate-700'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
                 >
                   {editingCategory ? 'Save Changes' : 'Create Category'}
                 </button>
