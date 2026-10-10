@@ -4,7 +4,7 @@ A full-stack expense management application built with React, Flask, PostgreSQL,
 
 ## Current Architecture
 
-![Expense Platform System Architecture](docs/Expense_Platform_System_Architecture.png)
+![Expense Platform System Architecture](docs/Expense%20Platform%20System%20Architecture.png)
 
 Internet -> Cloudflare / HTTPS -> AWS EC2 Ubuntu -> Docker Compose -> Nginx -> React/Flask -> PostgreSQL 16.
 
