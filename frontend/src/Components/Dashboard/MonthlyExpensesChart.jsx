@@ -1,3 +1,4 @@
+import { formatCurrency } from '../../utils/currency';
 import { useMemo } from 'react';
 import {
   ResponsiveContainer,
@@ -9,8 +10,19 @@ import {
   Tooltip,
 } from 'recharts';
 
-export default function MonthlyExpensesChart({ transactions = [] }) {
+export default function MonthlyExpensesChart({
+  transactions = [],
+  currency = 'NGN (₦)',
+  isDarkMode = false,
+}) {
   const currentYear = new Date().getFullYear();
+
+  const cardStyle = isDarkMode
+    ? 'bg-slate-800 border-slate-700'
+    : 'bg-white border-gray-200/80';
+
+  const titleStyle = isDarkMode ? 'text-slate-100' : 'text-gray-900';
+  const textStyle = isDarkMode ? 'text-slate-300' : 'text-gray-500';
 
   const monthsData = useMemo(() => {
     const months = [
@@ -52,37 +64,37 @@ export default function MonthlyExpensesChart({ transactions = [] }) {
     (item) => item.expense > 0
   );
 
-  const formatCurrency = (value) =>
-    `₦${Number(value).toLocaleString()}`;
+  const formatAmount = (value) =>
+    formatCurrency(value, currency);
 
   return (
-    <div className="bg-white p-6 rounded-2xl border border-gray-200/80 shadow-sm">
+    <div className={`${cardStyle} p-6 rounded-2xl border shadow-sm`}>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-lg font-bold text-gray-900">
+          <h2 className={`text-lg font-bold ${titleStyle}`}>
             Monthly Expenses
           </h2>
 
-          <p className="text-xs font-medium text-gray-500 mt-0.5">
+          <p className={`text-xs font-medium ${textStyle} mt-0.5`}>
             Monthly expense overview for {currentYear}
           </p>
         </div>
 
         <div>
-          <span className="block text-[10px] uppercase font-bold text-gray-400">
+          <span className={`block text-[10px] uppercase font-bold ${textStyle}`}>
             This Month
           </span>
 
           <span className="text-base font-extrabold text-rose-600">
-            {formatCurrency(currentMonthExpense)}
+            {formatAmount(currentMonthExpense)}
           </span>
         </div>
       </div>
 
       {/* Chart */}
       {!hasExpenses ? (
-        <div className="h-64 flex items-center justify-center text-sm text-gray-400">
+        <div className={`h-64 flex items-center justify-center text-sm ${textStyle}`}>
           No expenses recorded for {currentYear}.
         </div>
       ) : (
@@ -104,7 +116,7 @@ export default function MonthlyExpensesChart({ transactions = [] }) {
 
               <XAxis
                 dataKey="month"
-                tick={{
+                tick={{ fill: isDarkMode ? '#CBD5E1' : '#6B7280',
                   fontSize: 11,
                 }}
                 tickLine={false}
@@ -112,13 +124,13 @@ export default function MonthlyExpensesChart({ transactions = [] }) {
               />
 
               <YAxis
-                tick={{
+                tick={{ fill: isDarkMode ? '#CBD5E1' : '#6B7280',
                   fontSize: 10,
                 }}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(value) =>
-                  `₦${Number(value).toLocaleString()}`
+                  formatAmount(value)
                 }
                 width={75}
               />
