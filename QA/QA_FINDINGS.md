@@ -563,3 +563,18 @@ Required correction: Review frontend asset requirements and add a tested, restri
 Retest: Inspect response headers from the public HTTPS URL and run browser smoke tests for login, navigation, and API requests under the CSP. Confirm there are no unexplained CSP violations.
 
 Closure evidence: Header capture from the deployed HTTPS endpoint, reviewed CSP policy, and browser test evidence. Do not report HSTS as enabled unless observed on HTTPS responses.
+
+
+## QA-FIND-051 — Login/register rate limits may group all users behind Nginx
+
+Classification: Confirmed proxy-aware rate-limit configuration gap. Status: Open. Priority: Medium–High; availability and abuse prevention.
+
+Evidence: The authentication routes apply a limit of five requests per minute to registration and login. The limiter uses Flask-Limiter's `get_remote_address`. The reviewed backend does not configure trusted-proxy handling, while Nginx forwards requests to the backend and sets X-Forwarded-For. Without a deliberately configured trusted-proxy policy, Flask may see the Nginx container address as the remote address for all users. This can make legitimate users share the same small request limit and allow one client's repeated attempts to affect other users. The limiter also uses its default in-memory storage unless production storage is configured.
+
+Impact: Login and registration can be throttled for unrelated users, and the rate limit can reset on restart or differ between workers. Rate limiting may therefore be both too broad and inconsistent in production.
+
+Required correction: Backend/DevOps must configure proxy trust only for the known Nginx hop(s), using the correct trusted proxy count and ensuring the edge proxy overwrites/appends forwarding headers safely. Configure shared production rate-limit storage and document behavior if that store is unavailable. Do not blindly trust arbitrary client-supplied X-Forwarded-For values.
+
+Retest: Send login/register attempts through the public Nginx endpoint from two independent client addresses. Confirm each client's limit is tracked separately, excess requests receive 429, and the second client remains usable. Repeat across workers/restarts to verify shared storage behavior.
+
+Closure evidence: Reviewed proxy configuration, rate-limit storage configuration, automated or controlled test results from separate client addresses, response codes, and deployed commit/version.
