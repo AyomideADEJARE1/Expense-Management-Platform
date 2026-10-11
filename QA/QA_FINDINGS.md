@@ -33,7 +33,7 @@ Retest by searching for an existing expense and selecting the result. Confirm th
 ## QA-FIND-005 — Required date/category filtering is not exposed in the transaction workflow
 Classification: Requirement gap; correction proposed in PR #54. Status: Retest pending.
 
-The upstream `main` branch and the pre-correction integration branch expose search and an All/Expense type selector, but no transaction date/category filter controls. PR #54 now proposes start-date/end-date and category controls, plus matching API query support. CI and browser retests are pending.
+The upstream `main` branch and the pre-correction integration branch expose search and an All/Expense type selector, but no transaction date/category filter controls. PR #54 now proposes start-date/end-date and category controls, plus matching API query support. The date-range API regression test and frontend build passed in CI run `38164448383`; browser-level filtering verification remains pending.
 
 ## QA-FIND-006 — CSV export workflow needs end-to-end verification
 Classification: Correction proposed in PR #54; retest pending.
@@ -132,21 +132,21 @@ Required action: run `npm audit` against the exact lockfile revision, record the
 
 
 ## QA-FIND-018 — API CSV export can emit spreadsheet formulas from user-controlled text
-Classification: Security defect. Status: Correction proposed in PR #54; retest pending. Priority: High.
+Classification: Security defect. Status: Formula-neutralization helper tests PASS in CI run `38164448383`; actual file/browser retest pending. Priority: High.
 
 The backend `GET /api/expenses/export` writes expense descriptions and category names directly into CSV cells. CSV quoting alone does not prevent spreadsheet formula execution when a cell begins with characters such as `=`, `+`, `-`, or `@`. The frontend export had the same weakness for formula characters preceded by whitespace.
 
 The correction proposed in PR #54 prefixes potentially executable text cells in both backend and frontend CSV exports and adds regression tests for common formula prefixes. Retest both export paths with descriptions containing formula prefixes and leading whitespace before closing this finding.
 
 ## QA-FIND-019 — Non-finite or oversized monetary values can trigger server/database errors
-Classification: Input-validation defect. Status: Correction proposed in PR #54; retest pending. Priority: Medium.
+Classification: Input-validation defect. Status: Create-path regression tests PASS in CI run `38164448383`; update-path coverage pending. Priority: Medium.
 
 The expense and budget routes parse numeric input as `Decimal`, but comparing non-finite values such as `NaN` can raise a decimal exception rather than returning a controlled validation response. Values beyond the database column's supported precision can also fail at persistence time.
 
 The correction proposed in PR #54 rejects non-finite values and values at or above the maximum supported amount before database writes. Regression tests now cover non-finite and oversized expense and budget creation values. Update routes still need explicit tests for non-finite and oversized amounts.
 
 ## QA-FIND-020 — Category endpoints do not validate JSON field types before string operations
-Classification: Input-validation defect. Status: Correction proposed in PR #54; retest pending. Priority: Medium.
+Classification: Input-validation defect. Status: Create-path regression tests PASS in CI run `38164448383`; update-path coverage pending. Priority: Medium.
 
 The category routes call `.strip()` on the supplied category name without first confirming that it is a string, and they pass arbitrary JSON types for descriptions toward persistence. A request with a numeric name or list/object description can therefore produce an unhandled exception instead of a client error.
 
@@ -168,7 +168,7 @@ The upstream `main` `docker-compose.yml` hard-codes `expense_user`, `expense_pas
 The correction requires a coordinated configuration change: use Compose environment interpolation or a documented secret mechanism, provide safe example values only for local development, ensure the backend and PostgreSQL receive the same configured credentials, and verify a clean checkout can start without committing a real `.env`. Do not deploy until the production password is confirmed to be externally configured rather than relying on the repository defaults.
 
 ## QA-FIND-023 — Deployment health check verifies application reachability but not database readiness
-Classification: Observability/release-verification gap. Status: Correction proposed in PR #54; retest pending. Priority: Medium.
+Classification: Observability/release-verification gap. Status: Nginx/CD correction proposed in PR #54; runtime route retest pending. Priority: Medium.
 
 The public Nginx health route `/api/health` maps to backend `/health`, which returns `status: ok` without checking PostgreSQL. A separate `/health/db` endpoint checks database connectivity, and Nginx also exposes it as `/api/health/db`; however, the deployment workflow's post-deployment health check currently calls only `/api/health`.
 
@@ -184,7 +184,7 @@ PR #54 now mounts the second migration for fresh database initialization and run
 
 
 ## QA-FIND-025 — Authentication/profile routes can raise errors for malformed JSON field types
-Classification: Input-validation defect. Status: Correction proposed in PR #54; retest pending. Priority: Medium.
+Classification: Input-validation defect. Status: Covered malformed-field, profile, email, and name-limit tests PASS in CI run `38164448383`; broader auth/security coverage pending. Priority: Medium.
 
 The integration branch's registration and login routes call `.strip()` on name/email fields without first validating their JSON types. The profile update route also assumes first and last names are strings, and checks currency membership against a set without first ensuring the supplied value is a string. Numeric, list, or object values can therefore produce unhandled exceptions instead of controlled HTTP 400 responses.
 
@@ -192,7 +192,7 @@ PR #54 now validates registration/login field types, profile name types, and cur
 
 
 ## QA-FIND-026 — Expense and budget endpoints do not validate category ID types
-Classification: Input-validation defect. Status: Correction proposed in PR #54; retest pending. Priority: Medium.
+Classification: Input-validation defect. Status: Create-path regression tests PASS in CI run `38164448383`; update-path coverage pending. Priority: Medium.
 
 The expense and budget endpoints passed arbitrary JSON `category_id` values into SQLAlchemy lookups. Arrays, objects, booleans, zero, or negative values could cause unexpected database behavior or unhandled errors rather than a controlled validation response.
 
@@ -207,7 +207,7 @@ The Flask app assigns `SECRET_KEY` and `JWT_SECRET_KEY` directly from the `SECRE
 Required action: define the production-mode configuration convention, reject missing/default/weak secrets at startup in production, document generation and rotation, and ensure CI uses a separate non-production test key. This audit does not establish that the live production secret is weak; it establishes that the application does not currently enforce a safe value.
 
 ## QA-FIND-028 — PostgreSQL port configuration was ignored by the application
-Classification: Configuration defect. Status: Correction proposed in PR #54; retest pending. Priority: Low.
+Classification: Configuration defect. Status: Code correction included in PR #54; non-default-port verification pending. Priority: Low.
 
 The backend constructs its SQLAlchemy URL from PostgreSQL environment variables but hard-coded port 5432 instead of reading `POSTGRES_PORT`. This made the documented port setting ineffective for non-default database configurations. PR #54 now reads the configured port with 5432 as the default; CI and a non-default-port configuration test should verify the behavior.
 
