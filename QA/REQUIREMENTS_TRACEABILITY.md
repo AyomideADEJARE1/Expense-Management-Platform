@@ -10,7 +10,7 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 | REQ-04 | Delete expenses | TC-EXP-003 | PENDING |
 | REQ-05 | Expense categories | TC-CAT-001–003 | OBSERVATION |
 | REQ-06 | Monthly summaries | TC-REP-001 | PENDING |
-| REQ-07 | Budget limits | TC-BUD-001–003 | PENDING |
+| REQ-07 | Budget limits | TC-BUD-001–004 | API functionality present; database-level uniqueness risk remains open and functional retests are pending |
 | REQ-08 | Dashboard with charts | TC-DASH-001–003 | FINDING OPEN |
 | REQ-09 | Date/category filtering | TC-FLT-001–005 | Date-range/category UI and API corrections proposed in PR #54; CI and browser retest pending |
 | REQ-10 | CSV export | TC-EXP-004–005 | UI correction proposed in PR #54; retest pending |
@@ -21,8 +21,8 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 | REQ-15 | GitHub Actions CI/CD | TC-CI-001–006 | CI checks and initial backend smoke tests pass on PR #54; full functional coverage remains incomplete |
 | REQ-16 | Docker build/deployment | TC-CI-003, TC-CD-001–006 | Image build checks pass; live deployment and health verification remain pending |
 | REQ-17 | Nginx reverse proxy | TC-DEV-004 | PENDING |
-| REQ-18 | Health checks | TC-HLT-001–003, TC-CD-006 | Basic app health endpoint exists; database readiness is not included in the CD health gate; live retest pending |
-| REQ-19 | Secure environment variables | TC-SEC-001–004, TC-ENV-001 | Secret scanning exists; hard-coded Compose database credentials remain an open security finding |
+| REQ-18 | Health checks | TC-HLT-001–004, TC-CD-006–007 | Nginx database-health route and CD dual health gate proposed in PR #54; CI/live retest pending |
+| REQ-19 | Secure environment variables | TC-SEC-001–004, TC-ENV-001 | Secret scanning exists; hard-coded Compose credentials and production signing-secret enforcement remain open |
 | REQ-20 | Logs/monitoring | TC-MON-001–002 | PENDING |
 | REQ-21 | Architecture documentation | TC-DOC-001 | PENDING |
 | REQ-22 | Accurate README/setup | TC-DOC-002, TC-DOC-003, TC-ENV-001 | README correction proposed in PR #54; review pending |
