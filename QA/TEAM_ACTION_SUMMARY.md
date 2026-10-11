@@ -290,6 +290,18 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Evidence to close:** Passing CI, API results for both cases, session recovery result, and tested commit SHA.
 
+### 27. DevOps: keep local secrets out of Docker images
+
+**What happens:** The backend and frontend Dockerfiles copy source directories into their build stages. Without .dockerignore files, a local environment file can enter the build context even when Git ignores it.
+
+**Why it matters:** Local secrets may be copied into an image layer or a published image. Host node_modules can also make frontend builds larger and less reproducible.
+
+**Required correction:** The correction branch adds backend/.dockerignore and frontend/.dockerignore to exclude environment files. The frontend ignore file also excludes node_modules, generated output, and logs. CI checks that the ignore files and required rules exist.
+
+**How QA will verify:** Confirm CI passes the ignore-rule check and both Docker builds. For stronger evidence, build with harmless sentinel environment files present and verify the sentinel does not appear in the image or frontend bundle.
+
+**Evidence to close:** Ignore-file diff, CI run, successful image builds, and sentinel-based verification where available.
+
 ## Release checklist
 
 Do not mark a check as passed until evidence is attached.
