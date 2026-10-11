@@ -136,3 +136,5 @@ Record date, commit/branch, environment, steps, expected result, actual result, 
 | TC-SEC-005 | Nginx security response headers | Frontend/API responses include the configured baseline security headers |
 
 | TC-SEC-006 | Frontend dependency audit | Lockfile resolves source-map-js to 1.2.2+ and npm audit reports no high/critical finding |
+
+| TC-SEC-007 | Cross-user expense isolation | User A can list/export their own expense; User B's list and CSV export must not contain that expense; execute on an isolated test database |
