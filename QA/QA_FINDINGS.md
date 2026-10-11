@@ -362,6 +362,8 @@ Required tests: inspect the resolved Compose configuration without printing secr
 
 Closure evidence: correction on the target branch, successful clean setup, configuration tests, and a secret scan. A README warning alone is not sufficient.
 
+Correction status update — 2026-10-11: PR #54's correction branch now requires POSTGRES_USER, POSTGRES_PASSWORD, and POSTGRES_DB through root Compose environment variables, updates the root .env.example, and updates the README/Docker setup steps. The source correction is committed, but the current CI run and clean-start configuration/runtime checks must pass before this finding can close. If the former fixed password was ever used on a reachable host, rotate it.
+
 ## QA-FIND-038 — Category write endpoints have no authentication or role authorization
 Classification: Access control. Priority: High; security blocker. Status: Open.
 
@@ -494,7 +496,7 @@ Retest: Open the create and edit budget modals. Confirm the spending value canno
 Closure evidence: CI result for the fixing commit, browser screenshot, and comparison between displayed spending and the API/expense records. Source correction alone is not a pass.
 
 
-## QA-FIND-046 — Category creation, update, and deletion do not require authentication
+## QA-FIND-047 — Category creation, update, and deletion do not require authentication
 
 Classification: Confirmed security finding on upstream main and the current correction branch. Status: Open; authorization policy and code correction required. Priority: High.
 
@@ -507,20 +509,6 @@ Required correction: Team lead/product owner must confirm the intended category 
 Retest: Send POST, PUT, and DELETE requests without a token; they must be rejected. Repeat as a normal user and as an authorized role according to the agreed policy. Verify that one user's actions cannot change another user's category data.
 
 Closure evidence: Recorded category policy decision, code diff, automated authorization tests, tested commit SHA, and API results for each role.
-
-## QA-FIND-047 — Compose database credentials were embedded in the Compose file
-
-Classification: Confirmed configuration/security finding on upstream main; correction proposed in PR #54. Status: Source correction committed on the correction branch; CI and local/AWS verification pending. Priority: High for deployment hygiene.
-
-Evidence: Upstream `docker-compose.yml` contains literal `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB` values and repeats the password in the backend environment. The correction branch replaces these literals with required Compose environment variables and updates the root `.env.example` and setup documentation.
-
-Impact: Fixed credentials are easy to copy into other environments, encourage password reuse, and make it difficult to use distinct development and production secrets. A password committed to Git should be treated as exposed if it was ever used outside a disposable local environment.
-
-Required correction: Keep the environment-variable configuration; configure the root `.env` locally and protected deployment variables on AWS; never commit real secret values. Rotate any fixed password if it has been used in a shared or deployed environment. Do not delete or recreate the persistent database volume as part of a credential change without a backup and an approved migration plan.
-
-Retest: Run `docker compose config` with a correctly populated local `.env`; verify it fails clearly when required variables are absent; verify backend and PostgreSQL use the same configured values without printing the password.
-
-Closure evidence: Sanitized Compose configuration, local startup/health results, CI result for the correction commit, and proof that deployed credentials are supplied outside Git. No secret values should appear in the evidence.
 
 ## QA-FIND-048 — Frontend CI has no automated test script
 
