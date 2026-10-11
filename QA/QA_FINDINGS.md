@@ -193,3 +193,11 @@ Classification: Input-validation defect. Status: Correction proposed in PR #54; 
 The integration branch's registration and login routes call `.strip()` on name/email fields without first validating their JSON types. The profile update route also assumes first and last names are strings, and checks currency membership against a set without first ensuring the supplied value is a string. Numeric, list, or object values can therefore produce unhandled exceptions instead of controlled HTTP 400 responses.
 
 PR #54 now validates registration/login field types, profile name types, and currency types, and adds API regression tests for malformed payloads. Retest all invalid-input cases and confirm they return controlled client errors without a 500 response.
+
+
+## QA-FIND-026 — Expense and budget endpoints do not validate category ID types
+Classification: Input-validation defect. Status: Correction proposed in PR #54; retest pending. Priority: Medium.
+
+The expense and budget endpoints passed arbitrary JSON `category_id` values into SQLAlchemy lookups. Arrays, objects, booleans, zero, or negative values could cause unexpected database behavior or unhandled errors rather than a controlled validation response.
+
+PR #54 now requires a positive integer category ID when a category is supplied, while preserving `null` as the supported way to remove a budget's optional category. Regression tests cover malformed category IDs on expense and budget creation. Update-route coverage remains required.
