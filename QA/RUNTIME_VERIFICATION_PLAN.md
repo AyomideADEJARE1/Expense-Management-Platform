@@ -124,3 +124,15 @@ For each browser test, retain: date/time, environment and deployed commit, steps
 4. Security/data-integrity blocker: do not recommend production release while the item remains open.
 5. CI green: record the exact commit and run. Never describe it as proof that browser or live deployment testing passed.
 6. No evidence/no pass: an unexecuted check remains PENDING, not PASS.
+
+## RV-10 — Honor and verify the dedicated JWT signing secret
+Related finding: QA-FIND-036. Priority: High; security configuration blocker.
+
+Why it matters: The previous app configuration read SECRET_KEY for JWT_SECRET_KEY even though CI and operators can supply JWT_SECRET separately. An operator could rotate JWT_SECRET and believe token signing had changed while the app continued using SECRET_KEY.
+
+Source correction now proposed in PR #54: app.py reads JWT_SECRET_KEY first, then JWT_SECRET, and uses SECRET_KEY only as a backward-compatible fallback if no dedicated JWT variable is set. The example environment file now documents separate Flask and JWT secret placeholders.
+
+Remaining action: remove the production ambiguity by requiring a dedicated JWT signing secret in production; reject missing or placeholder values and add configuration tests proving that the dedicated variable is used. The compatibility fallback must not allow production to start without the dedicated JWT key.
+
+Pass evidence: automated tests show that distinct Flask and JWT values populate distinct config keys; production fails when either is missing/placeholder; test environment remains deterministic; CI and secret scan pass. Until those tests and fail-closed behavior exist, QA-FIND-036 remains RETEST PENDING.
+
