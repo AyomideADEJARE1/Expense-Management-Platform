@@ -47,3 +47,5 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 | REQ-34 | Category deletion reports accurate conflict/server errors | TC-CAT-006–007 | PR #54 prechecks category references, uses passive database deletes, and distinguishes the known expense foreign-key conflict (409) from unexpected failures (500); CI run 38179504988 passed both regression tests, while live runtime verification remains pending |
 
 | REQ-35 | Container build contexts exclude local secrets and host dependencies | TC-SEC-010, TC-CI-003 | PR #54 adds backend/frontend .dockerignore files and CI checks required patterns; CI run 38179504988 passed the ignore-rule check, both image builds, and sentinel inspection; the backend image excluded /app/.env and the frontend bundle excluded VITE_SECRET_SENTINEL. This proves the test sentinels were excluded, not that an actual secret was leaked |
+
+| REQ-36 | Database migrations complete before application restart | TC-CD-007 | PR #54 reorders deployment and adds a CI source-order check; staging failure/recovery verification remains pending |
