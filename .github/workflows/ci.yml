@@ -130,6 +130,31 @@ jobs:
             echo " $actual " | grep -q " $t " || { echo "::error::Missing table: $t"; exit 1; }
           done
 
+      - name: Verify duplicate legacy budgets block the uniqueness migration
+        run: |
+          createdb budget_duplicate_test
+          for f in database/migrations/001_initial_schema.sql database/migrations/002_user_settings.sql; do
+            psql -d budget_duplicate_test -v ON_ERROR_STOP=1 -q -f "$f"
+          done
+          psql -d budget_duplicate_test -v ON_ERROR_STOP=1 <<'SQL'
+          INSERT INTO users (full_name, email, password_hash)
+          VALUES ('Migration QA', 'migration-qa@example.test', 'not-a-real-hash');
+          INSERT INTO budgets (user_id, category_id, amount, month)
+          VALUES
+            (1, NULL, 100.00, DATE '2026-10-01'),
+            (1, NULL, 200.00, DATE '2026-10-01');
+          SQL
+          if psql -d budget_duplicate_test -v ON_ERROR_STOP=1 -q -f database/migrations/003_budget_uniqueness.sql >migration-duplicate.log 2>&1; then
+            echo "::error::Uniqueness migration unexpectedly accepted duplicate general budgets."
+            exit 1
+          fi
+          if ! grep -q "duplicate user/month budgets with NULL category exist" migration-duplicate.log; then
+            cat migration-duplicate.log
+            echo "::error::Migration failed, but not with the expected duplicate-data diagnostic."
+            exit 1
+          fi
+          echo "Duplicate legacy budgets are rejected with an actionable diagnostic."
+
   backend:
     name: Backend (lint & test)
     needs: detect
