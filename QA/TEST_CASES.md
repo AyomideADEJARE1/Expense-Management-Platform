@@ -155,3 +155,5 @@ Record date, commit/branch, environment, steps, expected result, actual result, 
 | TC-BUD-005 | Budget spending display in create/edit form | Spending value is read-only, helper text explains calculation, and displayed value matches recorded expenses after reload |
 
 | TC-DB-006 | Budget uniqueness migration with legacy duplicates | Migration fails safely with an actionable diagnostic before adding indexes; deployment stops and existing data remains available for manual remediation |
+
+| TC-BUD-006 | Unexpected budget commit failure | API returns a generic HTTP 500, rolls back the transaction, exposes no database details, and accepts a subsequent valid budget request |
