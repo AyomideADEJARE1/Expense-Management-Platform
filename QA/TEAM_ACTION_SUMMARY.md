@@ -142,7 +142,7 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Why it matters:** Leftover data can make tests unreliable, and incorrect database configuration could affect data outside the test environment.
 
-**Required correction:** Use a dedicated disposable test database, add a guard that refuses destructive setup unless the database is clearly a test database, and ensure reliable rollback or cleanup.
+**Required correction:** Use a dedicated disposable test database. The correction branch now has a guard that refuses to run tests unless the configured database name contains a test/testing marker. This is a safety guard, not complete cleanup; reliable rollback/cleanup and repeatable-run behavior still need verification.
 
 **QA verification and closure evidence:** Run the suite repeatedly and in a different order; retain the database guard/cleanup tests, CI output, and test database configuration.
 
