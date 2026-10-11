@@ -251,10 +251,12 @@ expense-postgres
 
 ## 7. Database Initialization
 
-The Compose configuration mounts:
+The Compose configuration mounts these versioned SQL files:
 
 ```text
 database/migrations/001_initial_schema.sql
+database/migrations/002_user_settings.sql
+database/migrations/003_budget_uniqueness.sql
 ```
 
 into:
@@ -263,11 +265,7 @@ into:
 /docker-entrypoint-initdb.d/001_initial_schema.sql
 ```
 
-The migration is mounted read-only.
-
-PostgreSQL executes initialization scripts from this directory when a new database cluster is created.
-
-This means the initial application schema is automatically created when the PostgreSQL data volume is initialized for the first time.
+The files are mounted read-only. PostgreSQL executes initialization scripts from this directory when a new database cluster is created, in filename order. Migration 001 creates the initial schema; migration 002 adds user settings; migration 003 adds database-level budget uniqueness, including separate handling for budgets with a NULL category. Migration 003 stops with an actionable error if duplicate legacy budgets exist, so those records must be reviewed and resolved before deployment can continue.
 
 ---
 
