@@ -109,3 +109,6 @@ Record date, commit/branch, environment, steps, expected result, actual result, 
 
 | TC-DB-004 | Fresh database initialization | All required columns from migrations 001 and 002 exist after Compose startup |
 | TC-DB-005 | Existing persistent database upgrade | Idempotent user-settings migration adds missing columns without rerunning initial schema |
+
+| TC-AUTH-006 | Registration/login with numeric, list, or object fields | API returns HTTP 400 without an unhandled server error |
+| TC-AUTH-007 | Profile update with non-string name/currency | API returns HTTP 400 and profile data remains unchanged |
