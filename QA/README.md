@@ -12,7 +12,13 @@ The upstream README documents a live URL, while earlier QA notes described the e
 
 The upstream repository's `main` branch is reviewed separately from `integration/deployable-main`. PR #53 proposes QA documentation for upstream `main`; PR #54 proposes code corrections against `integration/deployable-main` because that branch contains integration-specific profile settings and migration 002. The fork's `stephen/qa-findings-followup` and `stephen/qa-transaction-fixes` branches are the working copies behind those unmerged pull requests. Neither PR has been merged.
 
+Deployment decision: the QA owner reports that the project tutor approved AWS as an alternative deployment target. AWS EC2 is the target used in this audit. This records the target choice; it does not prove that the latest code is deployed or that the public health checks and browser flows pass.
+
+Start with TEAM_ACTION_SUMMARY.md for the plain-language action list, then use QA_FINDINGS.md and RUNTIME_VERIFICATION_PLAN.md for source evidence, required corrections, verification steps, and closure evidence.
+
 Documents:
+- TEAM_ACTION_SUMMARY.md — role-based team actions with impact, required correction, retest steps, and closure evidence.
+- RUNTIME_VERIFICATION_PLAN.md — detailed runtime gates and evidence required before closure.
 - TEST_PLAN.md — scope, method, environments, evidence and release criteria.
 - REQUIREMENTS_TRACEABILITY.md — requirements mapped to verification coverage.
 - TEST_CASES.md — functional, API, security, database, infrastructure, CI/CD and documentation tests.
