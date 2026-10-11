@@ -454,7 +454,6 @@ def test_expenses_and_csv_export_are_isolated_between_users(client):
     assert private_description not in other_export.get_data(as_text=True)
 
 
-
 def test_budget_uniqueness_indexes_exist():
     with app.app_context():
         indexes = db.session.execute(
@@ -502,7 +501,6 @@ def test_duplicate_general_budget_returns_conflict(client):
     assert len(listed.get_json()["data"]) == 1
 
 
-
 def test_unexpected_budget_commit_failure_rolls_back_and_session_recovers(
     client, monkeypatch
 ):
@@ -547,7 +545,6 @@ def test_unexpected_budget_commit_failure_rolls_back_and_session_recovers(
     assert len(listed.get_json()["data"]) == 1
 
 
-
 def test_only_budget_unique_index_violations_map_to_conflict():
     known_unique_violation = SimpleNamespace(
         orig=SimpleNamespace(
@@ -565,4 +562,7 @@ def test_only_budget_unique_index_violations_map_to_conflict():
     )
 
     assert _is_budget_uniqueness_violation(known_unique_violation) is True
-    assert _is_budget_uniqueness_violation(unrelated_integrity_violation) is False
+    assert (
+        _is_budget_uniqueness_violation(unrelated_integrity_violation)
+        is False
+    )
