@@ -109,6 +109,8 @@ def database_health():
         })
 
     except Exception:
+        db.session.rollback()
+
         return jsonify({
             "status": "error",
             "database": "disconnected"
