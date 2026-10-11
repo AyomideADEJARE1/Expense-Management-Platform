@@ -17,7 +17,6 @@ export default function Budgets({
   categories = [],
   budgets = [],
   setBudgets,
-  loadAppData,
   isDarkMode = false,
 }) {
 
