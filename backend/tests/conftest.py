@@ -1,13 +1,13 @@
 import sys
 from pathlib import Path
 
+import pytest
+from sqlalchemy.engine import make_url
+
+
 BACKEND_DIR = str(Path(__file__).resolve().parents[1])
 if BACKEND_DIR not in sys.path:
     sys.path.insert(0, BACKEND_DIR)
-
-
-import pytest
-from sqlalchemy.engine import make_url
 
 
 def is_test_database(database_name):
