@@ -559,6 +559,8 @@ Closure evidence: Reviewed proxy configuration, rate-limit storage configuration
 
 ## CI status note — 2026-10-11
 
-Run 38178336973 passed the database migration job, including migration 003 and the legacy-duplicate guard, but the overall run failed at backend Flake8 because the newly added tests had extra blank lines and one long line. The test formatting was corrected in code commit 025b7e758b7a63495e2ca5ebdc4ccb69f5a5c84c. A fresh CI result for that fixing commit is pending. Do not describe the current code head as CI-green until the new run passes.
+The first run on the budget migration/test changes (38178336973, commit 08920f92aca37d865771f381f14b077c67bebfc1) failed at backend Flake8 because the new tests had formatting issues. Those issues were corrected.
 
-The fresh-database migration checks are encouraging but do not replace a test against a populated existing database. If migration 003 detects duplicate legacy budgets, deployment must stop until the data is reviewed and corrected.
+The latest CI run, 38178490904, passed for code commit 2ff1e1a39f7bbccd62e95a1c112dd27e59eda4ef. All eight jobs passed: secret scan, component detection, database migrations, backend lint/tests, frontend lint/build, both Docker builds, and the aggregate ci-success check. The backend suite collected and passed 31 tests. The database job successfully applied migrations 001–003, verified the uniqueness indexes, confirmed legacy duplicate budgets stop migration with an actionable diagnostic, and validated the resolved Compose environment configuration without the old fixed password.
+
+Important limitation: the frontend package still has no test script, so the optional frontend test step can pass without running frontend tests. CI does not prove a live AWS deployment, a populated existing-volume upgrade, browser end-to-end behavior, or the open category authorization/proxy-aware rate-limit issues. Those still require their documented verification and evidence.
