@@ -298,7 +298,7 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Required correction:** The correction branch adds backend/.dockerignore and frontend/.dockerignore to exclude environment files. The frontend ignore file also excludes node_modules, generated output, and logs. CI checks that the ignore files and required rules exist.
 
-**How QA will verify:** Confirm CI passes the ignore-rule check and both Docker builds. For stronger evidence, build with harmless sentinel environment files present and verify the sentinel does not appear in the image or frontend bundle.
+**How QA will verify:** CI now builds with harmless sentinel environment files present, loads the images, and checks that the backend image has no /app/.env and the frontend bundle has no sentinel variable. Confirm the new CI run passes.
 
 **Evidence to close:** Ignore-file diff, CI run, successful image builds, and sentinel-based verification where available.
 
