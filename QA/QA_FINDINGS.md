@@ -479,3 +479,16 @@ Correction: The correction branch now preserves `editingBudget.month` when editi
 Retest: Create or seed a budget for a past month, edit only its amount, save, reload the page, and verify the month remains unchanged. Also create a new budget and verify it still defaults to the current month. Check the API response and database row for both cases.
 
 Closure evidence: CI result for the fixing commit, browser/API test output, before-and-after budget month values, and tested commit SHA. The source correction is not a pass until the retest succeeds.
+
+
+## QA-FIND-046 — Budget form allows editing a spending value that is not saved
+
+Classification: Confirmed UI/API contract mismatch on the reviewed source; correction proposed in PR #54. Status: Retest pending. Priority: Low–Medium; user clarity and data consistency.
+
+Evidence: The budget modal displays an editable “Amount Already Spent” field, but the save payload contains only the category, budget amount, and month. The entered spending value is not sent to the API or persisted. Actual spending is derived from recorded expenses, so the editable field incorrectly suggests the user can set a value that the application ignores.
+
+Correction: The correction branch makes the spending field read-only and adds helper text explaining that the value is calculated from recorded expenses. Fixing commit: `e767d59418efdd37b5221af27b421cb413689ea7`.
+
+Retest: Open the create and edit budget modals. Confirm the spending value cannot be changed, helper text is visible, saving the budget updates only the spending limit, and the displayed spent amount matches the recorded expense data after reload.
+
+Closure evidence: CI result for the fixing commit, browser screenshot, and comparison between displayed spending and the API/expense records. Source correction alone is not a pass.
