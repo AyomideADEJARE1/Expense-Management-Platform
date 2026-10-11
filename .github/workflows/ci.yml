@@ -322,6 +322,19 @@ jobs:
       - uses: docker/setup-buildx-action@v4
         if: steps.dockerfile.outputs.present == 'true'
 
+      - name: Verify Docker build context ignore rules
+        run: |
+          for file in backend/.dockerignore frontend/.dockerignore; do
+            test -f "$file" || { echo "::error::Missing $file"; exit 1; }
+            grep -Fxq '.env' "$file" || { echo "::error::$file must exclude .env"; exit 1; }
+            grep -Fxq '.env.*' "$file" || { echo "::error::$file must exclude .env.*"; exit 1; }
+          done
+          grep -Fxq 'node_modules/' frontend/.dockerignore || {
+            echo "::error::Frontend build context must exclude node_modules."
+            exit 1
+          }
+          echo "Docker build contexts exclude local env files; frontend also excludes host dependencies."
+
       - name: Build image (no push)
         if: steps.dockerfile.outputs.present == 'true'
         uses: docker/build-push-action@v7
