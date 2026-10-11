@@ -28,7 +28,7 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 | REQ-22 | Accurate README/setup | TC-DOC-002, TC-DOC-003, TC-ENV-001 | README correction proposed in PR #54; review pending |
 | REQ-23 | Live URL | TC-CD-004 | URL is documented in README; current external availability and end-to-end function still require verification |
 
-| REQ-24 | Required cloud deployment target | TC-CD-001–006 | MISMATCH: capstone requires Azure VM; repository docs describe AWS EC2 as current production; team/instructor decision required |
+| REQ-24 | Approved cloud deployment target | TC-CD-001–006 | Decision recorded: project tutor approved AWS as an alternative, so AWS EC2 is the target for this audit. Verify successful deployment, public health routes, and the exact deployed commit/image before marking complete. |
 | REQ-25 | Database credentials are externally configured | TC-SEC-001–004, TC-ENV-001 | FINDING OPEN: Compose contains hard-coded database credentials |
 
 | REQ-26 | User-specific expense data isolation (security expectation for authenticated, user-specific expense records) | TC-SEC-007 | PENDING: regression test added to PR #54; CI rerun and broader authorization review required |
