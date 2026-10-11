@@ -613,3 +613,18 @@ Correction: PR #54 now starts only PostgreSQL, applies migrations 002 and 003, a
 Retest: Confirm the CI migration-order check passes. In a controlled staging environment, force migration 003 to fail using duplicate test data and verify the old application containers remain running and healthy. Then resolve the duplicate data, rerun deployment, and verify the intended commit is live.
 
 Closure evidence: Passing CI for the migration-order check, staging failure/recovery evidence, deployed image/commit identity, and health-check results. Source ordering alone does not prove the AWS deployment behaves as expected.
+
+
+## QA-FIND-055 — CD may attempt migrations before PostgreSQL is healthy
+
+Classification: Deployment reliability. Status: Correction proposed in PR #54; current CI verification pending. Priority: Medium–High.
+
+Evidence: After the migration-order correction, the CD script started PostgreSQL with `docker compose up -d postgres` and then immediately executed SQL migrations. Detached Compose startup does not necessarily wait until the database health check reports healthy.
+
+Impact: On a slower restart or cold VM, the migration command can run before PostgreSQL accepts connections, causing deployment to fail even when the schema and migration are valid.
+
+Correction: PR #54 now uses `docker compose up -d --wait postgres` before running migrations. CI's migration-order check was updated to require this health wait before migrations and before the application restart.
+
+Retest: Confirm the latest CI order check passes. In staging, restart PostgreSQL from a cold state and verify the workflow waits for health before applying migrations. Confirm the application services restart only after both migrations complete.
+
+Closure evidence: Passing CI for the order check and staging deployment logs showing database health before migration execution, followed by app restart and successful public health checks.
