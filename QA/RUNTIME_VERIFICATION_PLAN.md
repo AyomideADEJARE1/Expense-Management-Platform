@@ -218,3 +218,11 @@ Related finding: QA-FIND-050. Priority: Medium.
 Inspect headers from the deployed public HTTPS endpoint. Verify the existing headers remain present, review CSP compatibility with the React app, and test login/navigation/API calls with CSP enabled. Only expect HSTS after HTTPS is confirmed and the deployment layer is configured to emit it.
 
 Pass evidence: Header capture, CSP policy, browser test results, and tested deployment/version. Do not treat source configuration alone as runtime proof.
+
+
+## RV-19 — Verify rate limits through the reverse proxy
+Related finding: QA-FIND-051. Priority: Medium–High.
+
+Login and registration have per-route limits, but the backend uses get_remote_address without explicit trusted-proxy configuration and the default limiter storage is in memory. Through the deployed Nginx endpoint, test two independent client addresses. Verify one client's repeated requests do not throttle the other, excess requests return 429, and limits behave consistently across workers/restarts. Confirm forwarding headers cannot be spoofed to bypass limits.
+
+Pass evidence: Reviewed trusted-proxy count and Nginx forwarding configuration, shared production store configuration, controlled test results, response codes, and deployed version.
