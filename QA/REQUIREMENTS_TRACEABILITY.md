@@ -10,7 +10,7 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 | REQ-04 | Delete expenses | TC-EXP-003 | PENDING |
 | REQ-05 | Expense categories | TC-CAT-001–003 | OBSERVATION |
 | REQ-06 | Monthly summaries | TC-REP-001 | PENDING |
-| REQ-07 | Budget limits | TC-BUD-001–006, TC-DB-006 | PR #54 adds partial unique indexes for category and whole-month budgets, maps database uniqueness conflicts to HTTP 409, and tests the indexes/duplicate response. Fresh/existing database migration verification and CI for the latest commit are pending |
+| REQ-07 | Budget limits | TC-BUD-001–006, TC-DB-006 | PR #54 adds partial unique indexes for category and whole-month budgets, maps only known budget uniqueness violations to HTTP 409, and tests the indexes/duplicate response. CI run 38179293397 passed migrations and 33 backend tests; populated existing-volume verification and concurrent-request testing remain pending |
 | REQ-08 | Dashboard with charts | TC-DASH-001–003 | FINDING OPEN |
 | REQ-09 | Date/category filtering | TC-FLT-001–005 | Date-range/category UI and API corrections proposed in PR #54; CI and browser retest pending |
 | REQ-10 | CSV export | TC-EXP-004–005 | UI correction proposed in PR #54; retest pending |
@@ -19,7 +19,7 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 | REQ-13 | PostgreSQL | TC-DB-001–003 | PENDING |
 | REQ-14 | Docker Compose | TC-DEV-001–004 | PENDING |
 | REQ-15 | GitHub Actions CI/CD | TC-CI-001–006 | CI checks and initial backend smoke tests pass on PR #54; full functional coverage remains incomplete |
-| REQ-16 | Docker build/deployment | TC-CI-003, TC-CD-001–006, TC-DB-005–006 | Image build checks pass on the prior correction head; the budget uniqueness migration and its legacy-duplicate guard require the current CI result. Live AWS deployment and health verification remain pending |
+| REQ-16 | Docker build/deployment | TC-CI-003, TC-CD-001–006, TC-DB-005–006 | CI run 38179293397 passed migrations, Docker ignore-rule checks, and both image builds. Live AWS deployment, existing-volume upgrade, and public health verification remain pending |
 | REQ-17 | Nginx reverse proxy | TC-DEV-004 | PENDING |
 | REQ-18 | Health checks | TC-HLT-001–004, TC-CD-006–007 | Nginx database-health route and CD dual health gate proposed in PR #54; CI/live retest pending |
 | REQ-19 | Secure environment variables | TC-SEC-001–004, TC-ENV-001 | Secret scanning exists; hard-coded Compose credentials and production signing-secret enforcement remain open |
@@ -29,7 +29,7 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 | REQ-23 | Live URL | TC-CD-004 | URL is documented in README; current external availability and end-to-end function still require verification |
 
 | REQ-24 | Approved cloud deployment target | TC-CD-001–006 | Decision recorded: project tutor approved AWS as an alternative, so AWS EC2 is the target for this audit. Verify successful deployment, public health routes, and the exact deployed commit/image before marking complete. |
-| REQ-25 | Database credentials are externally configured | TC-SEC-001–004, TC-ENV-001–002 | Upstream main contains fixed Compose credentials; PR #54 replaces them with required root environment variables. CI and runtime verification of the correction are pending |
+| REQ-25 | Database credentials are externally configured | TC-SEC-001–004, TC-ENV-001–002 | Upstream main contains fixed Compose credentials; PR #54 replaces them with required root environment variables. CI run 38179293397 passed Compose interpolation validation; a clean startup and AWS secret configuration check remain pending |
 
 | REQ-26 | User-specific expense data isolation (security expectation for authenticated, user-specific expense records) | TC-SEC-007 | PENDING: regression test added to PR #54; CI rerun and broader authorization review required |
 
@@ -42,8 +42,8 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 
 | REQ-32 | Budget spending is derived from recorded expenses | TC-BUD-005 | Correction proposed in PR #54 makes the spending field read-only; browser verification against expense records remains pending |
 
-| REQ-33 | Prevent API tests from targeting non-test databases | TC-DB-007 | PR #54 adds an autouse guard that refuses a configured database name without a test/testing marker; CI and negative-configuration verification pending |
+| REQ-33 | Prevent API tests from targeting non-test databases | TC-DB-007 | PR #54 adds an autouse guard that refuses a configured database name without a test/testing marker; CI run 38178811441 passed the guard with expense_management_test, while negative non-test configuration and cleanup verification remain pending |
 
-| REQ-34 | Category deletion reports accurate conflict/server errors | TC-CAT-006–007 | PR #54 distinguishes the known expense foreign-key conflict (409) from unexpected database failures (500); CI and runtime evidence pending |
+| REQ-34 | Category deletion reports accurate conflict/server errors | TC-CAT-006–007 | PR #54 prechecks category references, uses passive database deletes, and distinguishes the known expense foreign-key conflict (409) from unexpected failures (500); CI run 38179293397 passed both regression tests, while live runtime verification remains pending |
 
-| REQ-35 | Container build contexts exclude local secrets and host dependencies | TC-SEC-010, TC-CI-003 | PR #54 adds backend/frontend .dockerignore files and CI checks required patterns; latest CI result pending |
+| REQ-35 | Container build contexts exclude local secrets and host dependencies | TC-SEC-010, TC-CI-003 | PR #54 adds backend/frontend .dockerignore files and CI checks required patterns; CI run 38179293397 passed the ignore-rule check and both image builds. Sentinel-based image inspection remains pending |
