@@ -95,3 +95,5 @@ Record date, commit/branch, environment, steps, expected result, actual result, 
 | TC-CD-006 | Public health route | Deployment health check uses the correct Nginx-routed endpoint and succeeds |
 | TC-ENV-001 | Clean checkout startup | Documented env-file setup is sufficient for Compose startup without committing real secrets |
 | TC-DOC-003 | README implementation accuracy | README paths, persistence model, setup, health route and deployment status match the integrated code |
+
+| TC-CI-005 | Frontend lint and dependency audit | ESLint completes with no errors; dependency audit findings are identified and dispositioned |
