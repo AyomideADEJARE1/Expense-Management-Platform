@@ -157,3 +157,5 @@ Record date, commit/branch, environment, steps, expected result, actual result, 
 | TC-DB-006 | Budget uniqueness migration with legacy duplicates | Migration fails safely with an actionable diagnostic before adding indexes; deployment stops and existing data remains available for manual remediation |
 
 | TC-BUD-006 | Unexpected budget commit failure | API returns a generic HTTP 500, rolls back the transaction, exposes no database details, and accepts a subsequent valid budget request |
+
+| TC-DB-007 | Run API tests with a non-test database name | Test session fails before API tests execute and reports that a test-only database is required |
