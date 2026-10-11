@@ -587,3 +587,18 @@ Correction: PR #54 now catches SQLAlchemy IntegrityError, checks for the specifi
 Retest: Attempt to delete a category referenced by an expense and verify HTTP 409 with the category-in-use message. Then simulate a database commit failure and verify HTTP 500, no internal error details in the response, the category remains available, and a subsequent valid delete succeeds.
 
 Closure evidence: Passing CI for the fixing commit, API test results for both paths, session recovery result, and tested commit SHA.
+
+
+## QA-FIND-053 — Docker build contexts lacked ignore rules for local environment files
+
+Classification: Secret exposure / container build hygiene. Status: Correction proposed in PR #54; CI verification pending. Priority: High if developers build images with local secrets present.
+
+Evidence: The reviewed repository had no root, backend, or frontend .dockerignore file. The backend Dockerfile uses `COPY . .`, so a local `backend/.env` file could be sent in the Docker build context and copied into the image even though Git ignores it. The frontend build also uses `COPY . .`; local `.env.*` files or host `node_modules` could be sent to the build context, and Vite-prefixed environment values may be embedded in built assets.
+
+Impact: A local secret can be included in a container image layer or published image, and host dependencies can make builds larger or less reproducible. A Git ignore rule alone does not exclude files from Docker build contexts.
+
+Correction: PR #54 adds backend/.dockerignore to exclude environment files, Git metadata, Python caches/virtual environments, coverage output, and tests. It adds frontend/.dockerignore to exclude environment files, Git metadata, host node_modules, dist, coverage, and logs. CI now checks that both ignore files exist and contain the required secret exclusions.
+
+Retest: Build backend and frontend images with local sentinel environment files present in the workspace. Confirm the files are excluded from the build context and no sentinel value appears in the resulting image or frontend bundle. Verify both Docker builds still succeed.
+
+Closure evidence: CI result for the ignore-rule check and image builds, reviewed ignore files, and a sentinel-based build-context test or equivalent evidence. Do not claim an actual secret was leaked unless evidence shows a real secret entered an image.
