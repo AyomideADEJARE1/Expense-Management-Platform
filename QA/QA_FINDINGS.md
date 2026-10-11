@@ -2,7 +2,7 @@
 
 Findings are evidence-based. QA is not judged by defect count.
 
-Latest completed CI checkpoint: PR #54 run `38164448383` passed secret scanning, database migration/schema checks, backend lint, frontend lint/build, 26 backend tests, both Docker image builds, and `ci-success` for commit `9d18079b94a5635016a574f9c7f858c7c4d6ab11`. The newer run `38164855365` has passed secret scanning, migration/schema checks, backend lint/tests, frontend lint/build, and backend Docker build; the frontend Docker build/final gate is still in progress. Its npm audit report shows zero vulnerabilities after the source-map-js patch. This is CI evidence for the correction branch, not proof that upstream `main` or the live deployment is fixed or fully tested. Browser-level and live-deployment verification remain pending.
+Latest completed CI checkpoint: PR #54 run `38164855365` passed secret scanning, database migration/schema checks, backend lint, frontend lint/build, 26 backend tests, both Docker image builds, and `ci-success` for commit `94787e0c66f19e7e337a0e8af6ec6629885c9596`. The npm audit report showed zero vulnerabilities after the `source-map-js` patch to `1.2.2`. This is CI evidence for the correction branch, not proof that upstream `main` or the live deployment is fixed or fully tested. Browser-level and live-deployment verification remain pending.
 
 ## QA-FIND-001 — Duplicate frontend source structures
 Classification: Observation. Status: Open.
@@ -103,7 +103,7 @@ Required action: document the exact setup step or provide a safe environment-fil
 
 
 ## QA-FIND-015 — Frontend/backend lint failures on the reviewed integration branch
-Classification: Confirmed CI failure. Status: Retest PASS for lint, tests, and frontend build; final Docker/CI gate pending for the latest head. Priority: High.
+Classification: Confirmed CI failure. Status: Retest PASS in CI run `38164855365` for lint, tests, frontend build, both Docker builds, and final CI gate. Priority: Historical failure retained for audit trail.
 
 GitHub Actions CI run `38157705137` for the first PR #54 revision failed the frontend lint step with four ESLint errors:
 - `frontend/src/pages/Budgets.jsx`: unused `loadAppData`.
