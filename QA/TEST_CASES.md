@@ -162,3 +162,5 @@ Record date, commit/branch, environment, steps, expected result, actual result, 
 
 | TC-CAT-006 | Delete category referenced by expense | API returns HTTP 409 and preserves the category and expense |
 | TC-CAT-007 | Unexpected database failure during category delete | API returns generic HTTP 500, rolls back, exposes no internal error details, and a later delete succeeds |
+
+| TC-SEC-010 | Docker build context contains local environment files | Required .dockerignore rules exclude .env/.env.*; frontend excludes node_modules; sentinel values do not appear in built images/assets where sentinel test is run |
