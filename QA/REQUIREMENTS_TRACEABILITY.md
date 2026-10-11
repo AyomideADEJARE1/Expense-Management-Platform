@@ -45,3 +45,5 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 | REQ-33 | Prevent API tests from targeting non-test databases | TC-DB-007 | PR #54 adds an autouse guard that refuses a configured database name without a test/testing marker; CI and negative-configuration verification pending |
 
 | REQ-34 | Category deletion reports accurate conflict/server errors | TC-CAT-006–007 | PR #54 distinguishes the known expense foreign-key conflict (409) from unexpected database failures (500); CI and runtime evidence pending |
+
+| REQ-35 | Container build contexts exclude local secrets and host dependencies | TC-SEC-010, TC-CI-003 | PR #54 adds backend/frontend .dockerignore files and CI checks required patterns; latest CI result pending |
