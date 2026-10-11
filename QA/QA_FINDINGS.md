@@ -177,3 +177,11 @@ Classification: Observability/release-verification gap. Status: Open. Priority: 
 The public Nginx health route `/api/health` maps to backend `/health`, which returns `status: ok` without checking PostgreSQL. A separate `/health/db` endpoint checks database connectivity, and Nginx also exposes it as `/api/health/db`; however, the deployment workflow's post-deployment health check currently calls only `/api/health`.
 
 Consequently, a deployment can pass its public health check while the database is unavailable. The release workflow should verify both application reachability and database connectivity, and the result should be recorded separately.
+
+
+## QA-FIND-024 — User-settings migration is not applied consistently by Compose and deployment
+Classification: Database/deployment defect. Status: Correction proposed in PR #54; retest pending. Priority: High.
+
+The integration branch adds `database/migrations/002_user_settings.sql` and the User model expects the added settings columns. Before correction, Compose mounted only `001_initial_schema.sql` into PostgreSQL's initialization directory. A fresh database would therefore miss the user-settings columns. In addition, PostgreSQL initialization scripts run only when the data directory is first initialized; simply adding a mount does not update an existing persistent volume.
+
+PR #54 now mounts the second migration for fresh database initialization and runs its idempotent `ADD COLUMN IF NOT EXISTS` statements during deployment so an existing volume can be updated. CI and deployment retests must verify both a clean database and an already-initialized database. Do not rerun the non-idempotent initial schema migration against an existing database.
