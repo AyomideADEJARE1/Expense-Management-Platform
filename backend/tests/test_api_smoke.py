@@ -292,3 +292,66 @@ def test_registration_rejects_invalid_email_and_oversized_name(client):
     for payload in invalid_payloads:
         response = client.post("/api/auth/register", json=payload)
         assert response.status_code == 400
+
+
+def test_expense_date_range_filters_and_validation(client):
+    email = f"qa-date-range-{uuid.uuid4().hex}@example.test"
+    password = "TestPassword123!"
+
+    registration = client.post(
+        "/api/auth/register",
+        json={
+            "full_name": "QA Date Range Test",
+            "email": email,
+            "password": password,
+        },
+    )
+    assert registration.status_code == 201
+
+    login = client.post(
+        "/api/auth/login",
+        json={"email": email, "password": password},
+    )
+    assert login.status_code == 200
+    token = login.get_json()["data"]["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    category_response = client.post(
+        "/api/categories",
+        json={"name": f"QA date range {uuid.uuid4().hex}"},
+    )
+    assert category_response.status_code == 201
+    category_id = category_response.get_json()["data"]["id"]
+
+    for expense_date in ["2026-10-01", "2026-10-10"]:
+        response = client.post(
+            "/api/expenses",
+            headers=headers,
+            json={
+                "category_id": category_id,
+                "amount": 10,
+                "description": "Date range test",
+                "expense_date": expense_date,
+            },
+        )
+        assert response.status_code == 201
+
+    filtered = client.get(
+        "/api/expenses?start_date=2026-10-05&end_date=2026-10-31",
+        headers=headers,
+    )
+    assert filtered.status_code == 200
+    assert len(filtered.get_json()["data"]) == 1
+    assert filtered.get_json()["data"][0]["expense_date"] == "2026-10-10"
+
+    invalid_date = client.get(
+        "/api/expenses?start_date=2026-10-31&end_date=2026-10-05",
+        headers=headers,
+    )
+    assert invalid_date.status_code == 400
+
+    malformed_date = client.get(
+        "/api/expenses?start_date=10-05-2026",
+        headers=headers,
+    )
+    assert malformed_date.status_code == 400
