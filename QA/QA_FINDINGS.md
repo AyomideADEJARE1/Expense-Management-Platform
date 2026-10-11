@@ -572,3 +572,18 @@ Test-database guard CI follow-up — 2026-10-11: the guard commit initially fail
 
 
 CI status superseding note — 2026-10-11: the prior paragraph saying run 38178811441 was queued is now outdated. Run 38178811441 completed successfully for code commit 7cf03021514b26df9ddec6a8ae0da29be525f397. All eight jobs passed, including the test database guard, database migrations, backend lint/tests, frontend lint/build, and both Docker builds. The backend suite collected and passed 31 tests. This verifies the guard with CI's expense_management_test database. It does not verify a deliberately non-test database configuration, complete per-test cleanup, an existing AWS database volume, live AWS deployment, or browser end-to-end behavior.
+
+
+## QA-FIND-052 — Category deletion maps every database failure to a conflict
+
+Classification: API error handling / operational diagnosis. Status: Correction proposed in PR #54; CI and retest pending. Priority: Medium.
+
+Evidence: Upstream main's category delete handler catches every exception from the database commit and returns HTTP 409 with a message saying the category is used by an expense. That response is only accurate for the relevant expense foreign-key violation. A database outage or unexpected programming error would be mislabeled as a user conflict.
+
+Impact: Clients and monitoring cannot distinguish a category that is genuinely in use from a server/database failure. Users may be told to change their data when the actual problem is an unavailable database.
+
+Correction: PR #54 now catches SQLAlchemy IntegrityError, checks for the specific foreign-key constraint name fk_expenses_category, and returns HTTP 409 only for that known case. Other integrity errors and unexpected exceptions return a generic HTTP 500. The handler rolls back before returning.
+
+Retest: Attempt to delete a category referenced by an expense and verify HTTP 409 with the category-in-use message. Then simulate a database commit failure and verify HTTP 500, no internal error details in the response, the category remains available, and a subsequent valid delete succeeds.
+
+Closure evidence: Passing CI for the fixing commit, API test results for both paths, session recovery result, and tested commit SHA.
