@@ -7,7 +7,6 @@ import { Plus, Edit3, Trash2, X, Folder } from 'lucide-react';
 export default function Categories({
   categories = [],
   setCategories,
-  loadAppData,
   isDarkMode = false,
 }) {
 
