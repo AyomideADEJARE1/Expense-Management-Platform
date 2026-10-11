@@ -87,9 +87,9 @@ Related finding: QA-FIND-012 and deployment workflow verification. Priority: Hig
 
 Why it matters: CI may build and publish an image successfully while the VM cannot pull it because the package is private or the VM has not authenticated. A deployment can also pull a moving latest tag that is not the exact commit tested by CI.
 
-Action: Decide whether GHCR packages are public or private. For private packages, provision least-privilege read access on the VM and test login non-interactively. Prefer immutable SHA-tagged images for deployment and record the commit SHA/image digest. Confirm the VM's checkout and image correspond to the same reviewed release.
+Action: Decide whether GHCR packages are public or private. For private packages, provision least-privilege read access on the VM and test login non-interactively. Use commit-specific SHA-tagged images and either enforce registry tag immutability or pin the image digest; record the commit SHA and image digest. Confirm the VM's checkout and image correspond to the same reviewed release.
 
-Pass evidence: VM successfully pulls both images; deployment logs identify the immutable tag/digest; running containers report the expected release; rollback instructions are documented and tested.
+Pass evidence: VM successfully pulls both images; deployment logs identify the commit-specific tag/digest; running containers report the expected release; rollback instructions are documented and tested.
 
 ### RV-09 — Validate migrations on both fresh and existing databases
 Related finding: Existing migration/volume concern noted in PR #53/#54. Priority: High; data-loss prevention.
