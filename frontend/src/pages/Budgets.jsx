@@ -104,11 +104,13 @@ export default function Budgets({
       return;
     }
 
-    // Backend requires the first day of the month.
+    // Keep the original budget month when editing a historical budget.
+    // New budgets default to the current month; edits must not move old budgets.
     const now = new Date();
-    const month = `${now.getFullYear()}-${String(
+    const currentMonth = `${now.getFullYear()}-${String(
       now.getMonth() + 1
     ).padStart(2, '0')}-01`;
+    const month = editingBudget?.month || currentMonth;
 
     const payload = {
       category_id: selectedCategory.id,
