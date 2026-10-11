@@ -568,7 +568,6 @@ def test_only_budget_unique_index_violations_map_to_conflict():
     )
 
 
-
 def test_delete_category_in_use_returns_conflict(client):
     email = f"qa-category-delete-{uuid.uuid4().hex}@example.test"
     password = "TestPassword123!"
