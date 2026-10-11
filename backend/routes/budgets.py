@@ -28,7 +28,7 @@ def create_budget():
 
     data = request.get_json(silent=True)
 
-    if not data:
+    if not isinstance(data, dict):
         return error_response(
             "Request body must contain JSON data",
             400
@@ -309,7 +309,7 @@ def update_budget(budget_id):
 
     data = request.get_json(silent=True)
 
-    if not data:
+    if not isinstance(data, dict):
         return error_response(
             "Request body must contain JSON data",
             400
