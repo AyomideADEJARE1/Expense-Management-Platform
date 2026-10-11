@@ -567,3 +567,6 @@ Important limitation: the frontend package still has no test script, so the opti
 
 
 Test-database guard CI follow-up — 2026-10-11: the guard commit initially failed Flake8 because two lines were too long. Those lines were fixed in code commit 7cf03021514b26df9ddec6a8ae0da29be525f397. CI run 38178811441 was queued at the time of this update. The prior green CI run 38178490904 did not include the new test-database guard; verify the new run before treating QA-FIND-043 as further mitigated.
+
+
+CI status superseding note — 2026-10-11: the prior paragraph saying run 38178811441 was queued is now outdated. Run 38178811441 completed successfully for code commit 7cf03021514b26df9ddec6a8ae0da29be525f397. All eight jobs passed, including the test database guard, database migrations, backend lint/tests, frontend lint/build, and both Docker builds. The backend suite collected and passed 31 tests. This verifies the guard with CI's expense_management_test database. It does not verify a deliberately non-test database configuration, complete per-test cleanup, an existing AWS database volume, live AWS deployment, or browser end-to-end behavior.
