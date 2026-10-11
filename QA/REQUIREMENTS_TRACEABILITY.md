@@ -12,7 +12,7 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 | REQ-06 | Monthly summaries | TC-REP-001 | PENDING |
 | REQ-07 | Budget limits | TC-BUD-001–003 | PENDING |
 | REQ-08 | Dashboard with charts | TC-DASH-001–003 | FINDING OPEN |
-| REQ-09 | Date/category filtering | TC-FLT-001–003 | UI correction proposed in PR #54; retest pending |
+| REQ-09 | Date/category filtering | TC-FLT-001–005 | Date-range/category UI and API corrections proposed in PR #54; CI and browser retest pending |
 | REQ-10 | CSV export | TC-EXP-004–005 | UI correction proposed in PR #54; retest pending |
 | REQ-11 | React frontend | TC-UI-001 | PENDING |
 | REQ-12 | Flask REST API | TC-API-001–004 | PENDING |
