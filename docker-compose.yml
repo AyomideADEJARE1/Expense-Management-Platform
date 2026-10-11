@@ -1,5 +1,6 @@
 services:
   frontend:
+    image: ${FRONTEND_IMAGE:-expense-frontend:local}
     build: ./frontend
     container_name: expense-frontend
     healthcheck:
@@ -10,6 +11,7 @@ services:
       start_period: 10s
 
   backend:
+    image: ${BACKEND_IMAGE:-expense-backend:local}
     build: ./backend
     container_name: expense-backend
     env_file:
