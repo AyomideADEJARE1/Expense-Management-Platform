@@ -146,6 +146,30 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **QA verification and closure evidence:** Run the suite repeatedly and in a different order; retain the database guard/cleanup tests, CI output, and test database configuration.
 
+### 15. Frontend/backend: normalize the signed-in user profile
+
+**What happens:** The API returns the current profile inside a response object, but upstream main stores the whole response as the user profile. The UI then looks for name fields on the wrong object.
+
+**Why it matters:** The account name or initials may be missing, and components that expect a direct profile object may behave incorrectly. The correction branch extracts and normalizes the profile, but it still needs browser retesting.
+
+**Required correction:** Keep the normalized response handling in the release branch and maintain one clear API-to-frontend profile shape.
+
+**How QA will verify:** Log in, refresh the page, and confirm the session stays valid and the expected account name/initials display correctly.
+
+**Evidence to close:** Tested commit SHA, redacted API response, browser screenshot, and a passing regression test where available.
+
+### 16. Frontend: verify expense search navigation
+
+**What happens:** Upstream main uses a misspelled tab identifier for expense search results, while the page uses the correctly spelled Transactions identifier. The correction branch fixes the identifier.
+
+**Why it matters:** Selecting a search result may set a tab that does not exist, leaving the user unable to open the intended transaction view from search.
+
+**Required correction:** Keep the corrected identifier and add a regression check for selecting an expense result.
+
+**How QA will verify:** Search for a known expense, select its result, and confirm the Transactions page opens and shows the intended record.
+
+**Evidence to close:** Tested commit SHA, browser screenshot/video, and a passing regression check where available.
+
 ## Release checklist
 
 Do not mark a check as passed until evidence is attached.
@@ -162,7 +186,7 @@ Do not mark a check as passed until evidence is attached.
 - [ ] The AWS VM can pull the published images using the intended permissions.
 - [ ] Both health endpoints work through Nginx.
 - [ ] Production rate limits use the approved shared storage configuration.
-- [ ] Registration, expense ownership, filters, CSV export, budgets, and dashboard totals pass browser testing.
+- [ ] Registration, current-user profile display, expense search navigation, expense ownership, filters, CSV export, budgets, and dashboard totals pass browser testing.
 - [ ] Screenshots, workflow run links, commit SHA, and test results are attached.
 
 **Current overall status:** Several issues are documented and some source corrections have been proposed. The correction branch has a reported successful CI run, but AWS deployment and browser verification remain pending. Do not describe the whole project as release-ready until the blocking items above are closed with evidence.
