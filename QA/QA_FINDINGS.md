@@ -593,38 +593,8 @@ Closure evidence: CI result for the ignore-rule check and image builds, reviewed
 
 ## CI status note — 2026-10-11
 
-Latest CI run 38179504988 passed for code commit 8f00242932980239c9ad77e0e811596755227e26. All eight jobs passed: secret scan, component detection, database migrations, backend lint/tests, frontend lint/build, both Docker builds, and the aggregate check. The backend suite collected and passed 33 tests. The database job applied migrations 001–003, verified the budget uniqueness indexes, confirmed legacy duplicate budgets stop migration with an actionable diagnostic, and validated Compose environment interpolation.
+Latest CI run 38179822312 passed for code commit 81f1ac88449012b530c83a9d9c2317558f3c905c. All eight jobs passed: secret scan, component detection, database migrations, backend lint/tests, frontend lint/build, both Docker builds, and the aggregate check. The backend suite passed 33 tests. The database job applied migrations 001–003, verified the uniqueness indexes and legacy-duplicate guard, validated Compose environment interpolation, and checked that the CD workflow starts PostgreSQL with a health wait, applies migrations 002/003, and only then restarts app services.
 
-The Docker build jobs checked the required .dockerignore rules, built and loaded both images, and passed sentinel checks: the backend image did not contain /app/.env, and the frontend bundle did not contain VITE_SECRET_SENTINEL. This is evidence that these test sentinel values were excluded; it is not evidence that an actual secret was previously leaked.
+Both Docker builds passed the .dockerignore rule checks and sentinel inspections: the backend image did not contain /app/.env, and the frontend bundle did not contain VITE_SECRET_SENTINEL. This proves the test sentinel files were excluded, not that an actual secret was previously leaked.
 
-Important limitations: the frontend package still has no test script, so the optional frontend test step can pass without running frontend functional tests. CI does not prove live AWS deployment, a populated existing-volume migration, browser end-to-end behavior, the negative non-test-database guard case, category write authorization, proxy-aware production rate limiting, or public CSP/HSTS behavior. Those remain open and require their documented runtime evidence.
-
-
-## QA-FIND-054 — CD restarts the application before applying database migrations
-
-Classification: Deployment sequencing / release safety. Status: Correction proposed in PR #54; current CI verification pending. Priority: High for schema-changing releases.
-
-Evidence: The reviewed CD workflow previously ran `docker compose up -d --remove-orphans` before explicitly applying migrations 002 and 003. That command can replace the running backend/frontend containers before a migration succeeds.
-
-Impact: If a migration fails—for example, migration 003 detects duplicate legacy budgets—the new application image may already be running against the old or partially upgraded schema. The deployment job then fails, but the application may already have changed version, making rollback and diagnosis harder.
-
-Correction: PR #54 now starts only PostgreSQL, applies migrations 002 and 003, and restarts backend/frontend/Nginx only after both migrations succeed. The current app version remains running while the migrations execute. CI also checks the order of these commands in the deployment workflow.
-
-Retest: Confirm the CI migration-order check passes. In a controlled staging environment, force migration 003 to fail using duplicate test data and verify the old application containers remain running and healthy. Then resolve the duplicate data, rerun deployment, and verify the intended commit is live.
-
-Closure evidence: Passing CI for the migration-order check, staging failure/recovery evidence, deployed image/commit identity, and health-check results. Source ordering alone does not prove the AWS deployment behaves as expected.
-
-
-## QA-FIND-055 — CD may attempt migrations before PostgreSQL is healthy
-
-Classification: Deployment reliability. Status: Correction proposed in PR #54; current CI verification pending. Priority: Medium–High.
-
-Evidence: After the migration-order correction, the CD script started PostgreSQL with `docker compose up -d postgres` and then immediately executed SQL migrations. Detached Compose startup does not necessarily wait until the database health check reports healthy.
-
-Impact: On a slower restart or cold VM, the migration command can run before PostgreSQL accepts connections, causing deployment to fail even when the schema and migration are valid.
-
-Correction: PR #54 now uses `docker compose up -d --wait postgres` before running migrations. CI's migration-order check was updated to require this health wait before migrations and before the application restart.
-
-Retest: Confirm the latest CI order check passes. In staging, restart PostgreSQL from a cold state and verify the workflow waits for health before applying migrations. Confirm the application services restart only after both migrations complete.
-
-Closure evidence: Passing CI for the order check and staging deployment logs showing database health before migration execution, followed by app restart and successful public health checks.
+Important limitations: the frontend package still has no test script, so the optional frontend test step can pass without running frontend functional tests. CI does not prove live AWS deployment, a populated existing-volume migration, staging failure/recovery behavior, browser end-to-end behavior, the negative non-test-database guard case, category write authorization, proxy-aware production rate limiting, or public CSP/HSTS behavior. Those remain open and require their documented runtime evidence.
