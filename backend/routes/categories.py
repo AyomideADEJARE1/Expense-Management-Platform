@@ -52,6 +52,18 @@ def create_category():
             400
         )
 
+    if not isinstance(name, str):
+        return error_response(
+            "Category name must be a string",
+            400
+        )
+
+    if description is not None and not isinstance(description, str):
+        return error_response(
+            "Category description must be a string",
+            400
+        )
+
     name = name.strip()
 
     if not name:
@@ -137,6 +149,12 @@ def update_category(category_id):
     description = data.get("description")
 
     if name is not None:
+        if not isinstance(name, str):
+            return error_response(
+                "Category name must be a string",
+                400
+            )
+
         name = name.strip()
 
         if not name:
@@ -159,6 +177,12 @@ def update_category(category_id):
         category.name = name
 
     if description is not None:
+        if not isinstance(description, str):
+            return error_response(
+                "Category description must be a string",
+                400
+            )
+
         category.description = description
 
     db.session.commit()
