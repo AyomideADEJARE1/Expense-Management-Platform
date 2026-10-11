@@ -88,11 +88,11 @@ A healthy container does not, by itself, prove that registration, expense owners
 
 The upstream `main` documentation currently identifies the live application URL as **https://expense-tracker.live** and describes the live host as AWS EC2 Ubuntu. Availability and current end-to-end functionality must be verified before using this URL as submission evidence.
 
-The capstone specification requires an Azure Virtual Machine. The existing Azure deployment workflow is prepared but disabled until its variables and secrets are configured. Therefore, the documented AWS-hosted URL does not by itself satisfy the Azure deployment requirement; the team must confirm the accepted target and provide evidence for the required environment.
+The project tutor has approved AWS as an alternative deployment target, as reported by the QA owner. AWS EC2 is the target for this capstone audit and the live environment documented by the project. Retain the tutor's approval with submission records. The public URL alone does not prove that the latest reviewed commit is deployed; capture workflow, instance/container, health-check, and browser evidence for the submitted version.
 
 The CI workflow performs static/build/schema checks. At the time of this review, the backend test command allows pytest's “no tests collected” exit code and the frontend package has no test script, so a green CI result must not be interpreted as complete functional test coverage. This is recorded as an open QA finding.
 
-The CD workflow is prepared to publish container images and deploy to an Azure VM when deployment is explicitly enabled and the required secrets/variables are configured. The team must confirm the actual target environment before enabling deployment. Do not describe the app as deployed or production-ready until the deployed URL, routing, health checks, and end-to-end user journeys have been verified.
+The CD workflow publishes container images and can deploy to AWS EC2 when DEPLOY_ENABLED=true and the required AWS secrets/variables are configured. The deployment workflow uses AWS_EC2_HOST, AWS_EC2_USER, and AWS_EC2_SSH_KEY. Do not describe the latest code as deployed or production-ready until the deployed commit/image, public routing, health checks, and end-to-end user journeys have been verified.
 
 ## Security notes
 
