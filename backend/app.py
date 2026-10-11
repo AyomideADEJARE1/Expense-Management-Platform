@@ -30,7 +30,7 @@ database_url = URL.create(
     username=os.getenv("POSTGRES_USER"),
     password=os.getenv("POSTGRES_PASSWORD"),
     host=os.getenv("POSTGRES_HOST", "localhost"),
-    port=5432,
+    port=int(os.getenv("POSTGRES_PORT", "5432")),
     database=os.getenv("POSTGRES_DB"),
 )
 
