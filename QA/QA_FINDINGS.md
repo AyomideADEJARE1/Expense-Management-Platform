@@ -79,7 +79,7 @@ Classification: Confirmed security defect. Status: Open. Priority: High.
 
 In `backend/routes/categories.py` on `integration/deployable-main`, the category POST, PUT, and DELETE handlers have no `@jwt_required()` guard. An unauthenticated caller can attempt to create, rename, or delete shared category records. The routes currently model categories as global rather than user-owned, so write access is publicly available.
 
-Required action: agree on the intended category administration model with the team. Then enforce authentication and authorization appropriate to that model, add negative tests for unauthenticated writes, and verify that category deletion cannot damage expenses or leave inconsistent records.
+Impact: unauthenticated callers can mutate global categories that other accounts use. The risk includes unauthorized renames and delete attempts against referenced records. The category UI cannot be treated as a security boundary.\n\nRequired action: agree on the intended category administration model with the team. Then enforce authentication and authorization appropriate to that model, add negative tests for unauthenticated and unauthorized writes, and verify that category deletion cannot damage expenses or leave inconsistent records. Closure requires a documented shared-category policy, role/ownership checks in the API, and passing API/browser tests.
 
 ## QA-FIND-011 — Automated test coverage was missing/incomplete
 Classification: Confirmed verification gap; initial backend smoke tests proposed in PR #54. Status: Retest pending. Priority: High.
@@ -368,18 +368,9 @@ Closure evidence: correction on the target branch, successful clean setup, confi
 
 Correction status update — 2026-10-11: PR #54's correction branch now requires POSTGRES_USER, POSTGRES_PASSWORD, and POSTGRES_DB through root Compose environment variables, updates the root .env.example, and updates the README/Docker setup steps. The source correction is committed, but the current CI run and clean-start configuration/runtime checks must pass before this finding can close. If the former fixed password was ever used on a reachable host, rotate it.
 
-## QA-FIND-038 — Category write endpoints have no authentication or role authorization
-Classification: Access control. Priority: High; security blocker. Status: Open.
+## QA-FIND-038 — Duplicate evidence consolidated into QA-FIND-010
 
-Evidence reviewed in `backend/routes/categories.py` on `stephen/qa-transaction-fixes`: `create_category`, `update_category`, and `delete_category` do not use `@jwt_required()` or another authorization guard. The category list and detail endpoints are also public; whether read access should be public must be an explicit product decision.
-
-Why it matters: any network caller who can reach the API may create, rename, or attempt to delete globally shared categories. Validation and duplicate-name checks do not establish permission to modify shared data.
-
-Required correction: document the category ownership model. For global categories, protect mutations with authentication and an explicit administrator/maintainer permission; for per-user categories, scope reads and writes to the authenticated owner and update related expense/budget behavior. Preserve a legitimate administrative path rather than simply disabling all writes.
-
-Required tests: unauthenticated create/update/delete return 401; ordinary authenticated user attempting admin-only mutation returns 403; authorized admin can mutate; category reads follow the documented policy; referenced-category deletion returns a controlled conflict and preserves linked records.
-
-Closure evidence: documented policy, implementation, passing positive and negative authorization tests, and API/browser verification.
+This entry describes the same category-write authorization root cause already tracked by QA-FIND-010. Do not count it as a separate defect. QA-FIND-010 is the canonical finding and includes the required policy decision, role enforcement, negative tests, and closure evidence.
 
 ## QA-FIND-039 — Rate limiter has no configured shared production storage
 Classification: Abuse protection / production configuration. Priority: High for multi-worker deployment. Status: Open.
@@ -504,19 +495,9 @@ Retest: Open the create and edit budget modals. Confirm the spending value canno
 Closure evidence: CI result for the fixing commit, browser screenshot, and comparison between displayed spending and the API/expense records. Source correction alone is not a pass.
 
 
-## QA-FIND-047 — Category creation, update, and deletion do not require authentication
+## QA-FIND-047 — Duplicate evidence consolidated into QA-FIND-010
 
-Classification: Confirmed security finding on upstream main and the current correction branch. Status: Open; authorization policy and code correction required. Priority: High.
-
-Evidence: `backend/routes/categories.py` defines `POST /api/categories`, `PUT /api/categories/<category_id>`, and `DELETE /api/categories/<category_id>` without JWT authentication decorators or an equivalent authorization check. These routes change the shared category table used by expense and budget records. A caller who can reach the API can attempt to add, rename, or delete categories without signing in.
-
-Impact: Unauthorized users may alter categories used by other accounts. Renaming or deleting a shared category can change what users see in transaction and budget views or fail when foreign-key references prevent deletion. This is a cross-user integrity risk, not just a missing UI restriction.
-
-Required correction: Team lead/product owner must confirm the intended category model: globally shared categories managed by authorized administrators, or user-owned categories. Backend must then enforce authentication and the chosen role/ownership policy on every write endpoint. Hiding buttons in the frontend is not an authorization control. Add tests for anonymous, ordinary authenticated, authorized administrator/owner, and unauthorized user requests.
-
-Retest: Send POST, PUT, and DELETE requests without a token; they must be rejected. Repeat as a normal user and as an authorized role according to the agreed policy. Verify that one user's actions cannot change another user's category data.
-
-Closure evidence: Recorded category policy decision, code diff, automated authorization tests, tested commit SHA, and API results for each role.
+This entry repeats the unauthenticated category mutation finding. Do not count it as a separate defect. Use QA-FIND-010 as the canonical finding; QA-FIND-047 is retained only as a cross-reference so earlier review notes remain traceable.
 
 ## QA-FIND-048 — Frontend CI has no automated test script
 
