@@ -214,3 +214,11 @@ Required action: define the production-mode configuration convention, reject mis
 Classification: Configuration defect. Status: Correction proposed in PR #54; retest pending. Priority: Low.
 
 The backend constructs its SQLAlchemy URL from PostgreSQL environment variables but hard-coded port 5432 instead of reading `POSTGRES_PORT`. This made the documented port setting ineffective for non-default database configurations. PR #54 now reads the configured port with 5432 as the default; CI and a non-default-port configuration test should verify the behavior.
+
+
+## QA-FIND-029 — Authentication tests were coupled through the shared rate limiter
+Classification: Test-isolation defect. Status: Correction proposed in PR #54; retest pending. Priority: Medium.
+
+The first expanded CI run returned HTTP 429 in otherwise unrelated registration/profile tests because multiple test cases shared the same process-local five-requests-per-minute registration limit. This was test-state interference, not evidence that the validation assertions themselves were wrong.
+
+PR #54 updates the functional test fixture to disable rate limiting for ordinary endpoint tests. Rate-limit behavior should be verified separately in a dedicated test with explicit limits and controlled state. Production still needs a shared rate-limit store for multi-worker deployment.
