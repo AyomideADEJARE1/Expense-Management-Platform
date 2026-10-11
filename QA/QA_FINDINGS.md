@@ -104,3 +104,17 @@ Classification: Configuration/security observation. Status: Open.
 The integrated Compose file defines a fixed PostgreSQL username/password/database in YAML and requires `backend/.env` through `env_file`. The committed `backend/.env.example` uses placeholder values and does not by itself satisfy the required `backend/.env` path. A clean checkout may therefore fail to start until the local env file is created; fixed Compose credentials must remain strictly development-only.
 
 Required action: document the exact setup step or provide a safe environment-file pattern, ensure no real `.env` is committed, and make production credentials configurable through deployment secrets rather than source-controlled defaults.
+
+
+## QA-FIND-015 — Frontend lint fails on the reviewed integration branch
+Classification: Confirmed CI failure. Status: Correction committed; retest pending. Priority: High.
+
+GitHub Actions CI run `38157705137` for the first PR #54 revision failed the frontend lint step with four ESLint errors:
+- `frontend/src/pages/Budgets.jsx`: unused `loadAppData`.
+- `frontend/src/pages/Categories.jsx`: unused `loadAppData`.
+- `frontend/src/pages/Dashboard.jsx`: unused `formatCurrency` import.
+- `frontend/src/pages/Transactions.jsx`: unused `X` import.
+
+The follow-up correction branch removes those unused bindings/imports. A new CI run must confirm the lint step, frontend build, backend lint, and final `ci-success` job all pass before this finding is closed.
+
+The same CI log reports one high-severity npm dependency vulnerability during `npm ci`. The log excerpt does not identify the affected package; run `npm audit` and record the package, advisory, affected version, and safe remediation before classifying the risk as resolved.
