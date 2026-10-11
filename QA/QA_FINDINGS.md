@@ -201,3 +201,16 @@ Classification: Input-validation defect. Status: Correction proposed in PR #54; 
 The expense and budget endpoints passed arbitrary JSON `category_id` values into SQLAlchemy lookups. Arrays, objects, booleans, zero, or negative values could cause unexpected database behavior or unhandled errors rather than a controlled validation response.
 
 PR #54 now requires a positive integer category ID when a category is supplied, while preserving `null` as the supported way to remove a budget's optional category. Regression tests cover malformed category IDs on expense and budget creation. Update-route coverage remains required.
+
+
+## QA-FIND-027 — Application does not fail closed when a weak signing secret is configured
+Classification: Security/configuration risk. Status: Open. Priority: High before production release.
+
+The Flask app assigns `SECRET_KEY` and `JWT_SECRET_KEY` directly from the `SECRET_KEY` environment variable without validating that it is present, sufficiently strong, or different from the placeholder value used in the example environment files. The example placeholder is acceptable only as a value that must be replaced for local setup; it must never be used in production.
+
+Required action: define the production-mode configuration convention, reject missing/default/weak secrets at startup in production, document generation and rotation, and ensure CI uses a separate non-production test key. This audit does not establish that the live production secret is weak; it establishes that the application does not currently enforce a safe value.
+
+## QA-FIND-028 — PostgreSQL port configuration was ignored by the application
+Classification: Configuration defect. Status: Correction proposed in PR #54; retest pending. Priority: Low.
+
+The backend constructs its SQLAlchemy URL from PostgreSQL environment variables but hard-coded port 5432 instead of reading `POSTGRES_PORT`. This made the documented port setting ineffective for non-default database configurations. PR #54 now reads the configured port with 5432 as the default; CI and a non-default-port configuration test should verify the behavior.
