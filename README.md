@@ -1,74 +1,106 @@
-# Expense Tracker Web Application
+# Expense Management Platform
 
-A full-featured, responsive React-based financial management dashboard designed to track income, monitor expenses, create category spending limits, and generate monthly financial reports.
+A full-stack personal expense management application built with React, Flask, PostgreSQL, Docker Compose, and Nginx. GitHub Actions provides repository validation and a prepared image-publishing/deployment workflow.
 
-# Key Features
-Interactive Dashboard: Core financial overview with summary metrics, income vs. expense visual charts, category spending distributions, and quick view of recent transactions.
+## Current architecture
 
-Income Management: Track earnings across custom categories, log dates, add custom notes, and filter income entries.   Expense 
+Browser → Nginx → React frontend / Flask REST API → PostgreSQL
 
-Tracking & Linkage: Log daily expenses with custom titles, optional notes, category tags, and direct linkages to specific budgets.   
+Nginx is the public entry point. The frontend calls the Flask API through the `/api` prefix; the browser must not connect directly to PostgreSQL.
 
-Budget Limits & Automated Over-Budget Alerts: Set spending caps per category with visual progress indicators and active alert notifications when limits are exceeded.
+## Implemented application areas
 
-Dynamic Category Customization: Manage income and expense categories complete with color palettes, Lucide icons, and protected system default locks.   
+- User registration and login using JWT authentication and hashed passwords.
+- Expense creation, listing, editing, deletion, month/category API filtering, and an authenticated CSV export endpoint.
+- Category management, budgets, monthly summaries, and category summaries.
+- Dashboard totals, monthly/category charts, recent transactions, and reports.
+- Docker Compose services for frontend, backend, PostgreSQL, and Nginx, including container health checks.
+- GitHub Actions checks for secret scanning, database migration/schema checks, backend lint/test command, frontend lint/build, and Docker image builds.
 
-Centralized Transaction Ledger: Unified list showing all income and expense items with search, category filtering, and item deletion.   
+Implementation presence is not proof that every flow has passed runtime QA. See the `QA/` directory for the test plan, test cases, traceability matrix, findings, and release checklist.
 
-Monthly Financial Reports: Automated grouping by month (e.g., YYYY-MM), savings rate calculations, category breakdowns, and export/print functionality.   
+## Repository layout
 
-Global Search Engine: Real-time search across transactions, active budgets, and categories with instant navigation.   State 
+- `frontend/` — Vite/React application served by its container.
+- `backend/` — Flask API, routes, SQLAlchemy models, and dependencies.
+- `database/migrations/` — PostgreSQL initialization SQL.
+- `nginx/` — reverse proxy configuration.
+- `docker-compose.yml` — local multi-container stack.
+- `.github/workflows/` — CI and prepared CD workflows.
+- `QA/` — QA evidence and open findings.
 
-Persistence & Dark Mode: Built-in dark mode toggle and localStorage persistence across sessions for all entities.   Authentication & Toast Feedback: User authentication context modal and toast system with confirmation modals for safe deletions.   
+The root-level `src/` and root `package.json` are legacy/duplicate frontend assets. The Docker Compose frontend service builds from `frontend/`; use that directory as the frontend entry point unless the team deliberately consolidates the duplicate structure.
 
-# System Architecture & Component Mapping
+## Local prerequisites
 
-src/
-├── App.jsx                       # Main application state, search, notifications & dark mode
-├── Auth.jsx                      # User authentication provider and auth modal
-├── Components/
-│   ├── Layout/
-│   │   ├── Sidebar.jsx           # Main navigation drawer
-│   │   └── Header.jsx            # Top bar, notifications, search bar, theme toggle
-│   ├── Dashboard/
-│   │   ├── SummaryCards.jsx      # Metric cards (Total Income, Expenses, Net)
-│   │   ├── IncomeVsExpensesChart # Bar/Area financial comparison chart
-│   │   ├── CategoryDonutChart    # Category spending distribution chart
-│   │   ├── RecentTransactions    # Dashboard transaction preview table
-│   │   └── BudgetOverview        # Quick budget status widget
-│   └── ConfirmationModal.jsx     # Reusable deletion confirmation modal
-├── context/
-│   └── ToastContext.jsx          # Application-wide toast notifications
-└── pages/
-    ├── Dashboard.jsx             # Main dashboard view
-    ├── Income.jsx                # Income management page
-    ├── Expenses.jsx              # Expense management page
-    ├── Budgets.jsx               # Budget limits and progress tracker
-    ├── Categories.jsx            # Category setup and icon management
-    ├── Transactions.jsx          # Unified ledger page
-    └── Reports.jsx               # Monthly summaries & breakdown modal
-    
-# Code Base Highlights & Business Logic
+Install Docker Engine/Desktop with the Docker Compose plugin. From a clean checkout:
 
-Automatic Budget Recalculation & Alert System (App.jsx & Budgets.jsx):
-When an expense is recorded, handleAddExpense automatically recalculates total spending for the matching budget category and fires a Budget Alert ⚠️ notification if the limit is exceeded.
+```bash
+cp backend/.env.example backend/.env
+```
 
-Categorization & Custom Aesthetics (Categories.jsx):
-Categories support customized colors (Blue, Emerald, Orange, Purple, Pink, Amber, Red) and dynamic icon mapping (Lucide-react). System categories are locked against accidental modification or deletion.
+Edit `backend/.env` and replace the placeholder `SECRET_KEY` with a strong random development secret. Keep `backend/.env` out of version control. The Compose file supplies the database connection values to the backend and currently uses fixed development-only PostgreSQL credentials; do not reuse those credentials in production.
 
-Data Persistency Layer (App.jsx):
-Uses React useEffect hooks synced with browser localStorage for zero-backend persistent state across sessions:   expense_tracker_transactions   
-expense_tracker_incomes
-expense_tracker_expenses
-expense_tracker_budgets
-expense_tracker_categories
+Start the application from the repository root:
 
-Monthly Reports Calculation (Reports.jsx)
-Dynamically aggregates transaction objects into monthly buckets (YYYY-MM), computing totalIncome, totalExpense, netSavings, savings percentage rates, and individual category spending breakdowns.
+```bash
+docker compose up --build -d
+docker compose ps
+docker compose logs --tail=100
+```
 
-#Tech Stack
-Frontend Library: React (Hooks: useState, useEffect, useMemo)   
-Styling & UI: Tailwind CSS   
-Icons: Lucide React (lucide-react)   
-Build Tool: Vite   
-State Management: React Context API (AuthProvider, ToastProvider)
+Open the application at `http://localhost/` when port 80 is available. If port 80 is occupied, change the host-side port mapping in Compose deliberately and update the URL accordingly.
+
+Stop the services without deleting stored development data:
+
+```bash
+docker compose down
+```
+
+The PostgreSQL data is held in a named Docker volume. **Do not run `docker compose down -v` unless you intend to delete the local database volume and its data.**
+
+## Health checks and useful diagnostics
+
+The public Nginx health route is:
+
+```text
+GET /api/health
+```
+
+The backend also defines `/health/db`; the routed database health path should be verified against the current Nginx configuration before relying on it externally.
+
+Useful commands:
+
+```bash
+docker compose ps
+docker compose logs nginx
+docker compose logs frontend
+docker compose logs backend
+docker compose logs postgres
+curl -i http://localhost/api/health
+```
+
+A healthy container does not, by itself, prove that registration, expense ownership, budgets, reports, filters, or CSV downloads work correctly. Run the corresponding QA test cases and retain evidence.
+
+## CI/CD and deployment status
+
+The CI workflow performs static/build/schema checks. At the time of this review, the backend test command allows pytest's “no tests collected” exit code and the frontend package has no test script, so a green CI result must not be interpreted as complete functional test coverage. This is recorded as an open QA finding.
+
+The CD workflow is prepared to publish container images and deploy to an Azure VM when deployment is explicitly enabled and the required secrets/variables are configured. The team must confirm the actual target environment before enabling deployment. Do not describe the app as deployed or production-ready until the deployed URL, routing, health checks, and end-to-end user journeys have been verified.
+
+## Security notes
+
+- Never commit `.env` files, access tokens, passwords, or private keys.
+- Use strong secrets from the deployment environment for production.
+- Restrict public network access to the required application entry point and administrative access.
+- Category mutation routes and test coverage are under QA review; consult `QA/QA_FINDINGS.md` before treating the system as release-ready.
+
+## QA documentation
+
+- `QA/TEST_PLAN.md` — scope, environment, evidence rules, and release criteria.
+- `QA/TEST_CASES.md` — functional, API, security, infrastructure, CI/CD, and documentation tests.
+- `QA/REQUIREMENTS_TRACEABILITY.md` — requirement-to-test mapping.
+- `QA/QA_FINDINGS.md` — findings, observations, blockers, and retests.
+- `QA/RELEASE_CHECKLIST.md` — final release gate.
+
+A test may be marked PASS only when it was actually executed and supporting evidence was recorded. Source inspection alone should be recorded as a code-review finding, not as a successful runtime test.
