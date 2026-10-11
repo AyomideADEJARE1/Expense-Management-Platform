@@ -78,11 +78,11 @@ This document tells the team what is wrong, why it matters, and who needs to act
 ### 8. Team lead/DevOps: use AWS as the approved deployment target
 **Decision recorded for this audit:** The QA owner reports that the project tutor approved AWS as an alternative deployment target. The upstream README also identifies AWS EC2 as the current production environment.
 
-**What happens:** The reviewed CD workflow still contains an Azure-specific deployment job and Azure-specific secret names, while the approved/current environment is AWS EC2.
+**What happens:** The reviewed CD workflow still contains an legacy cloud-specific deployment job and secret names, while the approved/current environment is AWS EC2.
 
 **Why it matters:** A workflow configured for the wrong cloud will not reliably deploy to the approved AWS VM and may mislead maintainers about which secrets and host are required.
 
-**Required correction:** Align the deployment workflow, protected secret names, README, architecture/CI-CD documentation, and submission evidence with AWS. Retire or clearly separate the legacy Azure deployment job. Do not claim a deployment succeeded just because workflow code exists.
+**Required correction:** Align the deployment workflow, protected secret names, README, architecture/CI-CD documentation, and submission evidence with AWS. Retire or clearly separate the legacy cloud-specific deployment job. Do not claim a deployment succeeded just because workflow code exists.
 
 **How QA will verify:** Confirm the AWS job targets the intended EC2 host, deploys the reviewed commit, and completes application and database health checks.
 
