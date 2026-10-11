@@ -116,3 +116,5 @@ Record date, commit/branch, environment, steps, expected result, actual result, 
 | TC-VAL-004 | Expense/budget with invalid category ID type | API returns HTTP 400 and no record is created |
 
 | TC-AUTH-008 | Registration with malformed email or overlong name | API returns HTTP 400 and no user record is created |
+
+| TC-API-006 | Independent endpoint tests under test configuration | Ordinary API tests are not affected by shared rate-limit state; rate limiting has separate dedicated coverage |
