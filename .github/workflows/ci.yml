@@ -157,6 +157,11 @@ jobs:
       SECRET_KEY: ci-test-secret
       JWT_SECRET: ci-test-jwt-secret
       DATABASE_URL: postgresql://ci_user:ci_password@localhost:5432/expense_management_test
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: ci_user
+      POSTGRES_PASSWORD: ci_password
+      POSTGRES_DB: expense_management_test
     steps:
       - uses: actions/checkout@v7
 
@@ -172,6 +177,19 @@ jobs:
           pip install -r requirements.txt
           if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
           pip install flake8 pytest
+
+      - name: Apply database migrations for API tests
+        run: |
+          shopt -s nullglob
+          files=(../database/migrations/*.sql)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "::error::No database migrations found for API tests."
+            exit 1
+          fi
+          for f in "${files[@]}"; do
+            echo "Applying $f"
+            psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$f"
+          done
 
       - name: Lint
         run: flake8 . --count --show-source --statistics --exclude .venv,venv,migrations
