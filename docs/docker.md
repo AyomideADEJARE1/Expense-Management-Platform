@@ -207,8 +207,8 @@ Compose also provides the PostgreSQL connection configuration:
 POSTGRES_HOST=postgres
 POSTGRES_PORT=5432
 POSTGRES_USER=expense_user
-POSTGRES_PASSWORD=expense_password
-POSTGRES_DB=expense_db
+POSTGRES_PASSWORD=replace-with-a-strong-random-database-password
+POSTGRES_DB=expense_management
 ```
 
 The hostname is `postgres` because Docker Compose provides service-name DNS within the Compose network.
@@ -434,7 +434,7 @@ The current Compose configuration publishes only Nginx:
 | Frontend | 80 | Not published |
 | Backend | 5000 | Not published |
 | PostgreSQL | 5432 | Not published |
-| Nginx | 80 | 8080 |
+| Nginx | 80 | 80 |
 
 This keeps the application services behind the Nginx entry point.
 
@@ -465,7 +465,7 @@ http://localhost:5000/health
 Uses:
 
 ```bash
-pg_isready -U expense_user -d expense_db
+pg_isready -U expense_user -d expense_management
 ```
 
 ### Nginx
@@ -604,7 +604,7 @@ Connect directly to PostgreSQL:
 
 ```bash
 docker exec -it expense-postgres \
-  psql -U expense_user -d expense_db
+  psql -U expense_user -d expense_management
 ```
 
 ---
@@ -615,7 +615,7 @@ List the PostgreSQL tables:
 
 ```bash
 docker exec expense-postgres \
-  psql -U expense_user -d expense_db -c "\dt"
+  psql -U expense_user -d expense_management -c "\dt"
 ```
 
 The current application schema contains:
@@ -721,7 +721,7 @@ docker compose up -d --build
 | Frontend cannot reach API | Confirm the frontend uses `/api` and Nginx routes `/api/` to the backend. |
 | Nginx returns an error | Check `docker compose logs nginx` and verify the upstream service names. |
 | Service is unhealthy | Run `docker compose ps` and inspect that service's logs. |
-| Port 8080 is already in use | Stop the process using port 8080 or change the host-side port mapping. |
+| Port 80 is already in use | Stop the process using port 80 or change the host-side port mapping. |
 | Changes are not appearing | Rebuild the affected service with `docker compose up -d --build <service>`. |
 | Local database needs a full reset | Use `docker compose down -v` followed by `docker compose up -d`. |
 
@@ -765,14 +765,14 @@ See [CI/CD documentation](ci-cd.md) for the complete pipeline.
 
 The current Compose configuration is the project's **local/integration environment**.
 
-The repository also contains a configurable CD workflow for publishing images and deploying to an Azure VM.
+The repository also contains a configurable CD workflow for publishing images and deploying to the approved AWS EC2 target.
 
-The Azure deployment should not be considered an active production deployment until the following have been configured and verified:
+The AWS deployment should not be considered an active production deployment until the following have been configured and verified:
 
 - Production environment variables.
 - Production database credentials.
 - GHCR image configuration.
-- Azure VM configuration.
+- AWS EC2 instance and SSH access configuration.
 - Docker Compose production configuration.
 - Nginx public routing.
 - Deployment secrets.
