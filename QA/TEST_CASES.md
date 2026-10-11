@@ -138,3 +138,16 @@ Record date, commit/branch, environment, steps, expected result, actual result, 
 | TC-SEC-006 | Frontend dependency audit | Lockfile resolves source-map-js to 1.2.2+ and npm audit reports no high/critical finding |
 
 | TC-SEC-007 | Cross-user expense isolation | User A can list/export their own expense; User B's list and CSV export must not contain that expense; execute on an isolated test database |
+
+
+## Additional regression cases from the deeper audit
+
+| ID | Test | Expected |
+|---|---|---|
+| TC-CAT-005 | POST/PUT/DELETE category as anonymous, ordinary user, and authorized role | Only the role allowed by the documented category policy can change shared categories; unauthorized requests are rejected |
+| TC-ENV-002 | Compose startup with root environment file and without required variables | Valid environment starts with configured credentials; missing required values fail clearly before startup |
+| TC-UI-001 | Run frontend automated test suite in CI | CI log proves a non-zero test count was executed; an absent test script cannot be treated as functional test coverage |
+| TC-RL-001 | Login/register rate limits from two independent client addresses through Nginx | Each client is tracked correctly, one client does not throttle the other, excessive attempts return HTTP 429, and limits persist consistently across workers |
+| TC-SEC-008 | Content-Security-Policy on the public HTTPS endpoint | A reviewed CSP is present and login, navigation, and API calls continue to work without unexplained policy violations |
+| TC-SEC-009 | HSTS on the public HTTPS endpoint | HSTS is present only if HTTPS is enforced and the deployment layer is configured to send the header |
+| TC-DOC-004 | Clean checkout follows documented Compose port and environment setup | Documented port, URL, environment-file steps, and health paths match actual startup behavior |
