@@ -19,6 +19,16 @@ expenses_bp = Blueprint(
 )
 
 
+def safe_csv_cell(value):
+    """Prevent spreadsheet formula execution in untrusted CSV text cells."""
+    text = "" if value is None else str(value)
+
+    if text.lstrip()[:1] in ("=", "+", "-", "@"):
+        return "'" + text
+
+    return text
+
+
 def build_expense_query(user_id):
     """
     Build the base expense query for the authenticated user
@@ -280,9 +290,9 @@ def export_expenses():
     for expense in expenses:
         writer.writerow([
             expense.id,
-            expense.category.name,
+            safe_csv_cell(expense.category.name),
             f"{float(expense.amount):.2f}",
-            expense.description or "",
+            safe_csv_cell(expense.description),
             expense.expense_date.isoformat()
         ])
 
