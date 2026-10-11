@@ -10,14 +10,17 @@ Passing CI establishes that the tested commit passed the automated jobs that ran
 
 ## Release-blocking items and required decisions
 
-### RV-01 — Choose and prove the deployment target
-Related finding: QA-FIND-008. Priority: Release blocker.
+### RV-01 — Deploy to the approved AWS target and prove it is running
 
-Why it matters: The supplied capstone specification explicitly requires Azure VM deployment. The upstream README documents AWS EC2. Merely having an Azure workflow is not evidence that the app was deployed to Azure. If the wrong target is submitted, the project can fail the stated infrastructure requirement even when the app works.
+Related finding: QA-FIND-008 / QA-FIND-021. Priority: Release blocker until deployment evidence exists.
 
-Action: The team must confirm the target with the instructor. If Azure is required, configure the Azure VM secrets/variables, deploy the reviewed commit, and record the public app URL/IP and VM evidence. If the instructor approves AWS instead, record that approval and update the requirement traceability/README to reflect the decision; do not silently substitute one cloud for another.
+Decision: The QA owner reports that the project tutor approved AWS as an alternative deployment target. AWS EC2 is the target for this audit and is also the environment described by the upstream README. Retain the tutor's approval with the capstone submission records.
 
-Pass evidence: Written target decision; deployment workflow run for the intended target; timestamped URL/IP response; VM/container status; and demonstration screenshots. No target decision means this remains open.
+Why it matters: Approval of the target does not prove that the reviewed application commit is deployed. A workflow may be configured for a different environment, use stale secrets, or deploy a different image from the one tested by CI.
+
+Action: Align the CD workflow, protected secret names, README, architecture/CI-CD documentation, and evidence with AWS EC2. Configure the required AWS host/user/SSH-key secrets. Deploy the exact tested commit using its commit-tagged images, and record the public application URL, instance/container status, and deployment version.
+
+Pass evidence: Retained tutor approval; successful workflow run for the intended commit; AWS EC2/container status; public URL response; both public health checks; and timestamped screenshots/logs with secrets redacted. The target decision is recorded; deployment verification remains open until this evidence exists.
 
 ### RV-02 — Remove hard-coded database credentials
 Related finding: QA-FIND-035 and existing configuration finding QA-FIND-022. Priority: High; release blocker for production deployment.
