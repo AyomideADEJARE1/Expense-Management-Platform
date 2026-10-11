@@ -133,3 +133,25 @@ Classification: Dependency-security finding. Status: Open. Priority: High pendin
 The GitHub Actions `npm ci` log reported one high-severity dependency vulnerability. The log excerpt available during this audit did not identify the affected package or advisory, so no package upgrade is recommended blindly.
 
 Required action: run `npm audit` against the exact lockfile revision, record the affected package, advisory, dependency path and fixed version, then apply the smallest compatible update and rerun lint, build, and the audit.
+
+
+## QA-FIND-018 — API CSV export can emit spreadsheet formulas from user-controlled text
+Classification: Security defect. Status: Correction proposed in PR #54; retest pending. Priority: High.
+
+The backend `GET /api/expenses/export` writes expense descriptions and category names directly into CSV cells. CSV quoting alone does not prevent spreadsheet formula execution when a cell begins with characters such as `=`, `+`, `-`, or `@`. The frontend export had the same weakness for formula characters preceded by whitespace.
+
+The correction proposed in PR #54 prefixes potentially executable text cells in both backend and frontend CSV exports and adds regression tests for common formula prefixes. Retest both export paths with descriptions containing formula prefixes and leading whitespace before closing this finding.
+
+## QA-FIND-019 — Non-finite or oversized monetary values can trigger server/database errors
+Classification: Input-validation defect. Status: Correction proposed in PR #54; retest pending. Priority: Medium.
+
+The expense and budget routes parse numeric input as `Decimal`, but comparing non-finite values such as `NaN` can raise a decimal exception rather than returning a controlled validation response. Values beyond the database column's supported precision can also fail at persistence time.
+
+The correction proposed in PR #54 rejects non-finite values and values at or above the maximum supported amount before database writes. Regression tests currently cover non-finite expense creation values; budget and oversized-value cases still need explicit coverage.
+
+## QA-FIND-020 — Category endpoints do not validate JSON field types before string operations
+Classification: Input-validation defect. Status: Correction proposed in PR #54; retest pending. Priority: Medium.
+
+The category routes call `.strip()` on the supplied category name without first confirming that it is a string, and they pass arbitrary JSON types for descriptions toward persistence. A request with a numeric name or list/object description can therefore produce an unhandled exception instead of a client error.
+
+The correction proposed in PR #54 validates category name and description types on create/update and adds regression tests for invalid create payloads. Update-path type validation and the full category CRUD workflow still need test coverage.
