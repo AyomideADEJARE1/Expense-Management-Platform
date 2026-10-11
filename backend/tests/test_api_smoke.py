@@ -355,3 +355,13 @@ def test_expense_date_range_filters_and_validation(client):
         headers=headers,
     )
     assert malformed_date.status_code == 400
+
+
+def test_non_object_json_bodies_are_rejected(client):
+    for endpoint in (
+        "/api/auth/register",
+        "/api/auth/login",
+        "/api/categories",
+    ):
+        response = client.post(endpoint, json=["not", "an", "object"])
+        assert response.status_code == 400
