@@ -125,6 +125,22 @@ def create_expense():
             400
         )
 
+    if (
+        isinstance(category_id, bool)
+        or not isinstance(category_id, int)
+        or category_id <= 0
+    ):
+        return error_response(
+            "Category ID must be a positive integer",
+            400
+        )
+
+    if description is not None and not isinstance(description, str):
+        return error_response(
+            "Description must be a string",
+            400
+        )
+
     if amount is None:
         return error_response(
             "Amount is required",
@@ -369,6 +385,16 @@ def update_expense(expense_id):
 
     # Update category
     if category_id is not None:
+        if (
+            isinstance(category_id, bool)
+            or not isinstance(category_id, int)
+            or category_id <= 0
+        ):
+            return error_response(
+                "Category ID must be a positive integer",
+                400
+            )
+
         category = db.session.get(
             ExpenseCategory,
             category_id
@@ -420,6 +446,12 @@ def update_expense(expense_id):
 
     # Update description
     if "description" in data:
+        if description is not None and not isinstance(description, str):
+            return error_response(
+                "Description must be a string",
+                400
+            )
+
         expense.description = description
 
     # Update expense date
