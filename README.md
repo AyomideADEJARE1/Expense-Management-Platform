@@ -38,10 +38,11 @@ The root-level `src/` and root `package.json` are legacy/duplicate frontend asse
 Install Docker Engine/Desktop with the Docker Compose plugin. From a clean checkout:
 
 ```bash
+cp .env.example .env
 cp backend/.env.example backend/.env
 ```
 
-Edit `backend/.env` and replace the placeholder `SECRET_KEY` with a strong random development secret. Keep `backend/.env` out of version control. The Compose file supplies the database connection values to the backend and currently uses fixed development-only PostgreSQL credentials; do not reuse those credentials in production.
+Edit both environment files before starting the app. In `backend/.env`, set separate strong values for `SECRET_KEY` and `JWT_SECRET`. In the root `.env`, replace the PostgreSQL password placeholder with a unique strong password. Keep both `.env` files out of version control. Compose now requires these database variables instead of embedding a fixed password in the YAML.
 
 Start the application from the repository root:
 
