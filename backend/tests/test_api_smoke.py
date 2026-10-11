@@ -154,3 +154,63 @@ def test_non_finite_expense_amount_is_rejected(client):
             },
         )
         assert response.status_code == 400
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"full_name": 123, "email": "qa@example.test", "password": "secret"},
+        {"full_name": "QA User", "email": {"bad": "type"}, "password": "secret"},
+        {"full_name": "QA User", "email": "qa@example.test", "password": ["bad"]},
+    ],
+)
+def test_registration_rejects_non_string_fields(client, payload):
+    response = client.post("/api/auth/register", json=payload)
+
+    assert response.status_code == 400
+
+
+def test_login_rejects_non_string_fields(client):
+    response = client.post(
+        "/api/auth/login",
+        json={"email": 123, "password": ["not-a-string"]},
+    )
+
+    assert response.status_code == 400
+
+
+def test_profile_update_rejects_non_string_name_and_currency(client):
+    email = f"qa-profile-{uuid.uuid4().hex}@example.test"
+    password = "TestPassword123!"
+
+    registration = client.post(
+        "/api/auth/register",
+        json={
+            "full_name": "QA Profile Test",
+            "email": email,
+            "password": password,
+        },
+    )
+    assert registration.status_code == 201
+
+    login = client.post(
+        "/api/auth/login",
+        json={"email": email, "password": password},
+    )
+    assert login.status_code == 200
+    token = login.get_json()["data"]["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    bad_name = client.put(
+        "/api/auth/me",
+        headers=headers,
+        json={"first_name": 123, "last_name": "Tester"},
+    )
+    assert bad_name.status_code == 400
+
+    bad_currency = client.put(
+        "/api/auth/me",
+        headers=headers,
+        json={"currency": ["NGN (₦)"]},
+    )
+    assert bad_currency.status_code == 400
