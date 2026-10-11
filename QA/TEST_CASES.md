@@ -118,3 +118,5 @@ Record date, commit/branch, environment, steps, expected result, actual result, 
 | TC-AUTH-008 | Registration with malformed email or overlong name | API returns HTTP 400 and no user record is created |
 
 | TC-API-006 | Independent endpoint tests under test configuration | Ordinary API tests are not affected by shared rate-limit state; rate limiting has separate dedicated coverage |
+
+| TC-BUD-004 | Duplicate budget creation under concurrent requests | Database prevents duplicate budgets for the same user/month/category, including NULL category |
