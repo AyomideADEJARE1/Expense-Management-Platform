@@ -492,3 +492,74 @@ Correction: The correction branch makes the spending field read-only and adds he
 Retest: Open the create and edit budget modals. Confirm the spending value cannot be changed, helper text is visible, saving the budget updates only the spending limit, and the displayed spent amount matches the recorded expense data after reload.
 
 Closure evidence: CI result for the fixing commit, browser screenshot, and comparison between displayed spending and the API/expense records. Source correction alone is not a pass.
+
+
+## QA-FIND-046 — Category creation, update, and deletion do not require authentication
+
+Classification: Confirmed security finding on upstream main and the current correction branch. Status: Open; authorization policy and code correction required. Priority: High.
+
+Evidence: `backend/routes/categories.py` defines `POST /api/categories`, `PUT /api/categories/<category_id>`, and `DELETE /api/categories/<category_id>` without JWT authentication decorators or an equivalent authorization check. These routes change the shared category table used by expense and budget records. A caller who can reach the API can attempt to add, rename, or delete categories without signing in.
+
+Impact: Unauthorized users may alter categories used by other accounts. Renaming or deleting a shared category can change what users see in transaction and budget views or fail when foreign-key references prevent deletion. This is a cross-user integrity risk, not just a missing UI restriction.
+
+Required correction: Team lead/product owner must confirm the intended category model: globally shared categories managed by authorized administrators, or user-owned categories. Backend must then enforce authentication and the chosen role/ownership policy on every write endpoint. Hiding buttons in the frontend is not an authorization control. Add tests for anonymous, ordinary authenticated, authorized administrator/owner, and unauthorized user requests.
+
+Retest: Send POST, PUT, and DELETE requests without a token; they must be rejected. Repeat as a normal user and as an authorized role according to the agreed policy. Verify that one user's actions cannot change another user's category data.
+
+Closure evidence: Recorded category policy decision, code diff, automated authorization tests, tested commit SHA, and API results for each role.
+
+## QA-FIND-047 — Compose database credentials were embedded in the Compose file
+
+Classification: Confirmed configuration/security finding on upstream main; correction proposed in PR #54. Status: Source correction committed on the correction branch; CI and local/AWS verification pending. Priority: High for deployment hygiene.
+
+Evidence: Upstream `docker-compose.yml` contains literal `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB` values and repeats the password in the backend environment. The correction branch replaces these literals with required Compose environment variables and updates the root `.env.example` and setup documentation.
+
+Impact: Fixed credentials are easy to copy into other environments, encourage password reuse, and make it difficult to use distinct development and production secrets. A password committed to Git should be treated as exposed if it was ever used outside a disposable local environment.
+
+Required correction: Keep the environment-variable configuration; configure the root `.env` locally and protected deployment variables on AWS; never commit real secret values. Rotate any fixed password if it has been used in a shared or deployed environment. Do not delete or recreate the persistent database volume as part of a credential change without a backup and an approved migration plan.
+
+Retest: Run `docker compose config` with a correctly populated local `.env`; verify it fails clearly when required variables are absent; verify backend and PostgreSQL use the same configured values without printing the password.
+
+Closure evidence: Sanitized Compose configuration, local startup/health results, CI result for the correction commit, and proof that deployed credentials are supplied outside Git. No secret values should appear in the evidence.
+
+## QA-FIND-048 — Frontend CI has no automated test script
+
+Classification: Confirmed automated-coverage gap. Status: Open. Priority: Medium; release confidence.
+
+Evidence: The reviewed `frontend/package.json` defines `dev`, `build`, `lint`, and `preview`, but no `test` script. The CI workflow uses `npm test --if-present`, which succeeds without running tests when the script is absent.
+
+Impact: A green frontend CI result proves the configured lint/build checks passed, but it does not prove that login state, navigation, forms, budget editing, charts, or CSV-related UI interactions behave correctly.
+
+Required correction: Add a suitable frontend test runner and tests for the highest-risk user flows, or add a documented browser automation job. Once a test script is introduced, CI should execute it as a required check rather than silently skipping it.
+
+Retest: Verify the CI log explicitly shows tests executed and a non-zero test count. Include at least the profile refresh, expense-search navigation, budget create/edit, and validation cases. Add browser end-to-end coverage for the key complete user journeys.
+
+Closure evidence: Test script and test files, CI log showing the test command and count, and results for the covered flows.
+
+## QA-FIND-049 — Docker Compose port documentation disagrees with the actual port mapping
+
+Classification: Documentation/reproducibility finding. Status: Correction proposed in PR #54; verify remaining documentation references. Priority: Low–Medium.
+
+Evidence: The Compose file publishes Nginx as `80:80`, while parts of `docs/docker.md` describe `8080:80` and instruct the reader to open `localhost:8080`. The README describes `http://localhost/`. These instructions cannot all be correct for the same Compose configuration.
+
+Impact: A new developer may open the wrong URL or assume the stack failed to start. This wastes setup time and can lead to inaccurate QA evidence.
+
+Required correction: Keep the documented URL and port mapping consistent across Compose, README, Docker guide, and screenshots. If the host port is changed, update all references.
+
+Retest: Start the stack from a clean checkout and follow only the written instructions. Confirm the stated URL returns the frontend and the documented API health route.
+
+Closure evidence: Reviewed documentation diff and a clean-start result using the documented URL.
+
+## QA-FIND-050 — Nginx security headers do not yet include a Content Security Policy
+
+Classification: Security-hardening observation. Status: Open; CSP policy and HTTPS/HSTS behavior need review. Priority: Medium.
+
+Evidence: The reviewed `nginx/default.conf` sets `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, and `Permissions-Policy`, but does not set a Content-Security-Policy header. HSTS is also not present in the reviewed config.
+
+Impact: Without a suitable CSP, the browser has fewer restrictions against unexpected script/resource execution if an injection flaw is introduced. HSTS is relevant only when the public site is served over HTTPS; it must not be enabled blindly on a plain-HTTP endpoint.
+
+Required correction: Review frontend asset requirements and add a tested, restrictive CSP that does not break the React app. Configure HSTS at the HTTPS termination layer only after confirming HTTPS is enforced and subdomain/preload scope is appropriate. Preserve the existing security headers.
+
+Retest: Inspect response headers from the public HTTPS URL and run browser smoke tests for login, navigation, and API requests under the CSP. Confirm there are no unexplained CSP violations.
+
+Closure evidence: Header capture from the deployed HTTPS endpoint, reviewed CSP policy, and browser test evidence. Do not report HSTS as enabled unless observed on HTTPS responses.
