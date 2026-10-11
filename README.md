@@ -4,6 +4,8 @@ A full-stack personal expense management application built with React, Flask, Po
 
 ## Current architecture
 
+![Expense Platform System Architecture](docs/Expense%20Platform%20System%20Architecture.png)
+
 Browser → Nginx → React frontend / Flask REST API → PostgreSQL
 
 Nginx is the public entry point. The frontend calls the Flask API through the `/api` prefix; the browser must not connect directly to PostgreSQL.
@@ -83,6 +85,10 @@ curl -i http://localhost/api/health
 A healthy container does not, by itself, prove that registration, expense ownership, budgets, reports, filters, or CSV downloads work correctly. Run the corresponding QA test cases and retain evidence.
 
 ## CI/CD and deployment status
+
+The upstream `main` documentation currently identifies the live application URL as **https://expense-tracker.live** and describes the live host as AWS EC2 Ubuntu. Availability and current end-to-end functionality must be verified before using this URL as submission evidence.
+
+The capstone specification requires an Azure Virtual Machine. The existing Azure deployment workflow is prepared but disabled until its variables and secrets are configured. Therefore, the documented AWS-hosted URL does not by itself satisfy the Azure deployment requirement; the team must confirm the accepted target and provide evidence for the required environment.
 
 The CI workflow performs static/build/schema checks. At the time of this review, the backend test command allows pytest's “no tests collected” exit code and the frontend package has no test script, so a green CI result must not be interpreted as complete functional test coverage. This is recorded as an open QA finding.
 
