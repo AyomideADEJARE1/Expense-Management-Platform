@@ -120,3 +120,5 @@ Record date, commit/branch, environment, steps, expected result, actual result, 
 | TC-API-006 | Independent endpoint tests under test configuration | Ordinary API tests are not affected by shared rate-limit state; rate limiting has separate dedicated coverage |
 
 | TC-BUD-004 | Duplicate budget creation under concurrent requests | Database prevents duplicate budgets for the same user/month/category, including NULL category |
+
+| TC-CI-007 | Empty backend test suite | CI fails if pytest collects zero tests |
