@@ -403,7 +403,7 @@ main
 
 The deployment job uses SSH to connect to the configured AWS EC2 VM. The remote script derives the short commit tag with POSIX-compatible shell commands so it does not depend on Bash-only substring expansion.
 
-The corrected deployment process checks out the commit associated with the successful CI run, selects the corresponding `sha-<short commit>` backend/frontend image tags, pulls those images, and restarts the Compose services. The current workflow then applies the idempotent user-settings migration and checks both public health endpoints.
+The corrected deployment process checks out the commit associated with the successful CI run, selects the corresponding `sha-<short commit>` backend/frontend image tags, pulls those images, and restarts the Compose services. It then applies the idempotent user-settings migration (002), applies the budget uniqueness migration (003), and checks both public health endpoints. Migration 003 intentionally fails if legacy duplicate budgets exist, stopping deployment until the data is reviewed and remediated.
 
 The image tag is commit-specific but is not inherently immutable. For stronger release integrity, configure registry tag immutability or pin and record each image digest.
 
