@@ -11,7 +11,7 @@ if BACKEND_DIR not in sys.path:
 
 
 def is_test_database(database_name):
-    """Return True only when the configured database name identifies a test DB."""
+    """Return True when the configured database name identifies a test DB."""
     if not isinstance(database_name, str):
         return False
     normalized = database_name.lower()
@@ -31,7 +31,7 @@ def refuse_non_test_database():
 
     if not is_test_database(database_name):
         pytest.fail(
-            "Refusing to run API tests: configure POSTGRES_DB with a test-only "
-            "database name (for example expense_management_test).",
+            "Refusing to run API tests: configure POSTGRES_DB with a "
+            "test-only database name (for example expense_management_test).",
             pytrace=False,
         )
