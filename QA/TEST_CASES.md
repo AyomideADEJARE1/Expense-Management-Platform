@@ -82,3 +82,16 @@ Record date, commit/branch, environment, steps, expected result, actual result, 
 |---|---|---|
 | TC-DOC-001 | Architecture docs | Documentation matches implementation |
 | TC-DOC-002 | README | Setup/features/persistence/deployment match implementation |
+
+
+## Additional tests from source review
+| ID | Test | Expected |
+|---|---|---|
+| TC-CAT-004 | POST/PUT/DELETE category without token | Request is rejected; no category data changes |
+| TC-FLT-003 | Combine month and category filters | Only records matching both selected filters are shown |
+| TC-EXP-005 | Export filtered transaction list | CSV downloads with correct headers and only the intended records |
+| TC-CI-004 | CI test collection | Required backend/frontend test suites execute; missing suites cannot silently count as a full test pass |
+| TC-CD-005 | Published image deployment | VM pulls the exact GHCR image tags built from the tested commit |
+| TC-CD-006 | Public health route | Deployment health check uses the correct Nginx-routed endpoint and succeeds |
+| TC-ENV-001 | Clean checkout startup | Documented env-file setup is sufficient for Compose startup without committing real secrets |
+| TC-DOC-003 | README implementation accuracy | README paths, persistence model, setup, health route and deployment status match the integrated code |
