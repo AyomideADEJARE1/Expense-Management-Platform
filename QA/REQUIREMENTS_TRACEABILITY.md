@@ -10,7 +10,7 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 | REQ-04 | Delete expenses | TC-EXP-003 | PENDING |
 | REQ-05 | Expense categories | TC-CAT-001–003 | OBSERVATION |
 | REQ-06 | Monthly summaries | TC-REP-001 | PENDING |
-| REQ-07 | Budget limits | TC-BUD-001–005, TC-DB-006 | PR #54 adds partial unique indexes for category and whole-month budgets, maps database uniqueness conflicts to HTTP 409, and tests the indexes/duplicate response. Fresh/existing database migration verification and CI for the latest commit are pending |
+| REQ-07 | Budget limits | TC-BUD-001–006, TC-DB-006 | PR #54 adds partial unique indexes for category and whole-month budgets, maps database uniqueness conflicts to HTTP 409, and tests the indexes/duplicate response. Fresh/existing database migration verification and CI for the latest commit are pending |
 | REQ-08 | Dashboard with charts | TC-DASH-001–003 | FINDING OPEN |
 | REQ-09 | Date/category filtering | TC-FLT-001–005 | Date-range/category UI and API corrections proposed in PR #54; CI and browser retest pending |
 | REQ-10 | CSV export | TC-EXP-004–005 | UI correction proposed in PR #54; retest pending |
