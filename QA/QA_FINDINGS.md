@@ -573,6 +573,8 @@ Retest: Attempt to delete a category referenced by an expense and verify HTTP 40
 
 Closure evidence: Passing CI for the fixing commit, API test results for both paths, session recovery result, and tested commit SHA.
 
+Retest update — 2026-10-11: the first category-delete regression test exposed that SQLAlchemy tried to null a non-null expense category reference, producing HTTP 500 instead of 409. PR #54 now checks for referencing expenses before deletion and sets passive_deletes=True so the database RESTRICT constraint can handle a concurrent reference safely. The latest CI run 38179293397 is in progress; this fix remains pending until that test passes.
+
 
 ## QA-FIND-053 — Docker build contexts lacked ignore rules for local environment files
 
