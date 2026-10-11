@@ -18,12 +18,15 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 | REQ-12 | Flask REST API | TC-API-001–004 | PENDING |
 | REQ-13 | PostgreSQL | TC-DB-001–003 | PENDING |
 | REQ-14 | Docker Compose | TC-DEV-001–004 | PENDING |
-| REQ-15 | GitHub Actions CI/CD | TC-CI-001–005 | Partial CI passes observed; backend test suite still collects zero tests |
-| REQ-16 | Docker build/deployment | TC-CI-003, TC-CD-001–006 | Configuration correction proposed in PR #54; full CI/deployment retest pending |
+| REQ-15 | GitHub Actions CI/CD | TC-CI-001–006 | CI checks and initial backend smoke tests pass on PR #54; full functional coverage remains incomplete |
+| REQ-16 | Docker build/deployment | TC-CI-003, TC-CD-001–006 | Image build checks pass; live deployment and health verification remain pending |
 | REQ-17 | Nginx reverse proxy | TC-DEV-004 | PENDING |
-| REQ-18 | Health checks | TC-HLT-001–003 | BLOCKED/PENDING for live checks |
-| REQ-19 | Secure environment variables | TC-SEC-001–004 | PENDING |
+| REQ-18 | Health checks | TC-HLT-001–003, TC-CD-006 | Basic app health endpoint exists; database readiness is not included in the CD health gate; live retest pending |
+| REQ-19 | Secure environment variables | TC-SEC-001–004, TC-ENV-001 | Secret scanning exists; hard-coded Compose database credentials remain an open security finding |
 | REQ-20 | Logs/monitoring | TC-MON-001–002 | PENDING |
 | REQ-21 | Architecture documentation | TC-DOC-001 | PENDING |
 | REQ-22 | Accurate README/setup | TC-DOC-002, TC-DOC-003, TC-ENV-001 | README correction proposed in PR #54; review pending |
-| REQ-23 | Live URL | TC-CD-004 | BLOCKED until instance is restored |
+| REQ-23 | Live URL | TC-CD-004 | URL is documented in README; current external availability and end-to-end function still require verification |
+
+| REQ-24 | Required cloud deployment target | TC-CD-001–006 | MISMATCH: capstone requires Azure VM; repository docs describe AWS EC2 as current production; team/instructor decision required |
+| REQ-25 | Database credentials are externally configured | TC-SEC-001–004, TC-ENV-001 | FINDING OPEN: Compose contains hard-coded database credentials |
