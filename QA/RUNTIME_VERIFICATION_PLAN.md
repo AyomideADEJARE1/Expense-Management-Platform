@@ -236,3 +236,11 @@ Related finding: QA-FIND-046. Priority: Low–Medium.
 Open both new-budget and edit-budget forms. Confirm the "Amount Already Spent" value is read-only and helper text explains that it is calculated from recorded expenses. Save a budget, reload, and compare the displayed spending value with the relevant expense records and API response.
 
 Pass evidence: CI result for the correction commit, browser screenshot, and a before/after comparison against recorded expenses. Do not mark the finding closed from source review alone.
+
+
+## RV-21 — Verify category deletion error classification and recovery
+Related finding: QA-FIND-052. Priority: Medium.
+
+Test deletion of a category referenced by an expense. The API should return HTTP 409 with the category-in-use message. Then simulate an unexpected database commit failure during category deletion and verify a generic HTTP 500, rollback, no internal error details in the response, and that the category still exists and can be deleted after recovery.
+
+Pass evidence: Current CI passes both new tests; response codes and sanitized bodies are captured; a subsequent valid operation succeeds.
