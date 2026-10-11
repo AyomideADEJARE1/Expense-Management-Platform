@@ -154,8 +154,8 @@ jobs:
           --health-retries 10
     env:
       FLASK_ENV: testing
-      SECRET_KEY: ci-test-secret
-      JWT_SECRET: ci-test-jwt-secret
+      SECRET_KEY: ci-test-secret-key-with-at-least-thirty-two-bytes
+      JWT_SECRET: ci-test-jwt-secret-key-with-at-least-thirty-two-bytes
       DATABASE_URL: postgresql://ci_user:ci_password@localhost:5432/expense_management_test
       POSTGRES_HOST: localhost
       POSTGRES_PORT: "5432"
