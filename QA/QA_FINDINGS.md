@@ -318,13 +318,13 @@ Evidence: upstream `main` `docker-compose.yml` embeds fixed PostgreSQL user/pass
 - CI passing on PR #54 does not prove these remaining findings are fixed; the latest PR #54 run validates the current correction head, not the unchanged upstream `main` or live deployment.
 
 ## QA-FIND-036 — JWT-specific secret configuration is ignored
-Classification: Security configuration defect. Status: Open on the current correction branch. Priority: High.
+Classification: Security configuration defect. Status: Correction proposed in PR #54; retest and production fail-closed validation pending. Priority: High.
 
 Evidence: in backend/app.py, app.config["JWT_SECRET_KEY"] is assigned from os.getenv("SECRET_KEY"), while the CI workflow provides a separate JWT_SECRET environment variable. As written, the intended JWT-specific environment variable is ignored and both Flask SECRET_KEY and JWT signing use the SECRET_KEY value. This makes the configuration misleading and prevents operators from rotating/configuring the JWT key independently.
 
 Why it matters: a production secret rotation may not change the JWT signing key as expected if the operator changes only JWT_SECRET. It also makes it harder to follow least-privilege/secret-separation practices and can leave tokens signed with an unintended key.
 
-Required correction: define and document the intended environment variable names. Read JWT_SECRET_KEY (or consistently use the existing JWT_SECRET name) for Flask-JWT-Extended's JWT_SECRET_KEY setting; keep SECRET_KEY for Flask's own signing use. In production, reject missing, placeholder, known-default, or insufficiently strong values at startup, and never log the values. Provide test-only values explicitly in CI and update backend/.env.example and deployment secret documentation.
+Correction now proposed in PR #54: backend/app.py reads JWT_SECRET_KEY first, then the existing JWT_SECRET variable used by CI, and falls back to SECRET_KEY only for backward compatibility when no dedicated JWT secret is configured. backend/.env.example now documents separate Flask and JWT placeholders. Remaining action: make production startup reject missing/placeholder/weak secrets rather than accepting the compatibility fallback, and add automated tests proving the dedicated JWT variable is honored.
 
 Required regression tests:
 - Production configuration fails startup when either required key is missing or is a placeholder.
@@ -334,5 +334,5 @@ Required regression tests:
 
 Impact if left unresolved: operators may believe they rotated JWT_SECRET while the application continues signing JWTs with SECRET_KEY. This can undermine incident response and create a false sense that production key rotation was completed.
 
-Closure evidence: correction commit on the PR target branch, passing configuration tests, secret-scan success, and a reviewed example/deployment configuration. This finding overlaps the broader production-secret enforcement concern but is retained separately because the ignored JWT environment variable is a specific, directly evidenced configuration defect.
+Closure evidence: correction merged to the intended target branch, passing configuration tests, secret-scan success, and a reviewed example/deployment configuration. Until the production fail-closed checks and tests are added, status remains RETEST PENDING. This finding overlaps the broader production-secret enforcement concern but is retained separately because the ignored JWT environment variable is a specific, directly evidenced configuration defect.
 
