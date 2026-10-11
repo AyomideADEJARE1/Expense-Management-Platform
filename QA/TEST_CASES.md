@@ -128,3 +128,5 @@ Record date, commit/branch, environment, steps, expected result, actual result, 
 
 | TC-FLT-004 | Filter by inclusive start/end dates | Only authenticated user's expenses inside the selected date range are returned/exported |
 | TC-FLT-005 | Reversed or malformed date range | API returns HTTP 400 with a controlled validation response |
+
+| TC-VAL-005 | Non-object JSON request body | Write endpoints return HTTP 400 instead of an unhandled server error |
