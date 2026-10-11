@@ -559,21 +559,6 @@ Retest: Send login/register attempts through the public Nginx endpoint from two 
 Closure evidence: Reviewed proxy configuration, rate-limit storage configuration, automated or controlled test results from separate client addresses, response codes, and deployed commit/version.
 
 
-## CI status note — 2026-10-11
-
-The first run on the budget migration/test changes (38178336973, commit 08920f92aca37d865771f381f14b077c67bebfc1) failed at backend Flake8 because the new tests had formatting issues. Those issues were corrected.
-
-The latest CI run, 38178490904, passed for code commit 2ff1e1a39f7bbccd62e95a1c112dd27e59eda4ef. All eight jobs passed: secret scan, component detection, database migrations, backend lint/tests, frontend lint/build, both Docker builds, and the aggregate ci-success check. The backend suite collected and passed 31 tests. The database job successfully applied migrations 001–003, verified the uniqueness indexes, confirmed legacy duplicate budgets stop migration with an actionable diagnostic, and validated the resolved Compose environment configuration without the old fixed password.
-
-Important limitation: the frontend package still has no test script, so the optional frontend test step can pass without running frontend tests. CI does not prove a live AWS deployment, a populated existing-volume upgrade, browser end-to-end behavior, or the open category authorization/proxy-aware rate-limit issues. Those still require their documented verification and evidence.
-
-
-Test-database guard CI follow-up — 2026-10-11: the guard commit initially failed Flake8 because two lines were too long. Those lines were fixed in code commit 7cf03021514b26df9ddec6a8ae0da29be525f397. CI run 38178811441 was queued at the time of this update. The prior green CI run 38178490904 did not include the new test-database guard; verify the new run before treating QA-FIND-043 as further mitigated.
-
-
-CI status superseding note — 2026-10-11: the prior paragraph saying run 38178811441 was queued is now outdated. Run 38178811441 completed successfully for code commit 7cf03021514b26df9ddec6a8ae0da29be525f397. All eight jobs passed, including the test database guard, database migrations, backend lint/tests, frontend lint/build, and both Docker builds. The backend suite collected and passed 31 tests. This verifies the guard with CI's expense_management_test database. It does not verify a deliberately non-test database configuration, complete per-test cleanup, an existing AWS database volume, live AWS deployment, or browser end-to-end behavior.
-
-
 ## QA-FIND-052 — Category deletion maps every database failure to a conflict
 
 Classification: API error handling / operational diagnosis. Status: Correction proposed in PR #54; CI and retest pending. Priority: Medium.
@@ -602,3 +587,12 @@ Correction: PR #54 adds backend/.dockerignore to exclude environment files, Git 
 Retest: Build backend and frontend images with local sentinel environment files present in the workspace. Confirm the files are excluded from the build context and no sentinel value appears in the resulting image or frontend bundle. Verify both Docker builds still succeed.
 
 Closure evidence: CI result for the ignore-rule check and image builds, reviewed ignore files, and a sentinel-based build-context test or equivalent evidence. Do not claim an actual secret was leaked unless evidence shows a real secret entered an image.
+
+
+## CI status note — 2026-10-11
+
+The last completed green CI run, 38178811441, passed for code commit 7cf03021514b26df9ddec6a8ae0da29be525f397. It passed all eight jobs and 31 backend tests, including the test-database guard. That run predates the latest category deletion error-handling tests and Docker build-context ignore-rule checks.
+
+The current code head is 76d5488ce82a97ae13031a7ad39e8d76ea95d90c. CI run 38179177424 was in progress at the last check. Its database migration and frontend lint/build jobs had passed; the backend job and Docker builds were not all complete yet. Do not mark QA-FIND-052 or QA-FIND-053 CI-verified until the current run finishes successfully.
+
+The frontend package still has no test script, so CI can pass without executing frontend functional tests. CI does not prove live AWS deployment, populated existing-volume migration, browser end-to-end behavior, category authorization, the negative non-test-database guard case, or proxy-aware production rate limiting. Those remain open and require their documented evidence.
