@@ -8,7 +8,7 @@ from routes.expenses import safe_csv_cell
 
 @pytest.fixture()
 def client():
-    app.config.update(TESTING=True)
+    app.config.update(TESTING=True, RATELIMIT_ENABLED=False)
     with app.test_client() as test_client:
         yield test_client
 
