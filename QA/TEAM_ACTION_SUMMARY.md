@@ -302,6 +302,18 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Evidence to close:** Ignore-file diff, CI run, successful image builds, and sentinel-based verification where available.
 
+### 28. DevOps: apply database migrations before restarting the app
+
+**What happens:** The deployment workflow previously restarted all services before applying the database migrations.
+
+**Why it matters:** If a migration fails, the new app version may already be running against the old schema, leaving the release partly deployed.
+
+**Required correction:** Start the database, apply migrations 002 and 003, and only restart backend/frontend/Nginx after both migrations succeed. The correction branch now uses this order and adds a CI check for the command sequence.
+
+**How QA will verify:** Confirm the CI order check passes. In staging, deliberately make migration 003 fail and verify the existing app version remains running; then resolve the test data, redeploy, and confirm the intended commit and health checks.
+
+**Evidence to close:** Passing CI order check, staging failure/recovery proof, deployed image/commit identity, and health results.
+
 ## Release checklist
 
 Do not mark a check as passed until evidence is attached.
@@ -312,7 +324,7 @@ Do not mark a check as passed until evidence is attached.
 - [ ] Production database and JWT secrets are required and are not sample values.
 - [ ] Tests use an isolated database and pass repeatedly.
 - [ ] CI is green for the exact release commit, backend tests are collected, and frontend tests execute rather than being silently skipped.
-- [ ] Migration succeeds on fresh and existing databases.
+- [ ] Migration succeeds on fresh and existing databases.\n- [ ] Deployment applies migrations before restarting backend/frontend/Nginx.
 - [ ] AWS is the documented and approved deployment target, and the deployed AWS VM is evidenced.
 - [ ] The running image matches the tested commit.
 - [ ] The AWS VM can pull the published images using the intended permissions.
