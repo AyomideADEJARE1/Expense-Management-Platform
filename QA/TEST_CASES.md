@@ -130,3 +130,5 @@ Record date, commit/branch, environment, steps, expected result, actual result, 
 | TC-FLT-005 | Reversed or malformed date range | API returns HTTP 400 with a controlled validation response |
 
 | TC-VAL-005 | Non-object JSON request body | Write endpoints return HTTP 400 instead of an unhandled server error |
+
+| TC-HLT-005 | Database health probe failure and recovery | Probe returns 500 while DB is unavailable, rolls back the failed session, then returns healthy after recovery |
