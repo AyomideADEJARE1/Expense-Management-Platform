@@ -100,3 +100,9 @@ Record date, commit/branch, environment, steps, expected result, actual result, 
 | TC-CI-006 | Backend pytest collection | At least the committed API smoke tests are collected and pass |
 | TC-API-005 | Health endpoint smoke test | `/health` returns HTTP 200 and `{\"status\":\"ok\"}` |
 | TC-AUTH-005 | Registration → login → own expenses | A new user can register, receive a token, and access only their authenticated expense list |
+
+| TC-SEC-CSV-001 | Export description beginning with spreadsheet formula | CSV text cell is neutralized and does not execute as a formula |
+| TC-SEC-CSV-002 | Export formula preceded by whitespace | CSV text cell is neutralized after leading whitespace |
+| TC-VAL-001 | Create expense with NaN or Infinity amount | API returns HTTP 400; no database write occurs |
+| TC-VAL-002 | Create/update category with non-string name or description | API returns HTTP 400 rather than an unhandled server error |
+| TC-VAL-003 | Create/update expense or budget above supported numeric precision | API returns HTTP 400 rather than a database error |
