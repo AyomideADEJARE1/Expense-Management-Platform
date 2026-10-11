@@ -238,3 +238,11 @@ PR #54 now proposes start-date and end-date controls in the React transaction vi
 Classification: Input-validation defect. Status: Correction proposed in PR #54; retest pending. Priority: Medium.
 
 Several write routes checked only whether `request.get_json()` returned a truthy value before calling `.get()`. A non-empty JSON array is truthy but has no `.get()` method, which could cause an unhandled exception. PR #54 changes the authentication, category, expense, and budget write routes to reject non-object JSON bodies with HTTP 400 and adds regression tests for those payloads.
+
+
+## QA-FIND-031 — VM authentication to GitHub Container Registry is not established
+Classification: Deployment configuration risk. Status: Open. Priority: Medium.
+
+The CD workflow publishes images to GHCR and the deployment script pulls those images on the VM. The workflow logs in to GHCR on the GitHub Actions runner, but that login does not automatically authenticate the remote VM. If the packages are private, `docker compose pull` will fail unless the VM has a configured read-only package credential. If the packages are public, anonymous pull should be verified explicitly.
+
+Required action: confirm package visibility and test the VM pull from a clean authentication state. If credentials are required, provision a least-privilege read-only token through a secure host-side secret mechanism; do not place it in the repository or print it in logs.
