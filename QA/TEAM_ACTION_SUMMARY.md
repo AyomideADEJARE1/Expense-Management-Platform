@@ -194,16 +194,76 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Evidence to close:** Tested commit SHA, browser screenshot, and comparison with API/expense data.
 
+### 19. Backend/security: protect category changes
+
+**What happens:** The category API allows category creation, editing, and deletion without requiring a signed-in user or checking a role.
+
+**Why it matters:** Anyone who can reach the API may try to change shared categories used by multiple accounts. This can affect what other users see or prevent deletion when a category is already in use.
+
+**Required correction:** Confirm whether categories are shared and administrator-managed or owned by each user. Then enforce the selected policy on every category write endpoint. Frontend button visibility is not a security control.
+
+**How QA will verify:** Try POST, PUT, and DELETE without a token, as a normal signed-in user, and as the permitted role. Confirm unauthorized requests are rejected and one user's changes cannot affect another user's data.
+
+**Evidence to close:** Agreed category policy, code diff, automated authorization tests, tested commit SHA, and redacted API results.
+
+### 20. Backend/DevOps: remove fixed database credentials
+
+**What happens:** Upstream main contains fixed PostgreSQL credentials in Compose. The correction branch now requires values from the root environment file and updates the setup instructions.
+
+**Why it matters:** Fixed credentials are easily reused across environments and make production secrets harder to manage safely.
+
+**Required correction:** Keep the environment-variable configuration, set a unique local password, use protected AWS deployment configuration, and rotate the old password if it was used in a shared/deployed environment.
+
+**How QA will verify:** Run Compose configuration with a configured environment file; confirm it fails clearly when required values are missing; start the services and check application/database health.
+
+**Evidence to close:** Sanitized Compose output, successful startup and health checks, CI result for the correction commit, and confirmation that no real secrets were committed.
+
+### 21. Frontend: add automated UI tests
+
+**What happens:** The frontend package has no test script, while CI uses npm test with if-present behavior. Therefore, CI can pass without executing frontend tests.
+
+**Why it matters:** A green build does not prove that login state, navigation, budget editing, or key screens work when users interact with them.
+
+**Required correction:** Add a frontend test runner and tests for profile refresh, expense search, budget create/edit, and validation. Add browser end-to-end tests for the main user journeys.
+
+**How QA will verify:** Check CI logs for a test command that actually runs and reports a non-zero test count.
+
+**Evidence to close:** Test files, package script, CI run showing tests executed, and results for key flows.
+
+### 22. DevOps/documentation: make the port and startup instructions consistent
+
+**What happens:** The Compose file maps Nginx to host port 80, but the Docker guide previously described port 8080. Setup instructions also did not clearly require the root environment file used for Compose database values.
+
+**Why it matters:** A developer following the wrong URL may think the application is down or collect evidence from the wrong endpoint.
+
+**Required correction:** Keep Compose, README, Docker guide, and examples consistent. Copy the example environment file to the root environment file, configure both root and backend environment files, and follow the URL stated in the docs.
+
+**How QA will verify:** Start from a clean checkout and follow only the documented instructions. Confirm the stated URL and health endpoints respond.
+
+**Evidence to close:** Documentation diff, sanitized Compose config, and clean-start test results.
+
+### 23. DevOps/security: review browser security headers
+
+**What happens:** Nginx sets several security headers, but the reviewed configuration does not include Content-Security-Policy or HSTS.
+
+**Why it matters:** CSP can limit the impact of unexpected script/resource execution. HSTS helps enforce HTTPS, but it should only be set after HTTPS is confirmed at the public endpoint.
+
+**Required correction:** Define and test a CSP compatible with the React app. Configure HSTS at the HTTPS termination layer only after confirming HTTPS behavior and scope.
+
+**How QA will verify:** Inspect response headers on the public HTTPS endpoint and run login, navigation, and API browser tests with CSP enabled.
+
+**Evidence to close:** Header capture, reviewed CSP configuration, and browser results. Do not claim HSTS is enabled unless it is observed on HTTPS responses.
+
 ## Release checklist
 
 Do not mark a check as passed until evidence is attached.
 
-- [ ] Category permissions are implemented and tested.
+- [ ] Category permissions are implemented and tested for anonymous users, ordinary users, and the permitted role.
 - [ ] Database-enforced budget uniqueness is implemented and tested, including NULL-category budgets and concurrent requests.
 - [ ] Budget conflicts return HTTP 409; unexpected errors remain server errors and failed sessions are rolled back.
 - [ ] Production database and JWT secrets are required and are not sample values.
 - [ ] Tests use an isolated database and pass repeatedly.
-- [ ] CI is green for the exact release commit and backend tests are actually collected.
+- [ ] CI is green for the exact release commit, backend tests are collected, and frontend tests execute rather than being silently skipped.
 - [ ] Migration succeeds on fresh and existing databases.
 - [ ] AWS is the documented and approved deployment target, and the deployed AWS VM is evidenced.
 - [ ] The running image matches the tested commit.
@@ -211,6 +271,7 @@ Do not mark a check as passed until evidence is attached.
 - [ ] Both health endpoints work through Nginx.
 - [ ] Production rate limits use the approved shared storage configuration.
 - [ ] Registration, current-user profile display, expense search navigation, expense ownership, filters, CSV export, budget creation/editing (including historical month preservation and read-only calculated spending), and dashboard totals pass browser testing.
+- [ ] Public HTTPS security headers are checked and the approved CSP is tested.
 - [ ] Screenshots, workflow run links, commit SHA, and test results are attached.
 
 **Current overall status:** Several issues are documented and some source corrections have been proposed. The correction branch has a reported successful CI run, but AWS deployment and browser verification remain pending. Do not describe the whole project as release-ready until the blocking items above are closed with evidence.
