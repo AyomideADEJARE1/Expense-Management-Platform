@@ -284,7 +284,7 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Why it matters:** Users and monitoring may be told to change their data when the real problem is a server/database failure.
 
-**Required correction:** Return HTTP 409 only for the known expense foreign-key conflict. Return a generic HTTP 500 for unexpected database failures, roll back the session, and do not expose internal database details. The correction branch now contains this change.
+**Required correction:** Check whether any expense references the category before deleting it. Return HTTP 409 for that known conflict, and return a generic HTTP 500 for unexpected database failures. Roll back the session and do not expose internal database details. The correction branch now checks for references and lets the database enforce the RESTRICT constraint if a race occurs.
 
 **How QA will verify:** Delete a category that is used by an expense and confirm 409. Then simulate a database failure during deletion and confirm 500, no sensitive error details, the category still exists, and a later valid delete succeeds.
 
