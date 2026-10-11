@@ -75,14 +75,18 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **QA check:** Test a fresh database, an existing database, and a simulated migration failure. Record the results and recovery steps.
 
-### 8. DevOps and team lead: confirm the required cloud
-**What happens:** The capstone requirement calls for an Azure VM, while the main README describes AWS EC2.
+### 8. Team lead/DevOps: use AWS as the approved deployment target
+**Decision recorded for this audit:** The QA owner reports that the project tutor approved AWS as an alternative deployment target. The upstream README also identifies AWS EC2 as the current production environment.
 
-**Why it matters:** A working application on the wrong cloud may not meet the assessment requirement.
+**What happens:** The reviewed CD workflow still contains an Azure-specific deployment job and Azure-specific secret names, while the approved/current environment is AWS EC2.
 
-**Team lead/instructor:** Confirm whether Azure is mandatory or an alternative is approved. Record the decision. If Azure is required, deploy there and collect evidence.
+**Why it matters:** A workflow configured for the wrong cloud will not reliably deploy to the approved AWS VM and may mislead maintainers about which secrets and host are required.
 
-**QA check:** The documented requirement, actual VM, deployment workflow, and demonstration evidence must agree.
+**Required correction:** Align the deployment workflow, protected secret names, README, architecture/CI-CD documentation, and submission evidence with AWS. Retire or clearly separate the legacy Azure deployment job. Do not claim a deployment succeeded just because workflow code exists.
+
+**How QA will verify:** Confirm the AWS job targets the intended EC2 host, deploys the reviewed commit, and completes application and database health checks.
+
+**Evidence to close:** Retain the tutor's approval with submission records, workflow run, EC2/container status, timestamped public URL checks, and screenshots showing the deployed version.
 
 ### 9. Backend/DevOps owner: test health checks through Nginx
 **What happens:** A health endpoint may work inside the backend but fail through the public Nginx route.
@@ -104,29 +108,61 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **QA owner:** Test with two test accounts and known sample records. Compare the browser results with the API and database results. Never use real personal financial data for these tests.
 
-## What QA can and cannot close alone
+## Additional findings requiring team action
 
-QA can inspect code, document defects, write test cases, run available automated checks, compare results with requirements, and report evidence.
+### 11. DevOps: confirm the AWS VM can pull the published images
+**What happens:** The CD workflow publishes images to GitHub Container Registry (GHCR), but source configuration does not prove the AWS VM can pull them.
 
-QA cannot truthfully confirm a live Azure deployment without access to the deployment and its logs. QA should not choose the cloud target without the team/instructor's decision. QA should not invent category-admin permissions without agreement on the intended product behavior. Backend and DevOps owners must implement and verify changes that require their code, secrets, cloud access, or database environment.
+**Why it matters:** A successful image build can be followed by a failed deployment if the package is private or the VM lacks registry access.
 
-The team should assign a named person to each action. “Backend owner” and “DevOps owner” identify the role that needs to act; the team must fill in the person's name.
+**Required correction:** Decide whether packages are public or private. If private, configure least-privilege read access on the EC2 VM and authenticate without exposing tokens.
+
+**QA verification and closure evidence:** Pull both images from the target VM, deploy the intended immutable tag, and retain logs with secrets redacted plus the deployed image digest.
+
+### 12. Backend/security: configure shared production rate limiting
+**What happens:** Flask-Limiter reports that production rate-limit storage is in memory.
+
+**Why it matters:** Limits held in one process are not shared across multiple workers or instances and can reset after restart.
+
+**Required correction:** Configure a supported shared production store, such as Redis, with protected credentials and documented outage behavior. Keep in-memory storage scoped to local development and tests.
+
+**QA verification and closure evidence:** Test requests across workers and retain production configuration, results, and monitoring/failure-behavior evidence.
+
+### 13. Backend/database: handle budget-save failures by cause
+**What happens:** The budget creation route catches every exception from database commit and returns HTTP 500. A uniqueness conflict could be treated as a server failure after a database constraint is added.
+
+**Why it matters:** Expected duplicate requests are reported incorrectly, and a failed transaction may affect later requests if session rollback is not handled.
+
+**Required correction:** Roll back failed commits, map known uniqueness violations to HTTP 409, and return a generic 500 only for unexpected errors. Do not expose SQL details.
+
+**QA verification and closure evidence:** Test sequential and concurrent duplicates, then submit a valid budget after the conflict. Retain response codes, row counts, regression tests, and proof that sensitive details are not returned.
+
+### 14. Backend/test owner: prove test-database isolation
+**What happens:** The reviewed fixture does not by itself prove that test data is isolated, cleaned up, or protected against destructive setup targeting a non-test database.
+
+**Why it matters:** Leftover data can make tests unreliable, and incorrect database configuration could affect data outside the test environment.
+
+**Required correction:** Use a dedicated disposable test database, add a guard that refuses destructive setup unless the database is clearly a test database, and ensure reliable rollback or cleanup.
+
+**QA verification and closure evidence:** Run the suite repeatedly and in a different order; retain the database guard/cleanup tests, CI output, and test database configuration.
 
 ## Release checklist
 
 Do not mark a check as passed until evidence is attached.
 
 - [ ] Category permissions are implemented and tested.
-- [ ] Database-enforced budget uniqueness is implemented and tested.
-- [ ] Budget conflicts return HTTP 409; unexpected errors remain server errors.
+- [ ] Database-enforced budget uniqueness is implemented and tested, including NULL-category budgets and concurrent requests.
+- [ ] Budget conflicts return HTTP 409; unexpected errors remain server errors and failed sessions are rolled back.
 - [ ] Production database and JWT secrets are required and are not sample values.
 - [ ] Tests use an isolated database and pass repeatedly.
-- [ ] CI is green for the exact release commit.
+- [ ] CI is green for the exact release commit and backend tests are actually collected.
 - [ ] Migration succeeds on fresh and existing databases.
-- [ ] The deployment target is approved and matches the capstone requirement.
+- [ ] AWS is the documented and approved deployment target, and the deployed AWS VM is evidenced.
 - [ ] The running image matches the tested commit.
+- [ ] The AWS VM can pull the published images using the intended permissions.
 - [ ] Both health endpoints work through Nginx.
+- [ ] Production rate limits use the approved shared storage configuration.
 - [ ] Registration, expense ownership, filters, CSV export, budgets, and dashboard totals pass browser testing.
 - [ ] Screenshots, workflow run links, commit SHA, and test results are attached.
 
-**Current overall status:** Several issues are documented and some source corrections have been proposed. The latest reported CI run passed, but live deployment and browser verification remain pending. Do not describe the whole project as release-ready until the blocking items above are closed with evidence.
+**Current overall status:** Several issues are documented and some source corrections have been proposed. The correction branch has a reported successful CI run, but AWS deployment and browser verification remain pending. Do not describe the whole project as release-ready until the blocking items above are closed with evidence.
