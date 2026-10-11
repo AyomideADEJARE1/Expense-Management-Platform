@@ -33,6 +33,12 @@ def register():
     email = data.get("email")
     password = data.get("password")
 
+    if not isinstance(full_name, str) or not isinstance(email, str) or not isinstance(password, str):
+        return error_response(
+            "Full name, email, and password must be strings",
+            400
+        )
+
     if not full_name or not email or not password:
         return error_response(
             "Full name, email, and password are required",
@@ -108,6 +114,12 @@ def login():
 
     email = data.get("email")
     password = data.get("password")
+
+    if not isinstance(email, str) or not isinstance(password, str):
+        return error_response(
+            "Email and password must be strings",
+            400
+        )
 
     if not email or not password:
         return error_response(
@@ -199,8 +211,17 @@ def update_current_user():
 
     # Update the user's name when name fields are supplied.
     if "first_name" in data or "last_name" in data:
-        first_name = data.get("first_name", "").strip()
-        last_name = data.get("last_name", "").strip()
+        first_name_value = data.get("first_name", "")
+        last_name_value = data.get("last_name", "")
+
+        if not isinstance(first_name_value, str) or not isinstance(last_name_value, str):
+            return error_response(
+                "First name and last name must be strings",
+                400
+            )
+
+        first_name = first_name_value.strip()
+        last_name = last_name_value.strip()
 
         if not first_name:
             return error_response("First name cannot be empty", 400)
@@ -252,7 +273,10 @@ def update_current_user():
             "GBP (£)"
         }
 
-        if data["currency"] not in allowed_currencies:
+        if (
+            not isinstance(data["currency"], str)
+            or data["currency"] not in allowed_currencies
+        ):
             return error_response("Unsupported currency", 400)
 
         user.currency = data["currency"]
