@@ -195,16 +195,7 @@ jobs:
         run: flake8 . --count --show-source --statistics --exclude .venv,venv,migrations
 
       - name: Test
-        run: |
-          set +e
-          pytest -v
-          status=$?
-          # Exit code 5 means "no tests collected" - allowed while the backend is being scaffolded.
-          if [ $status -eq 5 ]; then
-            echo "::warning::No backend tests found yet."
-            exit 0
-          fi
-          exit $status
+        run: pytest -v
 
   frontend:
     name: Frontend (lint, test & build)
