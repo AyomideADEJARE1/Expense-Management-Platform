@@ -260,3 +260,11 @@ Related finding: QA-FIND-054. Priority: High.
 CI now checks that the CD workflow starts PostgreSQL, applies migration 002, applies migration 003, and only then restarts backend/frontend/Nginx. Confirm that check passes. In a controlled staging environment, create duplicate legacy budget data so migration 003 fails, then verify the currently running app version remains up and healthy. After resolving the test data, redeploy and verify the new image/commit and health checks.
 
 Pass evidence: CI order check, staging failure/recovery evidence, deployed commit/image identity, and public health checks. Do not mark this gate passed from source order alone.
+
+
+## RV-24 — Verify PostgreSQL is healthy before migration execution
+Related finding: QA-FIND-055. Priority: Medium–High.
+
+CI now requires the CD workflow to start PostgreSQL with `docker compose up -d --wait postgres`, apply migrations 002 and 003, and only then restart application services. Confirm the CI order check passes. In staging, restart PostgreSQL from a cold state and verify the migration commands begin only after the database health check is successful.
+
+Pass evidence: CI order check, staging deployment logs showing the health wait, successful migrations, and application/database health checks.
