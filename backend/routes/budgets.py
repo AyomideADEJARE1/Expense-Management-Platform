@@ -3,6 +3,7 @@ from decimal import Decimal, InvalidOperation
 
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from sqlalchemy.exc import IntegrityError
 
 from extensions import db
 from models.budget import Budget
@@ -177,6 +178,14 @@ def create_budget():
     try:
         db.session.add(budget)
         db.session.commit()
+
+    except IntegrityError:
+        db.session.rollback()
+
+        return error_response(
+            "A budget already exists for this month and category",
+            409
+        )
 
     except Exception:
         db.session.rollback()
@@ -449,6 +458,14 @@ def update_budget(budget_id):
 
     try:
         db.session.commit()
+
+    except IntegrityError:
+        db.session.rollback()
+
+        return error_response(
+            "A budget already exists for this month and category",
+            409
+        )
 
     except Exception:
         db.session.rollback()
