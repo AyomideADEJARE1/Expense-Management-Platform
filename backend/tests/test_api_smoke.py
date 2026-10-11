@@ -3,7 +3,7 @@ import uuid
 import pytest
 
 from app import app
-from extensions import limiter
+from extensions import db, limiter
 from routes.expenses import safe_csv_cell
 
 
@@ -449,3 +449,51 @@ def test_expenses_and_csv_export_are_isolated_between_users(client):
     )
     assert other_export.status_code == 200
     assert private_description not in other_export.get_data(as_text=True)
+
+
+
+def test_budget_uniqueness_indexes_exist():
+    with app.app_context():
+        indexes = db.session.execute(
+            db.text(
+                "SELECT indexname FROM pg_indexes "
+                "WHERE schemaname = 'public' AND tablename = 'budgets'"
+            )
+        ).scalars().all()
+
+    assert "uq_budgets_user_month_category" in indexes
+    assert "uq_budgets_user_month_no_category" in indexes
+
+
+def test_duplicate_general_budget_returns_conflict(client):
+    email = f"qa-budget-duplicate-{uuid.uuid4().hex}@example.test"
+    password = "TestPassword123!"
+
+    registration = client.post(
+        "/api/auth/register",
+        json={
+            "full_name": "QA Duplicate Budget Test",
+            "email": email,
+            "password": password,
+        },
+    )
+    assert registration.status_code == 201
+
+    login = client.post(
+        "/api/auth/login",
+        json={"email": email, "password": password},
+    )
+    assert login.status_code == 200
+    token = login.get_json()["data"]["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+    payload = {"amount": 150, "month": "2026-10-01"}
+
+    first = client.post("/api/budgets", headers=headers, json=payload)
+    second = client.post("/api/budgets", headers=headers, json=payload)
+
+    assert first.status_code == 201
+    assert second.status_code == 409
+
+    listed = client.get("/api/budgets", headers=headers)
+    assert listed.status_code == 200
+    assert len(listed.get_json()["data"]) == 1
