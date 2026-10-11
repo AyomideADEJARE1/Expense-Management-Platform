@@ -61,6 +61,16 @@ def create_budget():
     category = None
 
     if category_id is not None:
+        if (
+            isinstance(category_id, bool)
+            or not isinstance(category_id, int)
+            or category_id <= 0
+        ):
+            return error_response(
+                "Category ID must be a positive integer",
+                400
+            )
+
         category = db.session.get(
             ExpenseCategory,
             category_id
@@ -318,6 +328,16 @@ def update_budget(budget_id):
         category = None
 
         if category_id is not None:
+            if (
+                isinstance(category_id, bool)
+                or not isinstance(category_id, int)
+                or category_id <= 0
+            ):
+                return error_response(
+                    "Category ID must be a positive integer",
+                    400
+                )
+
             category = db.session.get(
                 ExpenseCategory,
                 category_id
