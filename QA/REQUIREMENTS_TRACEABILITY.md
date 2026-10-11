@@ -30,3 +30,5 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 
 | REQ-24 | Required cloud deployment target | TC-CD-001–006 | MISMATCH: capstone requires Azure VM; repository docs describe AWS EC2 as current production; team/instructor decision required |
 | REQ-25 | Database credentials are externally configured | TC-SEC-001–004, TC-ENV-001 | FINDING OPEN: Compose contains hard-coded database credentials |
+
+| REQ-26 | User-specific expense data isolation (security expectation for authenticated, user-specific expense records) | TC-SEC-007 | PENDING: regression test added to PR #54; CI rerun and broader authorization review required |
