@@ -574,3 +574,10 @@ Required correction: Backend/DevOps must configure proxy trust only for the know
 Retest: Send login/register attempts through the public Nginx endpoint from two independent client addresses. Confirm each client's limit is tracked separately, excess requests receive 429, and the second client remains usable. Repeat across workers/restarts to verify shared storage behavior.
 
 Closure evidence: Reviewed proxy configuration, rate-limit storage configuration, automated or controlled test results from separate client addresses, response codes, and deployed commit/version.
+
+
+## CI status note — 2026-10-11
+
+Run 38178336973 passed the database migration job, including migration 003 and the legacy-duplicate guard, but the overall run failed at backend Flake8 because the newly added tests had extra blank lines and one long line. The test formatting was corrected in code commit 025b7e758b7a63495e2ca5ebdc4ccb69f5a5c84c. A fresh CI result for that fixing commit is pending. Do not describe the current code head as CI-green until the new run passes.
+
+The fresh-database migration checks are encouraging but do not replace a test against a populated existing database. If migration 003 detects duplicate legacy budgets, deployment must stop until the data is reviewed and corrected.
