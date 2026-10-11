@@ -254,3 +254,9 @@ Required action: confirm package visibility and test the VM pull from a clean au
 Classification: Reliability defect. Status: Correction proposed in PR #54; retest pending. Priority: Low.
 
 The `/health/db` handler caught database exceptions and returned HTTP 500, but did not roll back the SQLAlchemy session. After a failed query, that session may remain in a failed transaction state and interfere with subsequent operations in the same request context. PR #54 now rolls back the session in the exception path. Verify that a simulated database failure returns an unhealthy status and that the application recovers after database connectivity is restored.
+
+
+## QA-FIND-035 — Nginx does not set baseline browser security headers
+Classification: Security hardening gap. Status: Baseline headers proposed in PR #54; container/browser retest pending. Priority: Medium.
+
+The reviewed Nginx server configuration did not set common response headers to reduce MIME sniffing, framing, referrer leakage, and unnecessary browser permissions. PR #54 adds `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, a strict referrer policy, and a restrictive permissions policy. Verify these headers on both frontend and API responses through Nginx. HSTS remains an infrastructure-level decision because the container Nginx listener is HTTP-only and TLS is documented as terminating outside the container.
