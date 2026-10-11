@@ -5,7 +5,7 @@
 #   1. publish - builds the backend and frontend Docker images and pushes them
 #                to GitHub Container Registry (ghcr.io). Services without a
 #                Dockerfile yet are skipped.
-#   2. deploy  - pulls the new images on the Azure VM with Docker Compose and
+#   2. deploy  - pulls the exact tested images on the AWS EC2 VM with Docker Compose and
 #                checks the /health endpoint. Disabled until the repository
 #                variable DEPLOY_ENABLED is set to "true" (see docs/ci-cd.md).
 
@@ -98,7 +98,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
 
   deploy:
-    name: Deploy to Azure VM
+    name: Deploy to AWS EC2
     needs: publish
     if: vars.DEPLOY_ENABLED == 'true' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -109,16 +109,19 @@ jobs:
       - name: Pull images and restart services
         uses: appleboy/ssh-action@v1.2.5
         with:
-          host: ${{ secrets.AZURE_VM_HOST }}
-          username: ${{ secrets.AZURE_VM_USER }}
-          key: ${{ secrets.AZURE_VM_SSH_KEY }}
+          host: ${{ secrets.AWS_EC2_HOST }}
+          username: ${{ secrets.AWS_EC2_USER }}
+          key: ${{ secrets.AWS_EC2_SSH_KEY }}
           script: |
             set -e
             cd ${{ vars.DEPLOY_PATH || '~/expense-management-platform' }}
-            git pull --ff-only
+            COMMIT_SHA="${{ github.event.workflow_run.head_sha || github.sha }}"
+            SHORT_SHA="${COMMIT_SHA:0:7}"
+            git fetch origin "$COMMIT_SHA"
+            git checkout --detach "$COMMIT_SHA"
             repo_lower=$(printf '%s' 'AyomideADEJARE1/Expense-Management-Platform' | tr '[:upper:]' '[:lower:]')
-            export BACKEND_IMAGE="ghcr.io/${repo_lower}-backend:latest"
-            export FRONTEND_IMAGE="ghcr.io/${repo_lower}-frontend:latest"
+            export BACKEND_IMAGE="ghcr.io/${repo_lower}-backend:sha-${SHORT_SHA}"
+            export FRONTEND_IMAGE="ghcr.io/${repo_lower}-frontend:sha-${SHORT_SHA}"
             docker compose pull backend frontend
             docker compose up -d --remove-orphans
             # This migration is idempotent and must also run for existing volumes.
