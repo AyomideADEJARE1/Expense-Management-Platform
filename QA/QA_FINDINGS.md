@@ -466,3 +466,16 @@ Retest: Register or log in with a test account, refresh the page, reload the cur
 
 Closure evidence: Tested commit SHA, API response sample with personal details redacted, browser screenshot, and passing automated/browser regression test where available.
 
+
+
+## QA-FIND-045 — Editing a historical budget changes its month to the current month
+
+Classification: Confirmed frontend/backend behavior defect on the reviewed source; correction proposed in PR #54. Status: Retest pending. Priority: Medium–High; financial record integrity.
+
+Evidence: In upstream main, `frontend/src/pages/Budgets.jsx` builds the request month from the current date for both new and edited budgets. The backend `PUT /api/budgets/<budget_id>` accepts that month and assigns it to the existing budget record. Therefore, editing an older month's budget can move it into the current month instead of changing only its amount. This can distort historical budget reports and create confusing duplicate-budget conflicts.
+
+Correction: The correction branch now preserves `editingBudget.month` when editing and uses the current month only when creating a new budget. Fixing commit: `666d79911d480eea2eec4e0d6e84711ef957ca97`.
+
+Retest: Create or seed a budget for a past month, edit only its amount, save, reload the page, and verify the month remains unchanged. Also create a new budget and verify it still defaults to the current month. Check the API response and database row for both cases.
+
+Closure evidence: CI result for the fixing commit, browser/API test output, before-and-after budget month values, and tested commit SHA. The source correction is not a pass until the retest succeeds.
