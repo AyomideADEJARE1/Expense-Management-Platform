@@ -185,3 +185,11 @@ Classification: Database/deployment defect. Status: Correction proposed in PR #5
 The integration branch adds `database/migrations/002_user_settings.sql` and the User model expects the added settings columns. Before correction, Compose mounted only `001_initial_schema.sql` into PostgreSQL's initialization directory. A fresh database would therefore miss the user-settings columns. In addition, PostgreSQL initialization scripts run only when the data directory is first initialized; simply adding a mount does not update an existing persistent volume.
 
 PR #54 now mounts the second migration for fresh database initialization and runs its idempotent `ADD COLUMN IF NOT EXISTS` statements during deployment so an existing volume can be updated. CI and deployment retests must verify both a clean database and an already-initialized database. Do not rerun the non-idempotent initial schema migration against an existing database.
+
+
+## QA-FIND-025 — Authentication/profile routes can raise errors for malformed JSON field types
+Classification: Input-validation defect. Status: Correction proposed in PR #54; retest pending. Priority: Medium.
+
+The integration branch's registration and login routes call `.strip()` on name/email fields without first validating their JSON types. The profile update route also assumes first and last names are strings, and checks currency membership against a set without first ensuring the supplied value is a string. Numeric, list, or object values can therefore produce unhandled exceptions instead of controlled HTTP 400 responses.
+
+PR #54 now validates registration/login field types, profile name types, and currency types, and adds API regression tests for malformed payloads. Retest all invalid-input cases and confirm they return controlled client errors without a 500 response.
