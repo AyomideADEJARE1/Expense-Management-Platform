@@ -240,6 +240,10 @@ The budget API checks whether a budget already exists for a user, month, and cat
 
 Required action: inspect existing data for duplicates, then add an appropriate database-level uniqueness strategy for category-specific budgets and whole-month budgets (where `category_id` is NULL). The migration must account for PostgreSQL's NULL uniqueness behavior and must be tested against both a fresh database and an existing database before release.
 
+Correction status update — 2026-10-11: PR #54 now adds `database/migrations/003_budget_uniqueness.sql`. It checks for pre-existing duplicates and then creates separate partial unique indexes for non-NULL category budgets and NULL-category whole-month budgets. The budget route now rolls back failed commits and maps SQLAlchemy IntegrityError to HTTP 409 for both create and update. CI tests now check both index names and verify that a duplicate whole-month budget returns 409 without creating a second row.
+
+Remaining verification: CI must pass for the new migration and tests. The migration is deliberately designed to fail with a clear message if existing duplicate rows are found; the team must inspect and resolve such data before retrying. Test both fresh initialization and an existing persistent volume before release. Source changes alone do not close this finding.
+
 
 ## QA-FIND-032 — Transaction filtering was limited to a month rather than a date range
 Classification: Functional requirement gap. Status: API regression test PASS in CI run `38164448383`; browser retest pending. Priority: Medium.
