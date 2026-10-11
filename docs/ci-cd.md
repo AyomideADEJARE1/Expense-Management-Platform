@@ -401,7 +401,7 @@ and the CD workflow is running against:
 main
 ```
 
-The deployment job uses SSH to connect to the configured AWS VM.
+The deployment job uses SSH to connect to the configured AWS EC2 VM. The remote script derives the short commit tag with POSIX-compatible shell commands so it does not depend on Bash-only substring expansion.
 
 The corrected deployment process checks out the commit associated with the successful CI run, selects the corresponding `sha-<short commit>` backend/frontend image tags, pulls those images, and restarts the Compose services. The current workflow then applies the idempotent user-settings migration and checks both public health endpoints.
 
