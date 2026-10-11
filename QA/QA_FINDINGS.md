@@ -238,3 +238,9 @@ Classification: Functional requirement gap. Status: Correction proposed in PR #5
 The first proposed transaction-filter correction added month/category filtering, but the capstone requirement calls for filtering by date and category. A month-only selector cannot isolate an arbitrary start/end period.
 
 PR #54 now proposes start-date and end-date controls in the React transaction view and matching `start_date`/`end_date` query parameters in the Flask expense query (including the authenticated CSV endpoint, which shares the same query builder). Regression tests cover an inclusive date range, reversed ranges, and malformed dates. Browser-level testing remains required.
+
+
+## QA-FIND-033 — API routes assume JSON request bodies are objects
+Classification: Input-validation defect. Status: Correction proposed in PR #54; retest pending. Priority: Medium.
+
+Several write routes checked only whether `request.get_json()` returned a truthy value before calling `.get()`. A non-empty JSON array is truthy but has no `.get()` method, which could cause an unhandled exception. PR #54 changes the authentication, category, expense, and budget write routes to reject non-object JSON bodies with HTTP 400 and adds regression tests for those payloads.
