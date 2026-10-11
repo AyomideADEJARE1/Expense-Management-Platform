@@ -2,6 +2,8 @@
 
 Findings are evidence-based. QA is not judged by defect count.
 
+Latest CI checkpoint: upstream PR #54 run `38164448383` passed secret scanning, database migration/schema checks, backend lint, frontend lint/build, 26 backend tests, both Docker image builds, and `ci-success` for commit `9d18079b94a5635016a574f9c7f858c7c4d6ab11`. This is CI evidence for the correction branch, not proof that the upstream `main` branch or live deployment has been fixed or fully tested. Browser-level and live-deployment verification remain pending.
+
 ## QA-FIND-001 — Duplicate frontend source structures
 Classification: Observation. Status: Open.
 
@@ -101,7 +103,7 @@ Required action: document the exact setup step or provide a safe environment-fil
 
 
 ## QA-FIND-015 — Frontend lint fails on the reviewed integration branch
-Classification: Confirmed CI failure. Status: Correction committed; retest pending. Priority: High.
+Classification: Confirmed CI failure. Status: Retest PASS for configured CI checks; dependency advisory remains open. Priority: High.
 
 GitHub Actions CI run `38157705137` for the first PR #54 revision failed the frontend lint step with four ESLint errors:
 - `frontend/src/pages/Budgets.jsx`: unused `loadAppData`.
@@ -211,11 +213,11 @@ The backend constructs its SQLAlchemy URL from PostgreSQL environment variables 
 
 
 ## QA-FIND-029 — Authentication tests were coupled through the shared rate limiter
-Classification: Test-isolation defect. Status: Correction proposed in PR #54; retest pending. Priority: Medium.
+Classification: Test-isolation defect. Status: Retest PASS in CI run `38164448383`; production rate-limit storage remains open under QA-FIND-016. Priority: Medium.
 
 The first expanded CI run returned HTTP 429 in otherwise unrelated registration/profile tests because multiple test cases shared the same process-local five-requests-per-minute registration limit. This was test-state interference, not evidence that the validation assertions themselves were wrong.
 
-PR #54 updates the functional test fixture to disable rate limiting for ordinary endpoint tests. Rate-limit behavior should be verified separately in a dedicated test with explicit limits and controlled state. Production still needs a shared rate-limit store for multi-worker deployment.
+PR #54 resets rate-limit state between functional tests. CI run `38164448383` passed all 26 tests, including the cases that previously failed with HTTP 429. Rate-limit behavior should still be verified separately in a dedicated test with explicit limits and controlled state. Production still needs a shared rate-limit store for multi-worker deployment.
 
 
 ## QA-FIND-030 — Budget uniqueness is enforced only in application code
@@ -227,7 +229,7 @@ Required action: inspect existing data for duplicates, then add an appropriate d
 
 
 ## QA-FIND-032 — Transaction filtering was limited to a month rather than a date range
-Classification: Functional requirement gap. Status: Correction proposed in PR #54; retest pending. Priority: Medium.
+Classification: Functional requirement gap. Status: API regression test PASS in CI run `38164448383`; browser retest pending. Priority: Medium.
 
 The first proposed transaction-filter correction added month/category filtering, but the capstone requirement calls for filtering by date and category. A month-only selector cannot isolate an arbitrary start/end period.
 
@@ -235,7 +237,7 @@ PR #54 now proposes start-date and end-date controls in the React transaction vi
 
 
 ## QA-FIND-033 — API routes assume JSON request bodies are objects
-Classification: Input-validation defect. Status: Correction proposed in PR #54; retest pending. Priority: Medium.
+Classification: Input-validation defect. Status: Regression tests PASS in CI run `38164448383`; broader route coverage pending. Priority: Medium.
 
 Several write routes checked only whether `request.get_json()` returned a truthy value before calling `.get()`. A non-empty JSON array is truthy but has no `.get()` method, which could cause an unhandled exception. PR #54 changes the authentication, category, expense, and budget write routes to reject non-object JSON bodies with HTTP 400 and adds regression tests for those payloads.
 
