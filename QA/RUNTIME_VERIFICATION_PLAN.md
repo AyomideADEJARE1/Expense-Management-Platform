@@ -115,7 +115,7 @@ Run these tests against the deployed candidate using two separate test accounts 
 | BR-07 | Delete a category referenced by an expense | Controlled conflict or documented safe behavior; no orphaned/broken expense | Prevents referential integrity failures |
 | BR-08 | Compare dashboard summary, category chart, budget overview, and raw records | Totals match known test fixtures | Prevents incorrect financial decisions based on UI totals |
 | BR-09 | Reload page and sign in again after restart | Persisted data remains; authentication behaves as designed | Detects frontend-only or transient state mistaken for persistence |
-| BR-10 | Open README links and follow setup/deployment steps on a clean environment | Steps work without undocumented local state | Makes the project reproducible for the assessor |
+| BR-10 | Open README links and follow setup/deployment steps on a clean environment | Steps work without undocumented local state | Makes the project reproducible for the assessor |\n| BR-11 | Log in, refresh, and load the current-user profile | Name/initials and signed-in state match the API profile; refresh does not break the session | Detects a mismatch between the API response envelope and frontend user state |\n| BR-12 | Search for an existing expense and select the result | Transactions view opens and the selected record is visible | Prevents search navigation from pointing to a nonexistent tab |
 
 For each browser test, retain: date/time, environment and deployed commit, steps, expected result, actual result, pass/fail, screenshot or sanitized response, and defect ID for failures.
 
@@ -157,3 +157,15 @@ Action: confirm CI uses a dedicated disposable database; introduce safe transact
 
 Pass evidence: the suite passes twice consecutively and in altered order; test-created records are cleaned up; and a non-test database configuration is rejected before any mutation.
 
+
+
+## RV-13 — Keep the current-user profile contract consistent
+Related finding: QA-FIND-044. Priority: Medium; user-facing regression.
+
+Why it matters: The current-user endpoint returns a response envelope with the profile nested under `data`. Upstream main stores the whole response object in frontend user state, while the UI reads profile fields directly. This can leave the signed-in name/initials missing and can break components that rely on a normalized profile object.
+
+Source correction present in PR #54 branch: the frontend extracts `response.data || response`, then normalizes the full name into first/last name fields before setting user state.
+
+Action: Keep the correction in the reviewed release branch and ensure the API contract and frontend state shape remain consistent.
+
+Pass evidence: Automated or browser test logs show login and page refresh succeed; the displayed name/initials match the test account; and no user-profile fields are undefined in the rendered UI. Record the tested commit and sanitized evidence.
