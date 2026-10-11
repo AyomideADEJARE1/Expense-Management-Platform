@@ -51,7 +51,7 @@ Action: Inspect current production/test data for duplicates before adding constr
 
 Required tests: Same user/month/category duplicate is rejected; same user/month/NULL-category duplicate is rejected; different users may create their own matching budgets; different categories in the same month are allowed if that is the intended rule; simultaneous duplicate requests result in exactly one created row; migration works against a fresh database and an existing volume containing no duplicates.
 
-Pass evidence: Migration applied successfully, database indexes/constraints verified, regression/concurrency tests pass, and dashboard totals are checked against known records.
+Correction status update — 2026-10-11: PR #54 now adds migration 003 with duplicate-data checks and separate partial unique indexes for categorized and NULL-category budgets. CI now checks that both indexes exist, verifies duplicate general budgets return HTTP 409, and uses a separate database to prove legacy duplicate rows block the migration with a clear diagnostic. The budget route now maps IntegrityError to HTTP 409 and rolls back.\n\nPass evidence: Current CI passes the migration and regression tests; database indexes are verified; a populated existing volume is tested; concurrent requests result in exactly one row; and dashboard totals are checked against known records. Do not close this gate from source changes alone.
 
 ### RV-05 — Verify application and database health through Nginx
 Related finding: QA-FIND-034 and deployment health-check finding QA-FIND-012. Priority: High; deployment gate.
@@ -144,7 +144,7 @@ Related finding: QA-FIND-042. Priority: Medium–High.
 
 Why it matters: the budget route currently catches all commit exceptions and returns HTTP 500. Once a database uniqueness constraint is added, an expected duplicate is a conflict, not an internal server failure. Treating all errors alike makes client behavior and monitoring inaccurate.
 
-Action: catch the specific integrity exception for the budget uniqueness constraint, roll back the session, and return HTTP 409. Preserve HTTP 500 for unexpected database failures and log them safely without exposing SQL or secrets.
+Correction status update — 2026-10-11: PR #54 now catches SQLAlchemy IntegrityError separately for budget create/update, rolls back, and returns HTTP 409; unexpected errors remain generic HTTP 500 responses. Tests now cover duplicate conflict, and a new test simulates an unexpected commit failure to verify rollback, sanitized output, and subsequent session recovery.\n\nAction: verify the new tests pass on the current commit and confirm no SQL, credentials, or stack traces are returned.
 
 Pass evidence: automated tests show duplicates return 409, simulated unexpected database errors return 500, session rollback succeeds, and no sensitive details appear in client responses.
 
