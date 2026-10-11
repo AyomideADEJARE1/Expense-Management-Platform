@@ -142,6 +142,18 @@ def test_non_finite_expense_amount_is_rejected(client):
     assert category_response.status_code == 201
     category_id = category_response.get_json()["data"]["id"]
 
+    invalid_category = client.post(
+        "/api/expenses",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "category_id": [],
+            "amount": 10,
+            "description": "Invalid category ID test",
+            "expense_date": "2026-10-11",
+        },
+    )
+    assert invalid_category.status_code == 400
+
     for amount in ["NaN", "Infinity", "-Infinity", "10000000000"]:
         response = client.post(
             "/api/expenses",
@@ -244,6 +256,13 @@ def test_non_finite_budget_amount_is_rejected(client):
     )
     assert login.status_code == 200
     token = login.get_json()["data"]["access_token"]
+
+    invalid_category = client.post(
+        "/api/budgets",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"amount": 100, "month": "2026-10-01", "category_id": []},
+    )
+    assert invalid_category.status_code == 400
 
     for amount in ["NaN", "Infinity", "-Infinity", "10000000000"]:
         response = client.post(
