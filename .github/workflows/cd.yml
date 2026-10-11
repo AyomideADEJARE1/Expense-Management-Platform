@@ -116,7 +116,7 @@ jobs:
             set -e
             cd ${{ vars.DEPLOY_PATH || '~/expense-management-platform' }}
             COMMIT_SHA="${{ github.event.workflow_run.head_sha || github.sha }}"
-            SHORT_SHA="${COMMIT_SHA:0:7}"
+            SHORT_SHA="$(printf '%s' "$COMMIT_SHA" | cut -c1-7)"
             git fetch origin "$COMMIT_SHA"
             git checkout --detach "$COMMIT_SHA"
             repo_lower=$(printf '%s' 'AyomideADEJARE1/Expense-Management-Platform' | tr '[:upper:]' '[:lower:]')
