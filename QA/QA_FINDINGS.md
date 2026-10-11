@@ -118,3 +118,18 @@ GitHub Actions CI run `38157705137` for the first PR #54 revision failed the fro
 The follow-up correction branch removes those unused bindings/imports. The next CI run then exposed two backend Flake8 failures in `backend/routes/auth.py`: E302 (one blank line before `@auth_bp.put("/me")`) and E501 (an 80-character error-response line). Both formatting fixes are now committed on PR #54. The next run shows frontend lint/build and backend lint passing, along with migration/schema checks and secret scanning. Docker image builds and the final `ci-success` job were still in progress at the time of this update. Pytest collected zero tests and emitted the configured warning, so backend behavior remains untested by automated tests.
 
 The same CI log reports one high-severity npm dependency vulnerability during `npm ci`. The log excerpt does not identify the affected package; run `npm audit` and record the package, advisory, affected version, and safe remediation before classifying the risk as resolved.
+
+
+## QA-FIND-016 — Production rate-limit storage is configured as in-memory
+Classification: Production-readiness/security observation. Status: Open. Priority: Medium.
+
+The current `backend/extensions.py` creates Flask-Limiter without a `storage_uri`, and the successful CI test run emitted Flask-Limiter's warning that in-memory storage is not recommended for production. In-memory counters are process-local and are not shared between workers or instances, so rate limits can reset or diverge when the app scales or restarts.
+
+Required action: configure a supported shared store (for example, Redis) through deployment configuration for production, document the required setting, and verify rate limiting across the deployed process topology. The CI-only JWT key-length warning should also be removed by using a test signing key of at least 32 bytes; do not reuse CI keys in any real environment.
+
+## QA-FIND-017 — Frontend dependency audit reports one high-severity advisory
+Classification: Dependency-security finding. Status: Open. Priority: High pending identification.
+
+The GitHub Actions `npm ci` log reported one high-severity dependency vulnerability. The log excerpt available during this audit did not identify the affected package or advisory, so no package upgrade is recommended blindly.
+
+Required action: run `npm audit` against the exact lockfile revision, record the affected package, advisory, dependency path and fixed version, then apply the smallest compatible update and rerun lint, build, and the audit.
