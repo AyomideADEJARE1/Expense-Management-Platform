@@ -230,3 +230,11 @@ Classification: Data-integrity risk. Status: Open. Priority: Medium.
 The budget API checks whether a budget already exists for a user, month, and category before inserting or updating it. The PostgreSQL schema does not define a corresponding uniqueness constraint/index for that business key. Two concurrent requests can therefore both pass the application check and create duplicate budgets.
 
 Required action: inspect existing data for duplicates, then add an appropriate database-level uniqueness strategy for category-specific budgets and whole-month budgets (where `category_id` is NULL). The migration must account for PostgreSQL's NULL uniqueness behavior and must be tested against both a fresh database and an existing database before release.
+
+
+## QA-FIND-032 — Transaction filtering was limited to a month rather than a date range
+Classification: Functional requirement gap. Status: Correction proposed in PR #54; retest pending. Priority: Medium.
+
+The first proposed transaction-filter correction added month/category filtering, but the capstone requirement calls for filtering by date and category. A month-only selector cannot isolate an arbitrary start/end period.
+
+PR #54 now proposes start-date and end-date controls in the React transaction view and matching `start_date`/`end_date` query parameters in the Flask expense query (including the authenticated CSV endpoint, which shares the same query builder). Regression tests cover an inclusive date range, reversed ranges, and malformed dates. Browser-level testing remains required.
