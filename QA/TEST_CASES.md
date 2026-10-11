@@ -125,3 +125,6 @@ Record date, commit/branch, environment, steps, expected result, actual result, 
 
 | TC-HLT-004 | Database health through Nginx | `/api/health/db` reaches Flask `/health/db` and reports DB connectivity |
 | TC-CD-007 | Post-deployment health gate | CD fails unless both application and database health checks pass |
+
+| TC-FLT-004 | Filter by inclusive start/end dates | Only authenticated user's expenses inside the selected date range are returned/exported |
+| TC-FLT-005 | Reversed or malformed date range | API returns HTTP 400 with a controlled validation response |
