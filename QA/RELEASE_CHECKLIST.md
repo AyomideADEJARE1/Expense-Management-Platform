@@ -27,7 +27,7 @@
 - [ ] Health checks work.
 - [ ] CI executes required checks.
 - [ ] Required backend and frontend test suites actually collect and run.
-- [ ] Docker images build.
+- [ ] Docker images build.\n- [ ] Backend/frontend Docker build contexts exclude local environment files; frontend context excludes host node_modules.
 - [ ] Compose image names match published GHCR tags.
 - [ ] Public deployment health-check path matches Nginx routing.
 - [ ] AWS deployment configuration matches the actual environment.
