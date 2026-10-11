@@ -2,7 +2,7 @@
 
 Findings are evidence-based. QA is not judged by defect count.
 
-Latest CI checkpoint: upstream PR #54 run `38164448383` passed secret scanning, database migration/schema checks, backend lint, frontend lint/build, 26 backend tests, both Docker image builds, and `ci-success` for commit `9d18079b94a5635016a574f9c7f858c7c4d6ab11`. This is CI evidence for the correction branch, not proof that the upstream `main` branch or live deployment has been fixed or fully tested. Browser-level and live-deployment verification remain pending.
+Latest completed CI checkpoint: PR #54 run `38164448383` passed secret scanning, database migration/schema checks, backend lint, frontend lint/build, 26 backend tests, both Docker image builds, and `ci-success` for commit `9d18079b94a5635016a574f9c7f858c7c4d6ab11`. The newer run `38164855365` has passed secret scanning, migration/schema checks, backend lint/tests, frontend lint/build, and backend Docker build; the frontend Docker build/final gate is still in progress. Its npm audit report shows zero vulnerabilities after the source-map-js patch. This is CI evidence for the correction branch, not proof that upstream `main` or the live deployment is fixed or fully tested. Browser-level and live-deployment verification remain pending.
 
 ## QA-FIND-001 — Duplicate frontend source structures
 Classification: Observation. Status: Open.
@@ -102,8 +102,8 @@ The integrated Compose file defines a fixed PostgreSQL username/password/databas
 Required action: document the exact setup step or provide a safe environment-file pattern, ensure no real `.env` is committed, and make production credentials configurable through deployment secrets rather than source-controlled defaults.
 
 
-## QA-FIND-015 — Frontend lint fails on the reviewed integration branch
-Classification: Confirmed CI failure. Status: Retest PASS for configured CI checks; dependency advisory remains open. Priority: High.
+## QA-FIND-015 — Frontend/backend lint failures on the reviewed integration branch
+Classification: Confirmed CI failure. Status: Retest PASS for lint, tests, and frontend build; final Docker/CI gate pending for the latest head. Priority: High.
 
 GitHub Actions CI run `38157705137` for the first PR #54 revision failed the frontend lint step with four ESLint errors:
 - `frontend/src/pages/Budgets.jsx`: unused `loadAppData`.
