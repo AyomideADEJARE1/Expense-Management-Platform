@@ -174,7 +174,7 @@ jobs:
 
       - name: Verify deployment migrations run before app restart
         run: |
-          db_start=$(grep -nF 'docker compose up -d postgres' .github/workflows/cd.yml | cut -d: -f1)
+          db_start=$(grep -nF 'docker compose up -d --wait postgres' .github/workflows/cd.yml | cut -d: -f1)
           migration_002=$(grep -nF '002_user_settings.sql' .github/workflows/cd.yml | cut -d: -f1)
           migration_003=$(grep -nF '003_budget_uniqueness.sql' .github/workflows/cd.yml | cut -d: -f1)
           app_start=$(grep -nF 'docker compose up -d --remove-orphans backend frontend nginx' .github/workflows/cd.yml | cut -d: -f1)
