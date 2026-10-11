@@ -254,6 +254,18 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Evidence to close:** Header capture, reviewed CSP configuration, and browser results. Do not claim HSTS is enabled unless it is observed on HTTPS responses.
 
+### 24. Backend/DevOps: make authentication rate limits proxy-aware
+
+**What happens:** Login and registration are limited to five requests per minute, but the limiter uses the request's remote address. Behind Nginx, that address may be the proxy address shared by all users. The default in-memory store also does not share limits reliably across workers or restarts.
+
+**Why it matters:** One user's repeated requests may throttle unrelated users, while limits may reset or differ between workers.
+
+**Required correction:** Trust only the known Nginx proxy hop(s), ensure forwarding headers are handled safely, and configure shared production rate-limit storage. Do not trust arbitrary client-supplied forwarding headers.
+
+**How QA will verify:** Send login/register requests through the public Nginx endpoint from two independent client addresses. Confirm one client's limit does not throttle the other and that repeated requests return 429 as expected. Repeat across workers/restarts.
+
+**Evidence to close:** Reviewed proxy/storage configuration, separate-client test results, response codes, and deployed commit/version.
+
 ## Release checklist
 
 Do not mark a check as passed until evidence is attached.
@@ -269,7 +281,7 @@ Do not mark a check as passed until evidence is attached.
 - [ ] The running image matches the tested commit.
 - [ ] The AWS VM can pull the published images using the intended permissions.
 - [ ] Both health endpoints work through Nginx.
-- [ ] Production rate limits use the approved shared storage configuration.
+- [ ] Production rate limits use the approved shared storage configuration and are verified per client through the Nginx proxy.
 - [ ] Registration, current-user profile display, expense search navigation, expense ownership, filters, CSV export, budget creation/editing (including historical month preservation and read-only calculated spending), and dashboard totals pass browser testing.
 - [ ] Public HTTPS security headers are checked and the approved CSP is tested.
 - [ ] Screenshots, workflow run links, commit SHA, and test results are attached.
