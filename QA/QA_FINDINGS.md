@@ -260,3 +260,27 @@ The `/health/db` handler caught database exceptions and returned HTTP 500, but d
 Classification: Security hardening gap. Status: Baseline headers proposed in PR #54; container/browser retest pending. Priority: Medium.
 
 The reviewed Nginx server configuration did not set common response headers to reduce MIME sniffing, framing, referrer leakage, and unnecessary browser permissions. PR #54 adds `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, a strict referrer policy, and a restrictive permissions policy. Verify these headers on both frontend and API responses through Nginx. HSTS remains an infrastructure-level decision because the container Nginx listener is HTTP-only and TLS is documented as terminating outside the container.
+
+
+## Cross-branch verification addendum — 2026-10-11
+
+This addendum records a direct comparison of the upstream `main` branch, upstream `integration/deployable-main`, PR #53's documentation branch, and PR #54's correction branch. It supplements the numbered findings above; it does not create duplicate findings.
+
+### Confirmed against upstream `main`
+
+- `backend/routes/categories.py` is unchanged between upstream `main` and `integration/deployable-main` at the time of review (same file blob SHA `0ddfd5fc289b245c5bd3626d83fda7dc19f35070`). Category POST, PUT, and DELETE have no authentication decorator. This remains the existing QA-FIND-010 authorization issue; PR #54 adds field-type validation but does not add authorization. Do not mark it fixed.
+- Upstream `main` `docker-compose.yml` still hard-codes the PostgreSQL username/password/database for both backend and database service, and requires `backend/.env`. This remains QA-FIND-022 and the clean-checkout setup concern recorded under QA-FIND-014. Do not duplicate these as new findings.
+- Upstream `main` `frontend/src/pages/Transactions.jsx` exposes search and transaction-type selection but no date-range/category controls or direct CSV export action. These remain the requirement gaps in QA-FIND-005/006 and are proposed for correction by PR #54.
+- Upstream `main` documents AWS EC2 as production while the supplied capstone PDF requires an Azure VM. This remains QA-FIND-008/021 pending a documented instructor/team decision; Azure workflow code alone is not deployment evidence.
+- The upstream `main` Nginx configuration explicitly maps `/api/health` to backend `/health`, but has no exact mapping for `/api/health/db`. PR #54 proposes the missing route and CD check. Runtime verification is still pending.
+- The upstream `main` budget model has no database-level uniqueness constraint for (user, month, category), including the separate whole-month budget case when category is NULL. This remains QA-FIND-030; application-level pre-checks alone do not prevent concurrent duplicate inserts.
+
+### PR #54 correction review
+
+The PR #54 head branch contains transaction date-range/category UI and API query support, CSV formula neutralization, stricter JSON and field validation, a strict pytest collection gate, image-name configuration for Compose, a database health route, and baseline Nginx headers. Its recorded CI run reports 26 backend tests passing and zero npm audit vulnerabilities. These results apply to the tested correction commit, not upstream `main` or a live deployment.
+
+Outstanding items explicitly remain: category write authorization, production-safe database credentials, fail-closed production signing-secret validation, shared production rate-limit storage, database-enforced budget uniqueness, VM GHCR pull authentication/visibility, Azure-versus-AWS requirement resolution, and browser/live-deployment verification. No source-level correction should be promoted to PASS until its required retest evidence exists.
+
+### Additional test-coverage action
+
+PR #54 is being extended with a regression test for cross-user expense isolation across the authenticated expense list and CSV export. The test must pass in CI before this coverage gap can be marked covered. This test does not replace the broader requirement for complete CRUD, browser journey, and deployment testing.
