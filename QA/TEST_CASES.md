@@ -122,3 +122,6 @@ Record date, commit/branch, environment, steps, expected result, actual result, 
 | TC-BUD-004 | Duplicate budget creation under concurrent requests | Database prevents duplicate budgets for the same user/month/category, including NULL category |
 
 | TC-CI-007 | Empty backend test suite | CI fails if pytest collects zero tests |
+
+| TC-HLT-004 | Database health through Nginx | `/api/health/db` reaches Flask `/health/db` and reports DB connectivity |
+| TC-CD-007 | Post-deployment health gate | CD fails unless both application and database health checks pass |
