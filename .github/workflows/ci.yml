@@ -335,15 +335,38 @@ jobs:
           }
           echo "Docker build contexts exclude local env files; frontend also excludes host dependencies."
 
+      - name: Add harmless sentinel environment file for build-context test
+        if: steps.dockerfile.outputs.present == 'true'
+        run: |
+          if [ "${{ matrix.service }}" = "backend" ]; then
+            printf '%s\n' 'SECRET_SENTINEL=do-not-package' > backend/.env
+          else
+            printf '%s\n' 'VITE_SECRET_SENTINEL=do-not-embed' > frontend/.env.local
+          fi
+
       - name: Build image (no push)
         if: steps.dockerfile.outputs.present == 'true'
         uses: docker/build-push-action@v7
         with:
           context: ${{ matrix.service }}
           push: false
+          load: true
           tags: expense-${{ matrix.service }}:ci
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
+      - name: Verify sentinel was excluded from the built image
+        if: steps.dockerfile.outputs.present == 'true'
+        run: |
+          if [ "${{ matrix.service }}" = "backend" ]; then
+            docker run --rm --entrypoint sh expense-backend:ci -c 'test ! -e /app/.env'
+          else
+            if docker run --rm --entrypoint sh expense-frontend:ci -c "grep -R 'VITE_SECRET_SENTINEL' /usr/share/nginx/html"; then
+              echo "::error::Frontend environment sentinel was embedded in the built assets."
+              exit 1
+            fi
+          fi
+          echo "Local environment sentinel was not included in the built image/assets."
 
   ci-success:
     name: ci-success
