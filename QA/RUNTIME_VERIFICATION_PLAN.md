@@ -182,3 +182,39 @@ Action: Verify the edit flow against a historical budget, not only a newly creat
 
 Pass evidence: Browser/API test showing the month before edit and after reload is identical; a new budget uses the current month; CI passes for the fixing commit; record the tested commit SHA.
 
+
+
+## RV-14 — Category API authorization
+Related finding: QA-FIND-046. Priority: High.
+
+Test unauthenticated POST, PUT, and DELETE requests to the category API. They must be rejected. Repeat as a normal signed-in user and as the role authorized by the team's written category policy. Verify changes do not affect another user's category records where categories are user-owned. Do not close this gate until the intended global/shared versus user-owned category policy is documented.
+
+Pass evidence: Policy decision, API responses for each role, automated tests, and tested commit SHA.
+
+## RV-15 — Compose credential configuration
+Related finding: QA-FIND-047. Priority: High.
+
+From a clean checkout, copy the root example environment file to .env, set a unique local database password, and run docker compose config. Confirm the rendered configuration uses the supplied values, contains no embedded fixed password, and does not expose secret values in captured logs. Repeat with required values absent and confirm Compose fails before services start. Start the stack and verify both application and database health endpoints.
+
+Pass evidence: Sanitized config, startup/health results, CI run for the exact correction commit, and confirmation that real secrets are not tracked.
+
+## RV-16 — Confirm frontend automated tests execute
+Related finding: QA-FIND-048. Priority: Medium.
+
+Inspect frontend/package.json and the CI logs. The current package has no test script, so npm test with if-present behavior can skip tests. Closure requires a test script and CI logs showing a non-zero number of tests executed. Include profile refresh, expense-search navigation, and budget create/edit cases.
+
+Pass evidence: Test files, package script, CI test output, and tested commit SHA.
+
+## RV-17 — Verify documented port and clean-start steps
+Related finding: QA-FIND-049. Priority: Low–Medium.
+
+Follow README and Docker guide instructions from a clean checkout, configure the required environment files, start Compose, and use the exact URL documented for the host port. Confirm the frontend and public health routes respond.
+
+Pass evidence: Sanitized startup output, docker compose ps, tested URLs, and documentation diff.
+
+## RV-18 — Inspect public security headers and CSP
+Related finding: QA-FIND-050. Priority: Medium.
+
+Inspect headers from the deployed public HTTPS endpoint. Verify the existing headers remain present, review CSP compatibility with the React app, and test login/navigation/API calls with CSP enabled. Only expect HSTS after HTTPS is confirmed and the deployment layer is configured to emit it.
+
+Pass evidence: Header capture, CSP policy, browser test results, and tested deployment/version. Do not treat source configuration alone as runtime proof.
