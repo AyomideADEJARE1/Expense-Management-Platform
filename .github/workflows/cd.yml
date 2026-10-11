@@ -116,12 +116,15 @@ jobs:
             set -e
             cd ${{ vars.DEPLOY_PATH || '~/expense-management-platform' }}
             git pull --ff-only
-            docker compose pull
+            repo_lower=$(printf '%s' 'AyomideADEJARE1/Expense-Management-Platform' | tr '[:upper:]' '[:lower:]')
+            export BACKEND_IMAGE="ghcr.io/${repo_lower}-backend:latest"
+            export FRONTEND_IMAGE="ghcr.io/${repo_lower}-frontend:latest"
+            docker compose pull backend frontend
             docker compose up -d --remove-orphans
             docker image prune -f
 
       - name: Health check
         run: |
-          url="${{ vars.APP_URL }}/health"
-          echo "Checking $url"
+          url="${{ vars.APP_URL }}/api/health"
+          echo "Checking Nginx-routed health endpoint: $url"
           curl --fail --silent --show-error --retry 10 --retry-delay 6 --retry-all-errors "$url"
