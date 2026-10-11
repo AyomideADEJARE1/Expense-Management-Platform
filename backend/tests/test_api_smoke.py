@@ -1,4 +1,5 @@
 import uuid
+from types import SimpleNamespace
 
 import pytest
 from sqlalchemy.orm import Session
@@ -6,6 +7,7 @@ from sqlalchemy.orm import Session
 from app import app
 from extensions import db, limiter
 from routes.expenses import safe_csv_cell
+from routes.budgets import _is_budget_uniqueness_violation
 
 
 @pytest.fixture()
@@ -543,3 +545,24 @@ def test_unexpected_budget_commit_failure_rolls_back_and_session_recovers(
     listed = client.get("/api/budgets", headers=headers)
     assert listed.status_code == 200
     assert len(listed.get_json()["data"]) == 1
+
+
+
+def test_only_budget_unique_index_violations_map_to_conflict():
+    known_unique_violation = SimpleNamespace(
+        orig=SimpleNamespace(
+            diag=SimpleNamespace(
+                constraint_name="uq_budgets_user_month_no_category"
+            )
+        )
+    )
+    unrelated_integrity_violation = SimpleNamespace(
+        orig=SimpleNamespace(
+            diag=SimpleNamespace(
+                constraint_name="chk_budget_amount"
+            )
+        )
+    )
+
+    assert _is_budget_uniqueness_violation(known_unique_violation) is True
+    assert _is_budget_uniqueness_violation(unrelated_integrity_violation) is False
