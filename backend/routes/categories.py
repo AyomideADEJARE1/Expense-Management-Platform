@@ -1,4 +1,5 @@
 from flask import Blueprint, request
+from sqlalchemy.exc import IntegrityError
 
 from extensions import db
 from models.category import ExpenseCategory
@@ -214,13 +215,30 @@ def delete_category(category_id):
         db.session.delete(category)
         db.session.commit()
 
+    except IntegrityError as error:
+        db.session.rollback()
+
+        diag = getattr(getattr(error, "orig", None), "diag", None)
+        constraint_name = getattr(diag, "constraint_name", None)
+
+        if constraint_name == "fk_expenses_category":
+            return error_response(
+                "Category cannot be deleted because it is being used by "
+                "an expense",
+                409
+            )
+
+        return error_response(
+            "Failed to delete category",
+            500
+        )
+
     except Exception:
         db.session.rollback()
 
         return error_response(
-            "Category cannot be deleted because it is being used by "
-            "an expense",
-            409
+            "Failed to delete category",
+            500
         )
 
     return success_response(
