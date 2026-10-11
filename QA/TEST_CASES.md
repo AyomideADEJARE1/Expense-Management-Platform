@@ -164,3 +164,5 @@ Record date, commit/branch, environment, steps, expected result, actual result, 
 | TC-CAT-007 | Unexpected database failure during category delete | API returns generic HTTP 500, rolls back, exposes no internal error details, and a later delete succeeds |
 
 | TC-SEC-010 | Docker build context contains local environment files | Required .dockerignore rules exclude .env/.env.*; frontend excludes node_modules; sentinel values do not appear in built images/assets where sentinel test is run |
+
+| TC-CD-007 | Migration failure during deployment | Migration runs before app restart; if migration fails, the currently running app containers remain running and healthy |
