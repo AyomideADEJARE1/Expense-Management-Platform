@@ -370,9 +370,21 @@ def update_expense(expense_id):
                 400
             )
 
+        if not amount.is_finite():
+            return error_response(
+                "Amount must be a finite number",
+                400
+            )
+
         if amount <= 0:
             return error_response(
                 "Amount must be greater than zero",
+                400
+            )
+
+        if amount >= Decimal("10000000000"):
+            return error_response(
+                "Amount exceeds the maximum supported value",
                 400
             )
 
