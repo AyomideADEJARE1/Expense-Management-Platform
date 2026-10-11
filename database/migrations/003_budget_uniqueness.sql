@@ -29,7 +29,7 @@ BEGIN
             'Cannot add general-budget uniqueness index: duplicate user/month budgets with NULL category exist; resolve duplicates before retrying';
     END IF;
 END;
-$;
+$$;
 
 CREATE UNIQUE INDEX IF NOT EXISTS uq_budgets_user_month_category
     ON budgets (user_id, month, category_id)
