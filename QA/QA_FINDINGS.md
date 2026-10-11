@@ -336,3 +336,68 @@ Impact if left unresolved: operators may believe they rotated JWT_SECRET while t
 
 Closure evidence: correction merged to the intended target branch, passing configuration tests, secret-scan success, and a reviewed example/deployment configuration. Until the production fail-closed checks and tests are added, status remains RETEST PENDING. This finding overlaps the broader production-secret enforcement concern but is retained separately because the ignored JWT environment variable is a specific, directly evidenced configuration defect.
 
+## QA-FIND-037 — Compose hard-codes database credentials in both services
+Classification: Security/configuration. Priority: High; production release blocker. Status: Open.
+
+Evidence reviewed in `docker-compose.yml` on `stephen/qa-transaction-fixes`: the backend environment block sets `POSTGRES_USER=expense_user`, `POSTGRES_PASSWORD=expense_password`, and `POSTGRES_DB=expense_db`; the PostgreSQL service repeats the same fixed values. The backend also loads `backend/.env`, but the later Compose `environment` entries explicitly set these database values, so the fixed Compose values override same-named values from the env file.
+
+Why it matters: operators may believe they configured production database credentials in `backend/.env` while Compose injects the hard-coded values instead. The database may therefore run with predictable credentials even in a deployment intended to use secrets.
+
+Required correction: use one documented source of configuration for both services, such as required Compose interpolation variables or a supported secrets mechanism. Do not silently default production to known credentials. Keep local defaults confined to a clearly local-only override file if needed. Rotate any credential that was used in a reachable environment.
+
+Required tests: inspect the resolved Compose configuration without printing secret values; verify missing production values fail safely; verify both services receive the same configured values; start a fresh test stack; test an existing volume; verify no secret is emitted in logs.
+
+Closure evidence: correction on the target branch, successful clean setup, configuration tests, and a secret scan. A README warning alone is not sufficient.
+
+## QA-FIND-038 — Category write endpoints have no authentication or role authorization
+Classification: Access control. Priority: High; security blocker. Status: Open.
+
+Evidence reviewed in `backend/routes/categories.py` on `stephen/qa-transaction-fixes`: `create_category`, `update_category`, and `delete_category` do not use `@jwt_required()` or another authorization guard. The category list and detail endpoints are also public; whether read access should be public must be an explicit product decision.
+
+Why it matters: any network caller who can reach the API may create, rename, or attempt to delete globally shared categories. Validation and duplicate-name checks do not establish permission to modify shared data.
+
+Required correction: document the category ownership model. For global categories, protect mutations with authentication and an explicit administrator/maintainer permission; for per-user categories, scope reads and writes to the authenticated owner and update related expense/budget behavior. Preserve a legitimate administrative path rather than simply disabling all writes.
+
+Required tests: unauthenticated create/update/delete return 401; ordinary authenticated user attempting admin-only mutation returns 403; authorized admin can mutate; category reads follow the documented policy; referenced-category deletion returns a controlled conflict and preserves linked records.
+
+Closure evidence: documented policy, implementation, passing positive and negative authorization tests, and API/browser verification.
+
+## QA-FIND-039 — Rate limiter has no configured shared production storage
+Classification: Abuse protection / production configuration. Priority: High for multi-worker deployment. Status: Open.
+
+Evidence reviewed in `backend/extensions.py`: the `Limiter` is initialized with `key_func=get_remote_address` and `default_limits=[]`, with no explicit `storage_uri` or shared storage configuration. The application error handler can return 429, but that alone does not prove that meaningful limits are configured or shared between workers.
+
+Why it matters: with no default limits, protection depends entirely on route-specific decorators. If limits use process-local in-memory storage, separate workers/instances can each grant their own allowance and restarts reset counters. This can weaken protection against brute force or abusive traffic.
+
+Required correction: inventory route-level limit decorators and identify which sensitive endpoints need limits (especially login/registration). Configure explicit, documented limits and shared production storage such as Redis if the app runs across workers/instances. Keep local test behavior explicit and define what happens if the shared store is unavailable.
+
+Required tests: verify limits actually trigger on sensitive endpoints; verify counters are shared across multiple workers/instances; verify restart behavior; test/document shared-store outage behavior; ensure proxy configuration does not let callers spoof the address used for rate-limit keys.
+
+Closure evidence: reviewed route policy, production configuration, multi-worker test results, and operational documentation. Do not mark this fixed merely because the 429 handler exists.
+
+## QA-FIND-040 — Deployment publishes and deploys mutable latest image tags
+Classification: Deployment reproducibility / release integrity. Priority: High. Status: Open.
+
+Evidence reviewed in `.github/workflows/cd.yml` on `stephen/qa-transaction-fixes`: the publish job creates both `sha-<short commit>` and `latest` tags, but the Azure deploy script sets `BACKEND_IMAGE` and `FRONTEND_IMAGE` to the mutable `:latest` tags. The deploy script also runs `git pull --ff-only` on the VM instead of explicitly checking out the same immutable commit whose images are being deployed.
+
+Why it matters: the image deployed may not be the exact image produced from the commit whose CI run passed. Concurrent or later publishing can move `latest`, and the VM's source checkout can drift independently of the image. This complicates incident diagnosis and reliable rollback.
+
+Required correction: pass the triggering, tested commit SHA through the deployment job and deploy immutable SHA-tagged images (prefer full SHA or record the digest). Pin the VM checkout to the same reviewed commit or remove unnecessary source checkout from the runtime deployment process. Record deployed image digests and implement a documented rollback to the prior known-good digest.
+
+Required tests: workflow verifies the CI-tested SHA is the one published and deployed; VM pulls the intended immutable tags; running container image digest matches workflow output; rollback restores the prior version; a later `latest` publication cannot alter the selected release.
+
+Closure evidence: workflow changes, successful release run showing commit and digest, VM/container evidence, and a tested rollback procedure.
+
+## QA-FIND-041 — Database init scripts are manually replayed as migrations
+Classification: Deployment reliability / schema migration. Priority: High. Status: Open pending idempotency and rollback proof.
+
+Evidence reviewed in `.github/workflows/cd.yml`: deployment invokes `docker compose exec -T postgres ... psql ... -f /docker-entrypoint-initdb.d/002_user_settings.sql`. The same SQL file is mounted from `database/migrations` into the PostgreSQL init directory, where scripts are automatically run for a newly initialized data directory. The CD workflow comments that the script is idempotent, but that claim must be verified from the SQL contents and against an existing database.
+
+Why it matters: PostgreSQL's init directory is not a general migration runner for already-initialized volumes. Manually replaying a script can fail if it contains non-idempotent DDL, and deployment can become partially updated if schema changes fail after images have been replaced. A false idempotency assumption risks failed deployments or schema/application mismatch.
+
+Required correction: inspect and test the actual migration for repeatability; preferably use a versioned migration tool with recorded schema versions and explicit failure handling. Back up before production schema changes. Ensure migration failure stops the release and leaves a clear recovery/rollback path.
+
+Required tests: clean database install; apply migration to a populated pre-migration database; replay it safely if repeatability is claimed; simulate migration failure and prove deployment stops; verify backup/restore and application compatibility.
+
+Closure evidence: repeatable migration strategy, fresh/existing-volume test logs, schema version evidence, and tested recovery instructions.
+
