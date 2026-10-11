@@ -75,12 +75,12 @@ In `backend/routes/categories.py` on `integration/deployable-main`, the category
 
 Required action: agree on the intended category administration model with the team. Then enforce authentication and authorization appropriate to that model, add negative tests for unauthenticated writes, and verify that category deletion cannot damage expenses or leave inconsistent records.
 
-## QA-FIND-011 — CI can succeed without collecting backend or frontend tests
-Classification: Confirmed verification gap. Status: Open. Priority: High.
+## QA-FIND-011 — Automated test coverage was missing/incomplete
+Classification: Confirmed verification gap; initial backend smoke tests proposed in PR #54. Status: Retest pending. Priority: High.
 
-The CI workflow runs `pytest -v` but explicitly treats exit code 5 (no tests collected) as success. The frontend workflow uses `npm test --if-present`, while the integrated frontend `package.json` defines no test script. Consequently, a green CI run does not establish that the API or UI behavior has been covered by automated tests.
+The baseline CI workflow runs `pytest -v` but explicitly treats exit code 5 (no tests collected) as success. The frontend workflow uses `npm test --if-present`, while the integrated frontend `package.json` defines no test script. A prior CI run confirmed that pytest collected zero tests. PR #54 adds initial backend smoke tests for `/health`, unauthenticated access to protected expenses, invalid registration input, and a register → login → own-expenses API path, and configures the backend job to apply migrations before tests.
 
-Required action: add real backend tests for authentication, authorization/user isolation, expense/category/budget CRUD, summaries, filters, CSV and health; add frontend or browser-level tests for critical user journeys; make missing required test suites fail CI once those suites are established.
+This is a useful starting suite, not complete coverage. The new CI run must confirm the tests actually collect and pass. Additional coverage is still required for cross-user data isolation, expense/category/budget CRUD, summaries, filters, CSV, invalid payloads, and frontend/browser journeys.
 
 ## QA-FIND-012 — Deployment workflow does not align cleanly with Compose image configuration
 Classification: Confirmed deployment-configuration inconsistency; correction proposed in PR #54. Status: Retest/configuration review pending. Priority: High.
