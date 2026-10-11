@@ -170,6 +170,18 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Evidence to close:** Tested commit SHA, browser screenshot/video, and a passing regression check where available.
 
+### 17. Frontend/backend: preserve the month when editing an older budget
+
+**What happens:** The upstream frontend sends the current month when saving any budget, including an edit to an older budget. The backend accepts that month and updates the existing record.
+
+**Why it matters:** Editing a historical budget can move it into the current month, making historical budget reports inaccurate and causing confusing duplicate-budget conflicts.
+
+**Required correction:** When editing, send the budget's existing month. Use the current month only when creating a new budget. The correction branch now preserves the existing month; retesting is still required.
+
+**How QA will verify:** Edit the amount on a budget from a past month, save, reload, and confirm the month has not changed. Then create a new budget and confirm it defaults to the current month.
+
+**Evidence to close:** Tested commit SHA, browser/API result, and before-and-after month values.
+
 ## Release checklist
 
 Do not mark a check as passed until evidence is attached.
@@ -186,7 +198,7 @@ Do not mark a check as passed until evidence is attached.
 - [ ] The AWS VM can pull the published images using the intended permissions.
 - [ ] Both health endpoints work through Nginx.
 - [ ] Production rate limits use the approved shared storage configuration.
-- [ ] Registration, current-user profile display, expense search navigation, expense ownership, filters, CSV export, budgets, and dashboard totals pass browser testing.
+- [ ] Registration, current-user profile display, expense search navigation, expense ownership, filters, CSV export, budget creation/editing (including historical month preservation), and dashboard totals pass browser testing.
 - [ ] Screenshots, workflow run links, commit SHA, and test results are attached.
 
 **Current overall status:** Several issues are documented and some source corrections have been proposed. The correction branch has a reported successful CI run, but AWS deployment and browser verification remain pending. Do not describe the whole project as release-ready until the blocking items above are closed with evidence.
