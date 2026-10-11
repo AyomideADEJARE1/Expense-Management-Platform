@@ -19,9 +19,9 @@ services:
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
-      POSTGRES_USER: expense_user
-      POSTGRES_PASSWORD: expense_password
-      POSTGRES_DB: expense_db
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in the root .env file}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the root .env file}
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in the root .env file}
     depends_on:
       postgres:
         condition: service_healthy
@@ -36,15 +36,15 @@ services:
     image: postgres:16-alpine
     container_name: expense-postgres
     environment:
-      POSTGRES_USER: expense_user
-      POSTGRES_PASSWORD: expense_password
-      POSTGRES_DB: expense_db
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in the root .env file}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the root .env file}
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in the root .env file}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/migrations/001_initial_schema.sql:/docker-entrypoint-initdb.d/001_initial_schema.sql:ro
       - ./database/migrations/002_user_settings.sql:/docker-entrypoint-initdb.d/002_user_settings.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U expense_user -d expense_db"]
+      test: ["CMD-SHELL", "pg_isready -U "${POSTGRES_USER}" -d "${POSTGRES_DB}""]
       interval: 10s
       timeout: 5s
       retries: 5
