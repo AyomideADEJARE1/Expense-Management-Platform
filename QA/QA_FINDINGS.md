@@ -123,12 +123,12 @@ The current `backend/extensions.py` creates Flask-Limiter without a `storage_uri
 
 Required action: configure a supported shared store (for example, Redis) through deployment configuration for production, document the required setting, and verify rate limiting across the deployed process topology. The CI-only JWT key-length warning should also be removed by using a test signing key of at least 32 bytes; do not reuse CI keys in any real environment.
 
-## QA-FIND-017 — Frontend dependency audit reports a high-severity source-map-js advisory
-Classification: Dependency-security finding. Status: Patch proposed in PR #54; audit retest pending. Priority: High.
+## QA-FIND-017 — Frontend dependency audit reported a high-severity source-map-js advisory
+Classification: Dependency-security finding. Status: Retest PASS for current PR #54 frontend lockfile; broader release review pending. Priority: High.
 
 The CI dependency-audit report identified `source-map-js` in the affected range `1.0.0–1.2.1`, with the high-severity event-loop denial-of-service advisory CVE-2026-93749 / GHSA-68fv-2mgg-jv7q. The fixed version is `1.2.2`; the installed copy was transitive, so changing a direct dependency alone would not reliably force the patched version.
 
-PR #54 adds an npm override for `source-map-js` and updates `frontend/package-lock.json` to `1.2.2`. The latest CI must confirm `npm ci` succeeds, the audit report shows no high/critical vulnerability for this package, and frontend lint/build still pass. Do not close this finding until that evidence is captured.
+PR #54 adds an npm override for `source-map-js` and updates `frontend/package-lock.json` to `1.2.2`. CI run `38164855365` reports `found 0 vulnerabilities` after `npm ci`; the frontend lint/build job also passed. The backend and Docker jobs are still running for that commit, so this finding is verified for the frontend dependency audit, while overall PR verification remains pending.
 
 
 ## QA-FIND-018 — API CSV export can emit spreadsheet formulas from user-controlled text
