@@ -271,3 +271,22 @@ def test_non_finite_budget_amount_is_rejected(client):
             json={"amount": amount, "month": "2026-10-01"},
         )
         assert response.status_code == 400
+
+
+def test_registration_rejects_invalid_email_and_oversized_name(client):
+    invalid_payloads = [
+        {
+            "full_name": "QA User",
+            "email": "not-an-email",
+            "password": "TestPassword123!",
+        },
+        {
+            "full_name": "N" * 101,
+            "email": f"qa-long-name-{uuid.uuid4().hex}@example.test",
+            "password": "TestPassword123!",
+        },
+    ]
+
+    for payload in invalid_payloads:
+        response = client.post("/api/auth/register", json=payload)
+        assert response.status_code == 400
