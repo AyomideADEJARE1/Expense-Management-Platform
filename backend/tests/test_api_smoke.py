@@ -142,7 +142,7 @@ def test_non_finite_expense_amount_is_rejected(client):
     assert category_response.status_code == 201
     category_id = category_response.get_json()["data"]["id"]
 
-    for amount in ["NaN", "Infinity", "-Infinity"]:
+    for amount in ["NaN", "Infinity", "-Infinity", "10000000000"]:
         response = client.post(
             "/api/expenses",
             headers={"Authorization": f"Bearer {token}"},
