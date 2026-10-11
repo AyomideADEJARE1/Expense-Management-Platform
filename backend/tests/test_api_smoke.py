@@ -449,4 +449,3 @@ def test_expenses_and_csv_export_are_isolated_between_users(client):
     )
     assert other_export.status_code == 200
     assert private_description not in other_export.get_data(as_text=True)
-
