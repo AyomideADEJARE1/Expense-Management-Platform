@@ -379,3 +379,73 @@ def test_non_object_json_bodies_are_rejected(client):
     ):
         response = client.post(endpoint, json=["not", "an", "object"])
         assert response.status_code == 400
+
+def test_expenses_and_csv_export_are_isolated_between_users(client):
+    """A user's expense list and CSV export must never expose another user's data."""
+    password = "TestPassword123!"
+
+    def register_and_login(label):
+        email = f"qa-isolation-{label}-{uuid.uuid4().hex}@example.test"
+        registration = client.post(
+            "/api/auth/register",
+            json={
+                "full_name": f"QA Isolation {label}",
+                "email": email,
+                "password": password,
+            },
+        )
+        assert registration.status_code == 201
+
+        login = client.post(
+            "/api/auth/login",
+            json={"email": email, "password": password},
+        )
+        assert login.status_code == 200
+        token = login.get_json()["data"]["access_token"]
+        return {"Authorization": f"Bearer {token}"}
+
+    owner_headers = register_and_login("Owner")
+    other_headers = register_and_login("Other")
+
+    category_name = f"QA isolation category {uuid.uuid4().hex}"
+    category_response = client.post(
+        "/api/categories",
+        json={"name": category_name},
+    )
+    assert category_response.status_code == 201
+    category_id = category_response.get_json()["data"]["id"]
+
+    private_description = f"private-expense-{uuid.uuid4().hex}"
+    create_response = client.post(
+        "/api/expenses",
+        headers=owner_headers,
+        json={
+            "category_id": category_id,
+            "amount": 42.50,
+            "description": private_description,
+            "expense_date": "2026-10-11",
+        },
+    )
+    assert create_response.status_code == 201
+
+    owner_list = client.get("/api/expenses", headers=owner_headers)
+    assert owner_list.status_code == 200
+    assert any(
+        item["description"] == private_description
+        for item in owner_list.get_json()["data"]
+    )
+
+    other_list = client.get("/api/expenses", headers=other_headers)
+    assert other_list.status_code == 200
+    assert all(
+        item["description"] != private_description
+        for item in other_list.get_json()["data"]
+    )
+
+    other_export = client.get(
+        "/api/expenses/export",
+        headers=other_headers,
+    )
+    assert other_export.status_code == 200
+    assert private_description not in other_export.get_data(as_text=True)
+
