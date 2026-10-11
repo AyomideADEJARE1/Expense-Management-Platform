@@ -136,3 +136,21 @@ Remaining action: remove the production ambiguity by requiring a dedicated JWT s
 
 Pass evidence: automated tests show that distinct Flask and JWT values populate distinct config keys; production fails when either is missing/placeholder; test environment remains deterministic; CI and secret scan pass. Until those tests and fail-closed behavior exist, QA-FIND-036 remains RETEST PENDING.
 
+## RV-11 — Handle budget uniqueness conflicts distinctly from server failures
+Related finding: QA-FIND-042. Priority: Medium–High.
+
+Why it matters: the budget route currently catches all commit exceptions and returns HTTP 500. Once a database uniqueness constraint is added, an expected duplicate is a conflict, not an internal server failure. Treating all errors alike makes client behavior and monitoring inaccurate.
+
+Action: catch the specific integrity exception for the budget uniqueness constraint, roll back the session, and return HTTP 409. Preserve HTTP 500 for unexpected database failures and log them safely without exposing SQL or secrets.
+
+Pass evidence: automated tests show duplicates return 409, simulated unexpected database errors return 500, session rollback succeeds, and no sensitive details appear in client responses.
+
+## RV-12 — Isolate API tests from persistent and production data
+Related finding: QA-FIND-043. Priority: Medium; test reliability gate.
+
+Why it matters: the API test fixture toggles test mode and resets rate limiting, but does not itself isolate the database or clean up records created by registration/category tests. Repeated or reordered runs can collide with leftovers, and a misconfigured local environment could target an unintended database.
+
+Action: confirm CI uses a dedicated disposable database; introduce safe transaction/schema cleanup or equivalent isolated fixtures; and add a guard that refuses destructive test setup unless the database is explicitly identified as a test database.
+
+Pass evidence: the suite passes twice consecutively and in altered order; test-created records are cleaned up; and a non-test database configuration is rejected before any mutation.
+
