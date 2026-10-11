@@ -6,7 +6,11 @@ The QA process uses three sources of truth: the approved Capstone/customer speci
 
 QA is not measured by defect count. PASS means tested with evidence. FAIL means tested and the expected result was not achieved. BLOCKED means a required environment or dependency was unavailable. PENDING means not yet executed. OBSERVATION means clarification is required before calling something a defect.
 
-The live deployment is intentionally paused to conserve the team's available cloud credit. Live-runtime checks are therefore BLOCKED/PENDING until the environment is restored.
+The upstream README documents a live URL, while earlier QA notes described the environment as paused. This audit has not obtained reliable live-runtime evidence, and the URL could not be fetched by the available web retrieval tool. Therefore, live checks remain PENDING rather than PASS or FAIL until a manual/runtime check is recorded.
+
+## Branch and pull-request scope
+
+The upstream repository's `main` branch is reviewed separately from `integration/deployable-main`. PR #53 proposes QA documentation for upstream `main`; PR #54 proposes code corrections against `integration/deployable-main` because that branch contains integration-specific profile settings and migration 002. The fork's `stephen/qa-findings-followup` and `stephen/qa-transaction-fixes` branches are the working copies behind those unmerged pull requests. Neither PR has been merged.
 
 Documents:
 - TEST_PLAN.md — scope, method, environments, evidence and release criteria.
