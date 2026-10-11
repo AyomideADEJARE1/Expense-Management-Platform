@@ -36,12 +36,12 @@
 
 ## Security/documentation
 - [ ] No real secrets are committed.
-- [ ] Environment/secret configuration is verified.
+- [ ] Environment/secret configuration is verified, including required root Compose variables and separate Flask/JWT secrets.\n- [ ] Category write authorization matches the documented category policy.\n- [ ] Authentication rate limits are verified per client through Nginx and use shared production storage.\n- [ ] CSP is tested on the public HTTPS endpoint; HSTS is confirmed only if configured and observed.
 - [ ] Password handling is verified.
 - [ ] Logs and monitoring are available.
 - [ ] Architecture documentation matches implementation.
 - [ ] README matches current implementation and deployment.
-- [ ] Clean-checkout environment setup is reproducible without committing real secrets.
+- [ ] Clean-checkout environment setup is reproducible without committing real secrets.\n- [ ] README and Docker guide use the same host port and startup commands.\n- [ ] Frontend automated tests execute in CI and report a non-zero test count.
 
 ## QA decision
 Decision: PENDING
