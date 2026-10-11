@@ -155,6 +155,23 @@ jobs:
           fi
           echo "Duplicate legacy budgets are rejected with an actionable diagnostic."
 
+      - name: Validate Docker Compose environment configuration
+        run: |
+          cp backend/.env.example backend/.env
+          printf '%s\n' \
+            'POSTGRES_USER=ci_user' \
+            'POSTGRES_PASSWORD=ci-compose-test-password' \
+            'POSTGRES_DB=expense_management_test' > .env
+          docker compose config > /tmp/compose-resolved.yml
+          grep -q 'POSTGRES_USER: ci_user' /tmp/compose-resolved.yml
+          grep -q 'POSTGRES_PASSWORD: ci-compose-test-password' /tmp/compose-resolved.yml
+          grep -q 'POSTGRES_DB: expense_management_test' /tmp/compose-resolved.yml
+          if grep -q 'expense_password' /tmp/compose-resolved.yml; then
+            echo "::error::Resolved Compose configuration still contains the old fixed password."
+            exit 1
+          fi
+          echo "Compose configuration resolves required database variables and contains no fixed legacy password."
+
   backend:
     name: Backend (lint & test)
     needs: detect
