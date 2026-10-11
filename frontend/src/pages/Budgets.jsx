@@ -379,9 +379,13 @@ export default function Budgets({
                   type="number"
                   placeholder="0"
                   value={formData.spent}
-                  onChange={(e) => setFormData({ ...formData, spent: e.target.value })}
+                  readOnly
+                  aria-describedby="budget-spent-help"
                   className={`w-full ${inputStyle} border rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500`}
                 />
+                <p id="budget-spent-help" className="mt-1 text-xs text-gray-500">
+                  Calculated from recorded expenses; it cannot be edited here.
+                </p>
               </div>
 
               <div className={`flex items-center justify-between pb-4 border-b ${isDarkMode ? 'border-slate-700' : 'border-gray-100'} mb-6`}>
