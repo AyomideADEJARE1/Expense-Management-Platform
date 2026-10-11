@@ -185,7 +185,7 @@ Pass evidence: Browser/API test showing the month before edit and after reload i
 
 
 ## RV-14 — Category API authorization
-Related finding: QA-FIND-047. Priority: High.
+Related finding: QA-FIND-010. Priority: High.
 
 Test unauthenticated POST, PUT, and DELETE requests to the category API. They must be rejected. Repeat as a normal signed-in user and as the role authorized by the team's written category policy. Verify changes do not affect another user's category records where categories are user-owned. Do not close this gate until the intended global/shared versus user-owned category policy is documented.
 
