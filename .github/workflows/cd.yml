@@ -125,8 +125,13 @@ jobs:
             docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -f /docker-entrypoint-initdb.d/002_user_settings.sql'
             docker image prune -f
 
-      - name: Health check
+      - name: Application and database health checks
         run: |
-          url="${{ vars.APP_URL }}/api/health"
-          echo "Checking Nginx-routed health endpoint: $url"
-          curl --fail --silent --show-error --retry 10 --retry-delay 6 --retry-all-errors "$url"
+          app_url="${{ vars.APP_URL }}/api/health"
+          db_url="${{ vars.APP_URL }}/api/health/db"
+
+          echo "Checking application health: $app_url"
+          curl --fail --silent --show-error --retry 10 --retry-delay 6 --retry-all-errors "$app_url"
+
+          echo "Checking database health: $db_url"
+          curl --fail --silent --show-error --retry 10 --retry-delay 6 --retry-all-errors "$db_url"
