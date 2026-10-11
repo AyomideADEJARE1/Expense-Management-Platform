@@ -252,3 +252,11 @@ Related finding: QA-FIND-053. Priority: High when building/publishing images fro
 Check that backend/.dockerignore and frontend/.dockerignore exclude .env and .env.*. Confirm frontend/.dockerignore excludes node_modules and generated output. CI now validates these required patterns. For stronger closure evidence, create harmless sentinel environment files in a disposable workspace, build both images, and verify the sentinel values are absent from image layers and frontend assets.
 
 Pass evidence: current CI ignore-rule check and Docker builds pass; sentinel-based image/bundle inspection is recorded where feasible. Do not claim an actual secret was exposed without evidence.
+
+
+## RV-23 — Verify migrations complete before application restart
+Related finding: QA-FIND-054. Priority: High.
+
+CI now checks that the CD workflow starts PostgreSQL, applies migration 002, applies migration 003, and only then restarts backend/frontend/Nginx. Confirm that check passes. In a controlled staging environment, create duplicate legacy budget data so migration 003 fails, then verify the currently running app version remains up and healthy. After resolving the test data, redeploy and verify the new image/commit and health checks.
+
+Pass evidence: CI order check, staging failure/recovery evidence, deployed commit/image identity, and public health checks. Do not mark this gate passed from source order alone.
