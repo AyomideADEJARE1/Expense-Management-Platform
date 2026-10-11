@@ -16,6 +16,7 @@
 - [ ] Budgets work and reflect expenses.
 - [ ] Dashboard totals/charts are correct.
 - [ ] Date/month and category filtering work.
+- [ ] Category write endpoints enforce the approved authentication/authorization model.
 - [ ] CSV export produces the required file.
 
 ## Integration/infrastructure
@@ -25,7 +26,10 @@
 - [ ] Nginx routing works.
 - [ ] Health checks work.
 - [ ] CI executes required checks.
+- [ ] Required backend and frontend test suites actually collect and run.
 - [ ] Docker images build.
+- [ ] Compose image names match published GHCR tags.
+- [ ] Public deployment health-check path matches Nginx routing.
 - [ ] AWS deployment configuration matches the actual environment.
 - [ ] Post-deployment health is verified.
 - [ ] Live URL/IP is reachable.
@@ -37,6 +41,7 @@
 - [ ] Logs and monitoring are available.
 - [ ] Architecture documentation matches implementation.
 - [ ] README matches current implementation and deployment.
+- [ ] Clean-checkout environment setup is reproducible without committing real secrets.
 
 ## QA decision
 Decision: PENDING
