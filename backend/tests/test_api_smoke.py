@@ -380,8 +380,9 @@ def test_non_object_json_bodies_are_rejected(client):
         response = client.post(endpoint, json=["not", "an", "object"])
         assert response.status_code == 400
 
+
 def test_expenses_and_csv_export_are_isolated_between_users(client):
-    """A user's expense list and CSV export must never expose another user's data."""
+    """A user's list and CSV export must not expose another user's expense."""
     password = "TestPassword123!"
 
     def register_and_login(label):
