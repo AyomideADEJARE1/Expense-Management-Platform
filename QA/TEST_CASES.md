@@ -97,3 +97,6 @@ Record date, commit/branch, environment, steps, expected result, actual result, 
 | TC-DOC-003 | README implementation accuracy | README paths, persistence model, setup, health route and deployment status match the integrated code |
 
 | TC-CI-005 | Frontend lint and dependency audit | ESLint completes with no errors; dependency audit findings are identified and dispositioned |
+| TC-CI-006 | Backend pytest collection | At least the committed API smoke tests are collected and pass |
+| TC-API-005 | Health endpoint smoke test | `/health` returns HTTP 200 and `{\"status\":\"ok\"}` |
+| TC-AUTH-005 | Registration → login → own expenses | A new user can register, receive a token, and access only their authenticated expense list |
