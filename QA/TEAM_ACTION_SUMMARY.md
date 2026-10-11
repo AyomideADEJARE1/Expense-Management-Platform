@@ -182,6 +182,18 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Evidence to close:** Tested commit SHA, browser/API result, and before-and-after month values.
 
+### 18. Frontend: make calculated spending clear in the budget form
+
+**What happens:** The budget form allows the user to edit “Amount Already Spent,” but the save request does not send that value. Spending is calculated from recorded expenses, so the input suggests a change can be saved when it cannot.
+
+**Why it matters:** Users may think they changed spending figures when the application ignores the entry.
+
+**Required correction:** Keep the spending field read-only and explain that it is calculated from recorded expenses. The correction branch now does this; browser retesting is still required.
+
+**How QA will verify:** Open create/edit budget forms, confirm the field cannot be edited, save a budget, and compare the displayed spent amount with the actual expense records after reload.
+
+**Evidence to close:** Tested commit SHA, browser screenshot, and comparison with API/expense data.
+
 ## Release checklist
 
 Do not mark a check as passed until evidence is attached.
@@ -198,7 +210,7 @@ Do not mark a check as passed until evidence is attached.
 - [ ] The AWS VM can pull the published images using the intended permissions.
 - [ ] Both health endpoints work through Nginx.
 - [ ] Production rate limits use the approved shared storage configuration.
-- [ ] Registration, current-user profile display, expense search navigation, expense ownership, filters, CSV export, budget creation/editing (including historical month preservation), and dashboard totals pass browser testing.
+- [ ] Registration, current-user profile display, expense search navigation, expense ownership, filters, CSV export, budget creation/editing (including historical month preservation and read-only calculated spending), and dashboard totals pass browser testing.
 - [ ] Screenshots, workflow run links, commit SHA, and test results are attached.
 
 **Current overall status:** Several issues are documented and some source corrections have been proposed. The correction branch has a reported successful CI run, but AWS deployment and browser verification remain pending. Do not describe the whole project as release-ready until the blocking items above are closed with evidence.
