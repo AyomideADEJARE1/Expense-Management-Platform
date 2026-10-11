@@ -395,9 +395,9 @@ Historical evidence from `.github/workflows/cd.yml` on `stephen/qa-transaction-f
 
 Why it matters: the image deployed may not be the exact image produced from the commit whose CI run passed. Concurrent or later publishing can move `latest`, and the VM's source checkout can drift independently of the image. This complicates incident diagnosis and reliable rollback.
 
-Required correction: pass the triggering, tested commit SHA through the deployment job and deploy immutable SHA-tagged images (prefer full SHA or record the digest). Pin the VM checkout to the same reviewed commit or remove unnecessary source checkout from the runtime deployment process. Record deployed image digests and implement a documented rollback to the prior known-good digest.
+Required correction: pass the triggering, tested commit SHA through the deployment job and deploy commit-specific SHA-tagged images and either enforce registry tag immutability or pin the image digest. Pin the VM checkout to the same reviewed commit or remove unnecessary source checkout from the runtime deployment process. Record deployed image digests and implement a documented rollback to the prior known-good digest.
 
-Required tests: workflow verifies the CI-tested SHA is the one published and deployed; VM pulls the intended immutable tags; running container image digest matches workflow output; rollback restores the prior version; a later `latest` publication cannot alter the selected release.
+Required tests: workflow verifies the CI-tested SHA is the one published and deployed; VM pulls the intended commit-specific tags or pinned digests; running container image digest matches workflow output; rollback restores the prior version; a later `latest` publication cannot alter the selected release.
 
 Closure evidence: workflow changes, successful release run showing commit and digest, VM/container evidence, and a tested rollback procedure.
 
