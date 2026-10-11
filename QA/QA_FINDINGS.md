@@ -24,11 +24,16 @@ The earlier reviewed implementation did not pass loaded budget data into all bud
 This is source-level evidence of a correction, not proof of correct runtime totals. Retest budget utilization, category breakdowns, and dashboard values against known expense/budget records before closing the finding.
 
 ## QA-FIND-004 — Expense search navigation uses an inconsistent tab identifier
-Classification: Historical finding; source correction present. Status: Retest pending.
 
-The earlier implementation used `transcations` instead of `transactions` for expense search navigation. PR #44 changed the identifier to `transactions` in `frontend/src/App.jsx`.
+Classification: Confirmed frontend defect on upstream main; correction proposed in PR #54. Status: Retest pending.
 
-Retest by searching for an existing expense and selecting the result. Confirm that the Transactions view opens and the intended record is visible.
+The current upstream main version of `frontend/src/App.jsx` assigns search results the tab identifier `transcations`, while the rendered page checks for `transactions`. Selecting an expense search result can therefore set an active tab that no page renders. The correction branch changes the identifier to `transactions`.
+
+Required action: Keep the corrected identifier in the reviewed release branch and add a regression check or browser test for selecting an expense search result.
+
+Retest: Log in, search for an existing expense description, select the result, and confirm the Transactions view opens and shows the intended record.
+
+Closure evidence: Tested commit SHA, browser screenshot/video, and a passing regression check where available.
 
 ## QA-FIND-005 — Required date/category filtering is not exposed in the transaction workflow
 Classification: Requirement gap; correction proposed in PR #54. Status: Retest pending.
@@ -444,4 +449,20 @@ The QA owner reports that the project tutor approved AWS as an alternative deplo
 A follow-up correction was committed to `.github/workflows/cd.yml` on the QA correction branch. It changes the deployment target to AWS EC2, uses AWS-specific secret names, checks out the commit associated with the deployment, and selects commit-tagged container images instead of the mutable latest tag. The workflow expects these GitHub Actions secrets: `AWS_EC2_HOST`, `AWS_EC2_USER`, and `AWS_EC2_SSH_KEY`, plus the existing protected deployment variables such as `DEPLOY_ENABLED`, `APP_URL`, and `DEPLOY_PATH` where configured.
 
 This is a source correction only. Before closure, verify that the required AWS secrets/variables are configured, the EC2 host can fetch the intended commit and pull the GHCR images, the migration succeeds on the existing database volume, and both public health checks pass. Do not publish secret values in evidence.
+
+
+
+## QA-FIND-044 — Authentication profile response is stored with the wrong object shape
+
+Classification: Confirmed frontend/API contract defect on upstream main; correction present in PR #54 branch. Status: Retest pending.
+
+Evidence: The backend `/api/auth/me` endpoint returns a standard response envelope containing the profile under `data`. The upstream main `frontend/src/Auth.jsx` assigns the entire API response to the current-user state instead of extracting the profile object. The same file's helper reads name fields directly from the current-user object, so the profile fields are not where the UI expects them to be. This can produce missing/incorrect name or initials and can break components that expect a direct user profile object.
+
+The correction branch reads `response.data || response`, normalizes `full_name` into first/last name fields, and stores a consistent profile object. This is source-level correction evidence, not a browser retest.
+
+Required action: Keep the normalized profile handling in the release branch and verify the current-user contract remains consistent between API response and frontend state.
+
+Retest: Register or log in with a test account, refresh the page, reload the current-user endpoint, and confirm the signed-in state remains valid and the expected user name/initials display correctly.
+
+Closure evidence: Tested commit SHA, API response sample with personal details redacted, browser screenshot, and passing automated/browser regression test where available.
 
