@@ -314,6 +314,18 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Evidence to close:** Passing CI order check, staging failure/recovery proof, deployed image/commit identity, and health results.
 
+### 29. DevOps: wait until PostgreSQL is healthy before migrations
+
+**What happens:** The deployment script previously started PostgreSQL in detached mode and immediately ran migrations. The database might not yet be ready to accept connections.
+
+**Why it matters:** A valid deployment can fail during a slow database restart simply because the migration command ran too early.
+
+**Required correction:** Start PostgreSQL with a health wait, apply migrations 002 and 003, and only then restart backend/frontend/Nginx. The correction branch now uses Compose's wait option and CI checks the order.
+
+**How QA will verify:** Confirm CI passes the deployment-order check and, in staging, restart PostgreSQL from a cold state and verify migrations begin only after the database is healthy.
+
+**Evidence to close:** CI result, staging logs showing database readiness before migrations, and successful application/database health checks.
+
 ## Release checklist
 
 Do not mark a check as passed until evidence is attached.
