@@ -244,3 +244,11 @@ Related finding: QA-FIND-052. Priority: Medium.
 Test deletion of a category referenced by an expense. The API should return HTTP 409 with the category-in-use message. Then simulate an unexpected database commit failure during category deletion and verify a generic HTTP 500, rollback, no internal error details in the response, and that the category still exists and can be deleted after recovery.
 
 Pass evidence: Current CI passes both new tests; response codes and sanitized bodies are captured; a subsequent valid operation succeeds.
+
+
+## RV-22 — Verify Docker build contexts exclude local secrets
+Related finding: QA-FIND-053. Priority: High when building/publishing images from a developer workspace.
+
+Check that backend/.dockerignore and frontend/.dockerignore exclude .env and .env.*. Confirm frontend/.dockerignore excludes node_modules and generated output. CI now validates these required patterns. For stronger closure evidence, create harmless sentinel environment files in a disposable workspace, build both images, and verify the sentinel values are absent from image layers and frontend assets.
+
+Pass evidence: current CI ignore-rule check and Docker builds pass; sentinel-based image/bundle inspection is recorded where feasible. Do not claim an actual secret was exposed without evidence.
