@@ -22,7 +22,11 @@ app = Flask(__name__)
 
 
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
-app.config["JWT_SECRET_KEY"] = os.getenv("SECRET_KEY")
+app.config["JWT_SECRET_KEY"] = (
+    os.getenv("JWT_SECRET_KEY")
+    or os.getenv("JWT_SECRET")
+    or os.getenv("SECRET_KEY")
+)
 
 
 database_url = URL.create(
