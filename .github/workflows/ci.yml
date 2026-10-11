@@ -172,6 +172,19 @@ jobs:
           fi
           echo "Compose configuration resolves required database variables and contains no fixed legacy password."
 
+      - name: Verify deployment migrations run before app restart
+        run: |
+          db_start=$(grep -nF 'docker compose up -d postgres' .github/workflows/cd.yml | cut -d: -f1)
+          migration_002=$(grep -nF '002_user_settings.sql' .github/workflows/cd.yml | cut -d: -f1)
+          migration_003=$(grep -nF '003_budget_uniqueness.sql' .github/workflows/cd.yml | cut -d: -f1)
+          app_start=$(grep -nF 'docker compose up -d --remove-orphans backend frontend nginx' .github/workflows/cd.yml | cut -d: -f1)
+          test -n "$db_start" && test -n "$migration_002" && test -n "$migration_003" && test -n "$app_start"
+          if [ "$db_start" -ge "$migration_002" ] || [ "$migration_002" -ge "$migration_003" ] || [ "$migration_003" -ge "$app_start" ]; then
+            echo "::error::Database migrations must complete before application services are restarted."
+            exit 1
+          fi
+          echo "Deployment order keeps the current app running until database migrations complete."
+
   backend:
     name: Backend (lint & test)
     needs: detect
