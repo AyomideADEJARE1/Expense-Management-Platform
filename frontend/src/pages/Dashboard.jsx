@@ -1,4 +1,3 @@
-import { formatCurrency } from '../utils/currency';
 import SummaryCards from '../Components/Dashboard/SummaryCards';
 import MonthlyExpensesChart from '../Components/Dashboard/MonthlyExpensesChart';
 import CategoryDonutChart from '../Components/Dashboard/CategoryDonutChart';
