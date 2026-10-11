@@ -1,6 +1,7 @@
 import uuid
 
 import pytest
+from sqlalchemy.orm import Session
 
 from app import app
 from extensions import db, limiter
@@ -493,6 +494,51 @@ def test_duplicate_general_budget_returns_conflict(client):
 
     assert first.status_code == 201
     assert second.status_code == 409
+
+    listed = client.get("/api/budgets", headers=headers)
+    assert listed.status_code == 200
+    assert len(listed.get_json()["data"]) == 1
+
+
+
+def test_unexpected_budget_commit_failure_rolls_back_and_session_recovers(
+    client, monkeypatch
+):
+    email = f"qa-budget-rollback-{uuid.uuid4().hex}@example.test"
+    password = "TestPassword123!"
+
+    registration = client.post(
+        "/api/auth/register",
+        json={
+            "full_name": "QA Budget Rollback Test",
+            "email": email,
+            "password": password,
+        },
+    )
+    assert registration.status_code == 201
+
+    login = client.post(
+        "/api/auth/login",
+        json={"email": email, "password": password},
+    )
+    assert login.status_code == 200
+    token = login.get_json()["data"]["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+    payload = {"amount": 200, "month": "2026-11-01"}
+
+    def fail_commit(self):
+        raise RuntimeError("simulated database failure")
+
+    with monkeypatch.context() as patcher:
+        patcher.setattr(Session, "commit", fail_commit)
+        failed = client.post("/api/budgets", headers=headers, json=payload)
+
+    assert failed.status_code == 500
+    assert "simulated database failure" not in failed.get_data(as_text=True)
+    assert "password" not in failed.get_data(as_text=True).lower()
+
+    recovered = client.post("/api/budgets", headers=headers, json=payload)
+    assert recovered.status_code == 201
 
     listed = client.get("/api/budgets", headers=headers)
     assert listed.status_code == 200
