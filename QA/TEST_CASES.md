@@ -151,3 +151,5 @@ Record date, commit/branch, environment, steps, expected result, actual result, 
 | TC-SEC-008 | Content-Security-Policy on the public HTTPS endpoint | A reviewed CSP is present and login, navigation, and API calls continue to work without unexplained policy violations |
 | TC-SEC-009 | HSTS on the public HTTPS endpoint | HSTS is present only if HTTPS is enforced and the deployment layer is configured to send the header |
 | TC-DOC-004 | Clean checkout follows documented Compose port and environment setup | Documented port, URL, environment-file steps, and health paths match actual startup behavior |
+
+| TC-BUD-005 | Budget spending display in create/edit form | Spending value is read-only, helper text explains calculation, and displayed value matches recorded expenses after reload |
