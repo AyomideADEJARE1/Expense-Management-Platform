@@ -160,8 +160,16 @@ def test_non_finite_expense_amount_is_rejected(client):
     "payload",
     [
         {"full_name": 123, "email": "qa@example.test", "password": "secret"},
-        {"full_name": "QA User", "email": {"bad": "type"}, "password": "secret"},
-        {"full_name": "QA User", "email": "qa@example.test", "password": ["bad"]},
+        {
+            "full_name": "QA User",
+            "email": {"bad": "type"},
+            "password": "secret",
+        },
+        {
+            "full_name": "QA User",
+            "email": "qa@example.test",
+            "password": ["bad"],
+        },
     ],
 )
 def test_registration_rejects_non_string_fields(client, payload):
