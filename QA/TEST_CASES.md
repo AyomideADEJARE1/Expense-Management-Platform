@@ -132,3 +132,5 @@ Record date, commit/branch, environment, steps, expected result, actual result, 
 | TC-VAL-005 | Non-object JSON request body | Write endpoints return HTTP 400 instead of an unhandled server error |
 
 | TC-HLT-005 | Database health probe failure and recovery | Probe returns 500 while DB is unavailable, rolls back the failed session, then returns healthy after recovery |
+
+| TC-SEC-005 | Nginx security response headers | Frontend/API responses include the configured baseline security headers |
