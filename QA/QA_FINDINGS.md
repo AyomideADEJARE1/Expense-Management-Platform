@@ -584,9 +584,9 @@ Evidence: The reviewed repository had no root, backend, or frontend .dockerignor
 
 Impact: A local secret can be included in a container image layer or published image, and host dependencies can make builds larger or less reproducible. A Git ignore rule alone does not exclude files from Docker build contexts.
 
-Correction: PR #54 adds backend/.dockerignore to exclude environment files, Git metadata, Python caches/virtual environments, coverage output, and tests. It adds frontend/.dockerignore to exclude environment files, Git metadata, host node_modules, dist, coverage, and logs. CI now checks that both ignore files exist and contain the required secret exclusions. Run 38179293397 passed the ignore-rule check and both Docker image builds.
+Correction: PR #54 adds backend/.dockerignore to exclude environment files, Git metadata, Python caches/virtual environments, coverage output, and tests. It adds frontend/.dockerignore to exclude environment files, Git metadata, host node_modules, dist, coverage, and logs. CI checks that both ignore files exist and contain the required secret exclusions. A follow-up CI change now creates harmless backend/frontend sentinel environment files, loads the built images, and checks that the backend image does not contain /app/.env and the frontend bundle does not contain the sentinel variable. The ignore-rule check and image builds passed in run 38179293397, but the new sentinel inspection requires a fresh successful CI run.
 
-Retest: Build backend and frontend images with local sentinel environment files present in the workspace. Confirm the files are excluded from the build context and no sentinel value appears in the resulting image or frontend bundle. Verify both Docker builds still succeed.
+Retest: The latest CI workflow now builds with harmless sentinel environment files present and checks the resulting backend image/frontend bundle. Confirm that new CI run passes and verify both Docker builds still succeed.
 
 Closure evidence: CI result for the ignore-rule check and image builds, reviewed ignore files, and a sentinel-based build-context test or equivalent evidence. Do not claim an actual secret was leaked unless evidence shows a real secret entered an image.
 
