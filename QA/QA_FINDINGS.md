@@ -401,3 +401,29 @@ Required tests: clean database install; apply migration to a populated pre-migra
 
 Closure evidence: repeatable migration strategy, fresh/existing-volume test logs, schema version evidence, and tested recovery instructions.
 
+## QA-FIND-042 — Budget creation converts all database failures into HTTP 500
+Classification: API error handling / data integrity. Priority: Medium–High. Status: Open.
+
+Evidence reviewed in `backend/routes/budgets.py` on `stephen/qa-transaction-fixes`: the budget creation handler catches every exception raised by `db.session.commit()`, rolls back, and returns the same generic HTTP 500 response. The handler does not distinguish an expected uniqueness conflict from an unexpected database outage or programming error.
+
+Why it matters: after database-level uniqueness is added, a concurrent duplicate request will normally be rejected by the database. If the handler continues to map every commit error to 500, clients receive a server-failure response for a predictable conflict, and monitoring cannot distinguish client conflicts from genuine infrastructure failures. Conversely, returning a conflict for every exception would also conceal real failures.
+
+Required correction: once the budget uniqueness migration is implemented, catch the specific database integrity exception for the relevant uniqueness constraint, roll back, and return a stable HTTP 409 response. Log unexpected exceptions safely on the server without returning SQL, credentials, or stack traces to clients; return a generic 500 for unexpected failures.
+
+Required tests: duplicate budget returns 409; a simulated unexpected database failure returns 500; the SQLAlchemy session is rolled back and remains usable after either path; the response never exposes SQL or secrets.
+
+Closure evidence: implementation commit, targeted tests for both expected and unexpected failures, and successful regression suite.
+
+## QA-FIND-043 — API tests do not establish database isolation between test cases
+Classification: Test reliability / reproducibility. Priority: Medium. Status: Open pending test-environment review.
+
+Evidence reviewed in `backend/tests/test_api_smoke.py` on `stephen/qa-transaction-fixes`: the client fixture toggles Flask testing and rate-limit settings and resets the limiter, but it does not itself create an isolated test database, wrap each test in a transaction that is rolled back, or remove created user/category records. Several tests register users and create globally named categories through the application's configured database.
+
+Why it matters: test cases can leave records behind, collide on category names, depend on execution order, or touch a database other than the intended disposable test database if CI environment configuration changes. A passing run may become flaky when tests are repeated or run in parallel, and a misconfigured local test run could modify a non-test database.
+
+Required correction: prove CI always points to a dedicated disposable test database. Prefer fixtures that create/drop schema or use per-test transactions and rollback; generate unique names where records are expected to persist for the test; clean up state reliably. Add a startup guard that refuses to run destructive test setup if the configured database is not explicitly identified as a test database.
+
+Required tests: run the suite twice consecutively; run relevant tests in a different order or with parallelization where supported; confirm no leftover users/categories after teardown; intentionally point the test configuration at a non-test database and confirm the guard refuses to run.
+
+Closure evidence: CI database service/configuration, isolated fixture implementation, repeated-run output, and proof that tests cannot target the production database accidentally.
+
