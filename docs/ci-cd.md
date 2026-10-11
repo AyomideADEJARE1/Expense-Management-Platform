@@ -461,37 +461,32 @@ Production secrets such as database passwords and application secret keys must r
 
 # 16. Deployment Health Check
 
-After deployment, the CD workflow performs an HTTP health check using:
+After deployment, the corrected CD workflow checks both public health endpoints:
 
 ```text
-<APP_URL>/health
+<APP_URL>/api/health
+<APP_URL>/api/health/db
 ```
 
-The request is retried several times before the workflow is considered failed.
+The first endpoint verifies that the application is responding. The second verifies that the backend can reach PostgreSQL. The workflow retries each endpoint and fails deployment verification if either request does not succeed.
 
 ### Important endpoint distinction
 
-The current application exposes the backend health endpoint at:
+The backend exposes:
 
 ```text
 /health
+/health/db
 ```
 
-and Nginx exposes it externally as:
+The correction branch's Nginx configuration maps these publicly as:
 
 ```text
 /api/health
+/api/health/db
 ```
 
-The current CD workflow checks:
-
-```text
-<APP_URL>/health
-```
-
-Therefore, the AWS deployment health-check path and the currently configured Nginx public health path should be reconciled before production deployment is enabled.
-
-This documentation does not treat the AWS deployment as verified until that deployment path has been tested successfully.
+The mapping must be tested through the deployed Nginx service. A source-level mapping or a healthy container alone is not sufficient evidence that both public endpoints work.
 
 ---
 
