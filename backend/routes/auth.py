@@ -33,7 +33,11 @@ def register():
     email = data.get("email")
     password = data.get("password")
 
-    if not isinstance(full_name, str) or not isinstance(email, str) or not isinstance(password, str):
+    if (
+        not isinstance(full_name, str)
+        or not isinstance(email, str)
+        or not isinstance(password, str)
+    ):
         return error_response(
             "Full name, email, and password must be strings",
             400
@@ -214,7 +218,10 @@ def update_current_user():
         first_name_value = data.get("first_name", "")
         last_name_value = data.get("last_name", "")
 
-        if not isinstance(first_name_value, str) or not isinstance(last_name_value, str):
+        if (
+            not isinstance(first_name_value, str)
+            or not isinstance(last_name_value, str)
+        ):
             return error_response(
                 "First name and last name must be strings",
                 400
