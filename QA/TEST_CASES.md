@@ -159,3 +159,6 @@ Record date, commit/branch, environment, steps, expected result, actual result, 
 | TC-BUD-006 | Unexpected budget commit failure | API returns a generic HTTP 500, rolls back the transaction, exposes no database details, and accepts a subsequent valid budget request |
 
 | TC-DB-007 | Run API tests with a non-test database name | Test session fails before API tests execute and reports that a test-only database is required |
+
+| TC-CAT-006 | Delete category referenced by expense | API returns HTTP 409 and preserves the category and expense |
+| TC-CAT-007 | Unexpected database failure during category delete | API returns generic HTTP 500, rolls back, exposes no internal error details, and a later delete succeeds |
