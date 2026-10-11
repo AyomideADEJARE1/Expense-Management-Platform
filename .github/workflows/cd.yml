@@ -123,10 +123,14 @@ jobs:
             export BACKEND_IMAGE="ghcr.io/${repo_lower}-backend:sha-${SHORT_SHA}"
             export FRONTEND_IMAGE="ghcr.io/${repo_lower}-frontend:sha-${SHORT_SHA}"
             docker compose pull backend frontend
-            docker compose up -d --remove-orphans
-            # This migration is idempotent and must also run for existing volumes.
+            # Start only the database first; keep the currently running app version up
+            # until the schema changes have completed successfully.
+            docker compose up -d postgres
+            # These migrations are also applied explicitly for already-initialized volumes.
             docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -f /docker-entrypoint-initdb.d/002_user_settings.sql'
             docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -f /docker-entrypoint-initdb.d/003_budget_uniqueness.sql'
+            # Restart application services only after migrations succeed.
+            docker compose up -d --remove-orphans backend frontend nginx
             docker image prune -f
 
       - name: Application and database health checks
