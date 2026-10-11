@@ -591,6 +591,36 @@ Retest: The latest CI workflow now builds with harmless sentinel environment fil
 Closure evidence: CI result for the ignore-rule check and image builds, reviewed ignore files, and a sentinel-based build-context test or equivalent evidence. Do not claim an actual secret was leaked unless evidence shows a real secret entered an image.
 
 
+
+
+## QA-FIND-054 — CD restarts the application before applying database migrations
+
+Classification: Deployment sequencing / release safety. Status: Source correction and CI order check passed; staging failure/recovery verification remains pending. Priority: High for schema-changing releases.
+
+Evidence: The reviewed CD workflow previously ran `docker compose up -d --remove-orphans` before explicitly applying migrations 002 and 003. That command could replace the running backend/frontend containers before a migration succeeded.
+
+Impact: If a migration fails—for example, migration 003 detects duplicate legacy budgets—the new application image may already be running against the old or partially upgraded schema. The deployment job then fails, but the application may already have changed version, making rollback and diagnosis harder.
+
+Correction: PR #54 now starts only PostgreSQL, waits for it to become healthy, applies migrations 002 and 003, and restarts backend/frontend/Nginx only after both migrations succeed. CI also checks the command order.
+
+Retest: Confirm the CI migration-order check passes. In a controlled staging environment, force migration 003 to fail using duplicate test data and verify the old application containers remain running and healthy. Then resolve the duplicate data, rerun deployment, and verify the intended commit is live.
+
+Closure evidence: CI run 38179822312 passed the migration-order check. Staging failure/recovery evidence, deployed image/commit identity, and health-check results remain required; source ordering alone does not prove the AWS deployment behaves as expected.
+
+## QA-FIND-055 — CD may attempt migrations before PostgreSQL is healthy
+
+Classification: Deployment reliability. Status: Source correction and CI order check passed; staging cold-start verification remains pending. Priority: Medium–High.
+
+Evidence: Before the latest correction, the CD script started PostgreSQL with `docker compose up -d postgres` and then immediately executed SQL migrations. Detached Compose startup does not necessarily wait until the database health check reports healthy.
+
+Impact: On a slower restart or cold VM, the migration command can run before PostgreSQL accepts connections, causing deployment to fail even when the schema and migration are valid.
+
+Correction: PR #54 now uses `docker compose up -d --wait postgres` before running migrations. CI's migration-order check requires this health wait before migrations and before the application restart.
+
+Retest: Confirm the latest CI order check passes. In staging, restart PostgreSQL from a cold state and verify the workflow waits for health before applying migrations. Confirm the application services restart only after both migrations complete.
+
+Closure evidence: CI run 38179822312 passed the order check. Staging deployment logs must still show database health before migration execution, followed by app restart and successful public health checks.
+
 ## CI status note — 2026-10-11
 
 Latest CI run 38179822312 passed for code commit 81f1ac88449012b530c83a9d9c2317558f3c905c. All eight jobs passed: secret scan, component detection, database migrations, backend lint/tests, frontend lint/build, both Docker builds, and the aggregate check. The backend suite passed 33 tests. The database job applied migrations 001–003, verified the uniqueness indexes and legacy-duplicate guard, validated Compose environment interpolation, and checked that the CD workflow starts PostgreSQL with a health wait, applies migrations 002/003, and only then restarts app services.
