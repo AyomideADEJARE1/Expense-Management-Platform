@@ -375,7 +375,7 @@ Images receive:
 - A short commit SHA tag
 - A `latest` tag
 
-The commit-tagged image identifies a specific build. The workflow also publishes `latest` for convenience, but deployment must use the immutable `sha-<short commit>` tag tied to the CI-tested commit.
+The commit-tagged image identifies a specific build. The workflow also publishes `latest` for convenience, but deployment must use the `sha-<short commit>` tag tied to the CI-tested commit, with registry tag immutability enforced or the image digest pinned for stronger guarantees.
 
 ---
 
