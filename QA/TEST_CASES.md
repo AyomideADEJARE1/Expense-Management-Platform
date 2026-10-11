@@ -106,3 +106,6 @@ Record date, commit/branch, environment, steps, expected result, actual result, 
 | TC-VAL-001 | Create expense with NaN or Infinity amount | API returns HTTP 400; no database write occurs |
 | TC-VAL-002 | Create/update category with non-string name or description | API returns HTTP 400 rather than an unhandled server error |
 | TC-VAL-003 | Create/update expense or budget above supported numeric precision | API returns HTTP 400 rather than a database error |
+
+| TC-DB-004 | Fresh database initialization | All required columns from migrations 001 and 002 exist after Compose startup |
+| TC-DB-005 | Existing persistent database upgrade | Idempotent user-settings migration adds missing columns without rerunning initial schema |
