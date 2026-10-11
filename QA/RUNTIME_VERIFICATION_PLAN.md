@@ -185,14 +185,14 @@ Pass evidence: Browser/API test showing the month before edit and after reload i
 
 
 ## RV-14 — Category API authorization
-Related finding: QA-FIND-046. Priority: High.
+Related finding: QA-FIND-047. Priority: High.
 
 Test unauthenticated POST, PUT, and DELETE requests to the category API. They must be rejected. Repeat as a normal signed-in user and as the role authorized by the team's written category policy. Verify changes do not affect another user's category records where categories are user-owned. Do not close this gate until the intended global/shared versus user-owned category policy is documented.
 
 Pass evidence: Policy decision, API responses for each role, automated tests, and tested commit SHA.
 
 ## RV-15 — Compose credential configuration
-Related finding: QA-FIND-047. Priority: High.
+Related finding: QA-FIND-037. Priority: High.
 
 From a clean checkout, copy the root example environment file to .env, set a unique local database password, and run docker compose config. Confirm the rendered configuration uses the supplied values, contains no embedded fixed password, and does not expose secret values in captured logs. Repeat with required values absent and confirm Compose fails before services start. Start the stack and verify both application and database health endpoints.
 
@@ -226,3 +226,11 @@ Related finding: QA-FIND-051. Priority: Medium–High.
 Login and registration have per-route limits, but the backend uses get_remote_address without explicit trusted-proxy configuration and the default limiter storage is in memory. Through the deployed Nginx endpoint, test two independent client addresses. Verify one client's repeated requests do not throttle the other, excess requests return 429, and limits behave consistently across workers/restarts. Confirm forwarding headers cannot be spoofed to bypass limits.
 
 Pass evidence: Reviewed trusted-proxy count and Nginx forwarding configuration, shared production store configuration, controlled test results, response codes, and deployed version.
+
+
+## RV-20 — Verify budget spending is derived from recorded expenses
+Related finding: QA-FIND-046. Priority: Low–Medium.
+
+Open both new-budget and edit-budget forms. Confirm the "Amount Already Spent" value is read-only and helper text explains that it is calculated from recorded expenses. Save a budget, reload, and compare the displayed spending value with the relevant expense records and API response.
+
+Pass evidence: CI result for the correction commit, browser screenshot, and a before/after comparison against recorded expenses. Do not mark the finding closed from source review alone.
