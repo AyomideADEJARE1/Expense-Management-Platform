@@ -245,7 +245,7 @@ export default function Transactions({ categories = [], onTransactionChange, isD
     const csvCell = (value) => {
       const raw = String(value ?? '');
       // Prevent spreadsheet formula execution for untrusted text fields.
-      const safe = /^[=+@-]/.test(raw) ? `'${raw}` : raw;
+      const safe = /^\s*[=+@-]/.test(raw) ? `'${raw}` : raw;
       return `"${safe.replace(/"/g, '""')}"`;
     };
     const rows = filteredTransactions.map((tx) => [
