@@ -7,12 +7,12 @@ Classification: Observation. Status: Open.
 
 The repository contains both a root-level React source structure and frontend/src. Docker builds ./frontend, making that tree the apparent containerized frontend. The role of the other tree should be clarified.
 
-## QA-FIND-002 — README does not match the current integrated implementation
-Classification: Documentation defect. Status: Open.
+## QA-FIND-002 — README accuracy differs by branch
+Classification: Documentation defect. Status: Correction proposed in PR #54; review pending.
 
-The README contains legacy frontend/localStorage-oriented descriptions, while the current implementation is an integrated React/Flask/PostgreSQL application with Docker/Nginx infrastructure.
+The current upstream `main` README already describes the integrated React/Flask/PostgreSQL stack and identifies AWS EC2 as the documented live environment. The `integration/deployable-main` README still contained legacy frontend/localStorage descriptions that did not match its integrated backend and Docker/Nginx implementation.
 
-Required action: update architecture, features, persistence, setup and deployment documentation.
+PR #54 replaces the integration-branch README and preserves the architecture diagram and documented live URL, while explicitly noting the unresolved Azure-vs-AWS capstone requirement. Review the rendered README and verify its links before closing this finding.
 
 ## QA-FIND-003 — Dashboard budget data is not passed to all budget-dependent components
 Classification: Historical finding; source correction present. Status: Retest pending.
@@ -31,35 +31,29 @@ Retest by searching for an existing expense and selecting the result. Confirm th
 ## QA-FIND-005 — Required date/category filtering is not exposed in the transaction workflow
 Classification: Requirement gap; correction proposed in PR #54. Status: Retest pending.
 
-The expense API supports month and category query parameters, but `frontend/src/pages/Transactions.jsx` currently exposes search and an All/Expense type selector only. It does not expose a date/month selector or category selector for filtering the transaction list.
-
-Required action: add accessible date/month and category controls, then execute TC-FLT-001 and TC-FLT-002 with records spanning multiple months and categories.
+The upstream `main` branch and the pre-correction integration branch expose search and an All/Expense type selector, but no transaction date/category filter controls. PR #54 now proposes start-date/end-date and category controls, plus matching API query support. CI and browser retests are pending.
 
 ## QA-FIND-006 — CSV export workflow needs end-to-end verification
 Classification: Correction proposed in PR #54; retest pending.
 
-The backend exposes an authenticated CSV endpoint at `/api/expenses/export`. PR #44 also replaces the Reports page print action with a client-side CSV download for the selected report. However, the Transactions page still has no direct CSV action, and no retained browser evidence currently proves that the generated file contains the correct records and fields.
+The backend exposes an authenticated CSV endpoint at `/api/expenses/export`, and PR #44 adds a client-side CSV download for the selected report. The Transactions page did not previously offer a direct export action; PR #54 now proposes one for the currently filtered transaction rows. Verify the downloaded file's headers, contents, formula handling, and user-data scope in a browser before closing this finding.
 
-Required action: provide/confirm a user-accessible export workflow, then verify the downloaded CSV opens correctly, includes the expected headers and filtered records, and contains only the authenticated user's data.
+## QA-FIND-007 — Category authorization observation (consolidated)
+Classification: Duplicate/overlapping observation. Status: Consolidated into QA-FIND-010.
 
-## QA-FIND-007 — Category authorization model requires clarification
-Classification: Security/authorization observation. Status: Open.
+The category write-authorization issue is tracked as the high-priority finding QA-FIND-010. Do not count this entry as a separate defect. The team still needs to confirm the intended global-category administration model before choosing the authorization implementation.
 
-Category routes do not follow the same authentication pattern used by protected expense/budget routes. This may be intentional for shared global categories. If categories are user-owned, authorization requires correction.
+## QA-FIND-008 — Deployment target conflicts with the supplied capstone specification
+Classification: Requirements/deployment mismatch. Status: Open; team/instructor decision required.
 
-Required action: confirm the intended ownership model before classifying it as a confirmed security defect.
+The supplied capstone specification requires an Azure Virtual Machine. Upstream `main` documentation describes AWS EC2 as the current live environment, while the CD workflow contains an Azure VM deployment job that the CI/CD documentation describes as legacy/configurable. The supplied requirement document does not itself establish that AWS has been approved as a substitute.
 
-## QA-FIND-008 — Deployment workflow and reported AWS environment require reconciliation
-Classification: DevOps observation. Status: Open.
+The team must confirm the required submission target with the instructor and provide evidence from that environment. Neither AWS documentation nor Azure workflow code alone proves the Azure deployment requirement has been satisfied.
 
-Repository deployment configuration historically references Azure VM deployment, while the team reports AWS as the current deployment environment under the tutor's permitted alternative. Configuration and documentation should be reconciled with the actual environment.
+## QA-FIND-009 — Live deployment verification has not been evidenced in this audit
+Classification: Verification gap. Status: Pending.
 
-This does not mean AWS has failed. Live verification is separately blocked while the instance is paused.
-
-## QA-FIND-009 — Live deployment verification is currently blocked
-Classification: Verification blocker. Status: Blocked.
-
-The deployment instance is intentionally paused. Live URL, post-deployment health and deployed routing checks cannot be marked PASS or FAIL until the environment is restored.
+The upstream README documents `https://expense-tracker.live`, but this audit has not captured a successful browser/API check of the live application. The web retrieval attempt could not access the URL, which is not sufficient evidence that the service is down. Verify the URL manually or with a suitable runtime check, then retain timestamped evidence for page load, login, expense operations, public health, database health, and deployment target.
 
 ## Retest rule
 Resolved findings remain in this record. Record the fixing commit/PR, affected test, environment, evidence and result. Successful re-execution is recorded as RETEST PASS.
@@ -115,7 +109,7 @@ GitHub Actions CI run `38157705137` for the first PR #54 revision failed the fro
 - `frontend/src/pages/Dashboard.jsx`: unused `formatCurrency` import.
 - `frontend/src/pages/Transactions.jsx`: unused `X` import.
 
-The follow-up correction branch removes those unused bindings/imports. The next CI run then exposed two backend Flake8 failures in `backend/routes/auth.py`: E302 (one blank line before `@auth_bp.put("/me")`) and E501 (an 80-character error-response line). Both formatting fixes are now committed on PR #54. The next run shows frontend lint/build and backend lint passing, along with migration/schema checks and secret scanning. Docker image builds and the final `ci-success` job were still in progress at the time of this update. Pytest collected zero tests and emitted the configured warning, so backend behavior remains untested by automated tests.
+The follow-up correction branch removes those unused bindings/imports. The next CI run then exposed two backend Flake8 failures in `backend/routes/auth.py`: E302 (one blank line before `@auth_bp.put("/me")`) and E501 (an 80-character error-response line). Both formatting fixes are now committed on PR #54. The early frontend lint and backend Flake8 failures were corrected in PR #54. An expanded CI run then collected 24 tests but failed four registration/profile/budget tests because the shared rate limiter returned HTTP 429 across test cases. PR #54 now resets rate-limit state between tests and removes the CI exception that treated zero collected tests as success. The latest commit must pass CI before this finding can be closed.
 
 The same CI log reports one high-severity npm dependency vulnerability during `npm ci`. The log excerpt does not identify the affected package; run `npm audit` and record the package, advisory, affected version, and safe remediation before classifying the risk as resolved.
 
