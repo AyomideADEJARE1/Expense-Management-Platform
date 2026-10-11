@@ -29,6 +29,13 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 | REQ-23 | Live URL | TC-CD-004 | URL is documented in README; current external availability and end-to-end function still require verification |
 
 | REQ-24 | Approved cloud deployment target | TC-CD-001–006 | Decision recorded: project tutor approved AWS as an alternative, so AWS EC2 is the target for this audit. Verify successful deployment, public health routes, and the exact deployed commit/image before marking complete. |
-| REQ-25 | Database credentials are externally configured | TC-SEC-001–004, TC-ENV-001 | FINDING OPEN: Compose contains hard-coded database credentials |
+| REQ-25 | Database credentials are externally configured | TC-SEC-001–004, TC-ENV-001–002 | Upstream main contains fixed Compose credentials; PR #54 replaces them with required root environment variables. CI and runtime verification of the correction are pending |
 
 | REQ-26 | User-specific expense data isolation (security expectation for authenticated, user-specific expense records) | TC-SEC-007 | PENDING: regression test added to PR #54; CI rerun and broader authorization review required |
+
+
+| REQ-27 | Category write authorization | TC-CAT-004–005 | FINDING OPEN: upstream main category POST/PUT/DELETE routes do not require authentication/authorization; the intended shared-category policy must be recorded and enforced |
+| REQ-28 | Automated frontend functional coverage | TC-UI-001, TC-CI-004 | FINDING OPEN: frontend package has no test script, and CI's if-present test step can skip tests |
+| REQ-29 | Reliable authentication rate limiting behind Nginx | TC-RL-001 | FINDING OPEN: proxy-aware client identity and shared production rate-limit storage require configuration and runtime proof |
+| REQ-30 | Browser security headers | TC-SEC-005, TC-SEC-008–009 | Baseline headers exist in correction branch; CSP/HSTS configuration and public HTTPS verification remain pending |
+| REQ-31 | Reproducible local setup | TC-ENV-001–002, TC-DOC-004 | Compose environment configuration and docs updated in PR #54; clean-checkout startup retest pending |
