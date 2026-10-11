@@ -147,7 +147,7 @@ Classification: Input-validation defect. Status: Correction proposed in PR #54; 
 
 The expense and budget routes parse numeric input as `Decimal`, but comparing non-finite values such as `NaN` can raise a decimal exception rather than returning a controlled validation response. Values beyond the database column's supported precision can also fail at persistence time.
 
-The correction proposed in PR #54 rejects non-finite values and values at or above the maximum supported amount before database writes. Regression tests currently cover non-finite expense creation values; budget and oversized-value cases still need explicit coverage.
+The correction proposed in PR #54 rejects non-finite values and values at or above the maximum supported amount before database writes. Regression tests now cover non-finite and oversized expense and budget creation values. Update routes still need explicit tests for non-finite and oversized amounts.
 
 ## QA-FIND-020 — Category endpoints do not validate JSON field types before string operations
 Classification: Input-validation defect. Status: Correction proposed in PR #54; retest pending. Priority: Medium.
