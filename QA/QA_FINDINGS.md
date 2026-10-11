@@ -437,6 +437,8 @@ Why it matters: test cases can leave records behind, collide on category names, 
 
 Required correction: prove CI always points to a dedicated disposable test database. Prefer fixtures that create/drop schema or use per-test transactions and rollback; generate unique names where records are expected to persist for the test; clean up state reliably. Add a startup guard that refuses to run destructive test setup if the configured database is not explicitly identified as a test database.
 
+Correction status update — 2026-10-11: PR #54 adds an autouse pytest session guard in backend/tests/conftest.py that refuses to run tests unless the configured database name contains a test/testing marker. CI run 38178811441 passed for the guard commit and collected/passed 31 backend tests against expense_management_test. This reduces the risk of accidentally targeting a normal database, but does not provide per-test transaction isolation or cleanup. The negative non-test-database case and repeated-run/cleanup behavior remain open.
+
 Required tests: run the suite twice consecutively; run relevant tests in a different order or with parallelization where supported; confirm no leftover users/categories after teardown; intentionally point the test configuration at a non-test database and confirm the guard refuses to run.
 
 Closure evidence: CI database service/configuration, isolated fixture implementation, repeated-run output, and proof that tests cannot target the production database accidentally.
