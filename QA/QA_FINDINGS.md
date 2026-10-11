@@ -222,3 +222,11 @@ Classification: Test-isolation defect. Status: Correction proposed in PR #54; re
 The first expanded CI run returned HTTP 429 in otherwise unrelated registration/profile tests because multiple test cases shared the same process-local five-requests-per-minute registration limit. This was test-state interference, not evidence that the validation assertions themselves were wrong.
 
 PR #54 updates the functional test fixture to disable rate limiting for ordinary endpoint tests. Rate-limit behavior should be verified separately in a dedicated test with explicit limits and controlled state. Production still needs a shared rate-limit store for multi-worker deployment.
+
+
+## QA-FIND-030 — Budget uniqueness is enforced only in application code
+Classification: Data-integrity risk. Status: Open. Priority: Medium.
+
+The budget API checks whether a budget already exists for a user, month, and category before inserting or updating it. The PostgreSQL schema does not define a corresponding uniqueness constraint/index for that business key. Two concurrent requests can therefore both pass the application check and create duplicate budgets.
+
+Required action: inspect existing data for duplicates, then add an appropriate database-level uniqueness strategy for category-specific budgets and whole-month budgets (where `category_id` is NULL). The migration must account for PostgreSQL's NULL uniqueness behavior and must be tested against both a fresh database and an existing database before release.
