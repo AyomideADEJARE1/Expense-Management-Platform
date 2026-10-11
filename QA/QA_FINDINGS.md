@@ -29,14 +29,14 @@ The earlier implementation used `transcations` instead of `transactions` for exp
 Retest by searching for an existing expense and selecting the result. Confirm that the Transactions view opens and the intended record is visible.
 
 ## QA-FIND-005 — Required date/category filtering is not exposed in the transaction workflow
-Classification: Confirmed requirement gap. Status: Open.
+Classification: Requirement gap; correction proposed in PR #54. Status: Retest pending.
 
 The expense API supports month and category query parameters, but `frontend/src/pages/Transactions.jsx` currently exposes search and an All/Expense type selector only. It does not expose a date/month selector or category selector for filtering the transaction list.
 
 Required action: add accessible date/month and category controls, then execute TC-FLT-001 and TC-FLT-002 with records spanning multiple months and categories.
 
 ## QA-FIND-006 — CSV export workflow needs end-to-end verification
-Classification: Partially addressed in source; retest pending.
+Classification: Correction proposed in PR #54; retest pending.
 
 The backend exposes an authenticated CSV endpoint at `/api/expenses/export`. PR #44 also replaces the Reports page print action with a client-side CSV download for the selected report. However, the Transactions page still has no direct CSV action, and no retained browser evidence currently proves that the generated file contains the correct records and fields.
 
@@ -83,7 +83,7 @@ The CI workflow runs `pytest -v` but explicitly treats exit code 5 (no tests col
 Required action: add real backend tests for authentication, authorization/user isolation, expense/category/budget CRUD, summaries, filters, CSV and health; add frontend or browser-level tests for critical user journeys; make missing required test suites fail CI once those suites are established.
 
 ## QA-FIND-012 — Deployment workflow does not align cleanly with Compose image configuration
-Classification: Confirmed deployment-configuration inconsistency. Status: Open. Priority: High.
+Classification: Confirmed deployment-configuration inconsistency; correction proposed in PR #54. Status: Retest/configuration review pending. Priority: High.
 
 The CD workflow publishes backend/frontend images to GHCR and later runs `docker compose pull` on the VM. In `docker-compose.yml`, the frontend and backend services specify `build:` contexts but no matching `image:` names for the published GHCR images. The deployment workflow therefore does not explicitly configure Compose to pull the images that the publish job creates.
 
@@ -92,7 +92,7 @@ The workflow health check requests `${APP_URL}/health`, while the integrated Ngi
 Required action: align Compose image names, publishing tags, and deployment pull behavior; align the health-check URL with the public Nginx route; verify using a deployment or controlled integration environment before marking CD as passing.
 
 ## QA-FIND-013 — Root README describes the legacy localStorage-only app
-Classification: Confirmed documentation defect. Status: Open.
+Classification: Confirmed documentation defect; corrected README proposed in PR #54. Status: Review pending.
 
 The root `README.md` on `integration/deployable-main` describes a React/localStorage application and lists a legacy component structure. The current integrated implementation instead uses the frontend under `frontend/`, Flask API routes, PostgreSQL, Docker Compose, and Nginx. This discrepancy can cause a developer or reviewer to follow incorrect setup and persistence instructions.
 
@@ -115,6 +115,6 @@ GitHub Actions CI run `38157705137` for the first PR #54 revision failed the fro
 - `frontend/src/pages/Dashboard.jsx`: unused `formatCurrency` import.
 - `frontend/src/pages/Transactions.jsx`: unused `X` import.
 
-The follow-up correction branch removes those unused bindings/imports. The next CI run then exposed two backend Flake8 failures in `backend/routes/auth.py`: E302 (one blank line before `@auth_bp.put("/me")`) and E501 (an 80-character error-response line). Both formatting fixes are now committed on PR #54. The latest CI run must confirm frontend lint/build, backend lint, and the final `ci-success` job all pass before this finding is closed.
+The follow-up correction branch removes those unused bindings/imports. The next CI run then exposed two backend Flake8 failures in `backend/routes/auth.py`: E302 (one blank line before `@auth_bp.put("/me")`) and E501 (an 80-character error-response line). Both formatting fixes are now committed on PR #54. The next run shows frontend lint/build and backend lint passing, along with migration/schema checks and secret scanning. Docker image builds and the final `ci-success` job were still in progress at the time of this update. Pytest collected zero tests and emitted the configured warning, so backend behavior remains untested by automated tests.
 
 The same CI log reports one high-severity npm dependency vulnerability during `npm ci`. The log excerpt does not identify the affected package; run `npm audit` and record the package, advisory, affected version, and safe remediation before classifying the risk as resolved.
