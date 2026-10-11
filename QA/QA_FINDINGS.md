@@ -115,6 +115,6 @@ GitHub Actions CI run `38157705137` for the first PR #54 revision failed the fro
 - `frontend/src/pages/Dashboard.jsx`: unused `formatCurrency` import.
 - `frontend/src/pages/Transactions.jsx`: unused `X` import.
 
-The follow-up correction branch removes those unused bindings/imports. A new CI run must confirm the lint step, frontend build, backend lint, and final `ci-success` job all pass before this finding is closed.
+The follow-up correction branch removes those unused bindings/imports. The next CI run then exposed two backend Flake8 failures in `backend/routes/auth.py`: E302 (one blank line before `@auth_bp.put("/me")`) and E501 (an 80-character error-response line). Both formatting fixes are now committed on PR #54. The latest CI run must confirm frontend lint/build, backend lint, and the final `ci-success` job all pass before this finding is closed.
 
 The same CI log reports one high-severity npm dependency vulnerability during `npm ci`. The log excerpt does not identify the affected package; run `npm audit` and record the package, advisory, affected version, and safe remediation before classifying the risk as resolved.
