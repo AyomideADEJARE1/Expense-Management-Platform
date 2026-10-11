@@ -266,13 +266,25 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Evidence to close:** Reviewed proxy/storage configuration, separate-client test results, response codes, and deployed commit/version.
 
+### 25. Frontend: make the budget spending value read-only
+
+**What happens:** The budget form previously displayed an editable spending value, but the save request did not send or store it. Actual spending is calculated from recorded expenses.
+
+**Why it matters:** The form suggests users can set a value that the system ignores, which can confuse users and make the budget display seem inconsistent.
+
+**Required correction:** Keep the spending value read-only and explain that it is calculated from recorded expenses. The correction branch already contains this source change; browser retesting is still pending.
+
+**How QA will verify:** Open create and edit budget forms, confirm the spending value cannot be changed, save a budget, reload, and compare the displayed spending with recorded expense data.
+
+**Evidence to close:** CI result for the fixing commit, browser screenshot, and comparison against expense/API records.
+
 ## Release checklist
 
 Do not mark a check as passed until evidence is attached.
 
 - [ ] Category permissions are implemented and tested for anonymous users, ordinary users, and the permitted role.
 - [ ] Database-enforced budget uniqueness is implemented and tested, including NULL-category budgets and concurrent requests.
-- [ ] Budget conflicts return HTTP 409; unexpected errors remain server errors and failed sessions are rolled back.
+- [ ] Budget conflicts return HTTP 409; unexpected errors remain server errors and failed sessions are rolled back.\n- [ ] Budget spending is read-only and matches recorded expenses after reload.
 - [ ] Production database and JWT secrets are required and are not sample values.
 - [ ] Tests use an isolated database and pass repeatedly.
 - [ ] CI is green for the exact release commit, backend tests are collected, and frontend tests execute rather than being silently skipped.
