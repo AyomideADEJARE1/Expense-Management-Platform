@@ -598,3 +598,18 @@ Latest CI run 38179504988 passed for code commit 8f00242932980239c9ad77e0e811596
 The Docker build jobs checked the required .dockerignore rules, built and loaded both images, and passed sentinel checks: the backend image did not contain /app/.env, and the frontend bundle did not contain VITE_SECRET_SENTINEL. This is evidence that these test sentinel values were excluded; it is not evidence that an actual secret was previously leaked.
 
 Important limitations: the frontend package still has no test script, so the optional frontend test step can pass without running frontend functional tests. CI does not prove live AWS deployment, a populated existing-volume migration, browser end-to-end behavior, the negative non-test-database guard case, category write authorization, proxy-aware production rate limiting, or public CSP/HSTS behavior. Those remain open and require their documented runtime evidence.
+
+
+## QA-FIND-054 — CD restarts the application before applying database migrations
+
+Classification: Deployment sequencing / release safety. Status: Correction proposed in PR #54; current CI verification pending. Priority: High for schema-changing releases.
+
+Evidence: The reviewed CD workflow previously ran `docker compose up -d --remove-orphans` before explicitly applying migrations 002 and 003. That command can replace the running backend/frontend containers before a migration succeeds.
+
+Impact: If a migration fails—for example, migration 003 detects duplicate legacy budgets—the new application image may already be running against the old or partially upgraded schema. The deployment job then fails, but the application may already have changed version, making rollback and diagnosis harder.
+
+Correction: PR #54 now starts only PostgreSQL, applies migrations 002 and 003, and restarts backend/frontend/Nginx only after both migrations succeed. The current app version remains running while the migrations execute. CI also checks the order of these commands in the deployment workflow.
+
+Retest: Confirm the CI migration-order check passes. In a controlled staging environment, force migration 003 to fail using duplicate test data and verify the old application containers remain running and healthy. Then resolve the duplicate data, rerun deployment, and verify the intended commit is live.
+
+Closure evidence: Passing CI for the migration-order check, staging failure/recovery evidence, deployed image/commit identity, and health-check results. Source ordering alone does not prove the AWS deployment behaves as expected.
