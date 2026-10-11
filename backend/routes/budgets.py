@@ -18,6 +18,16 @@ budgets_bp = Blueprint(
 )
 
 
+def _is_budget_uniqueness_violation(error):
+    """Return True only for the two database-enforced budget unique indexes."""
+    diag = getattr(getattr(error, "orig", None), "diag", None)
+    constraint_name = getattr(diag, "constraint_name", None)
+    return constraint_name in {
+        "uq_budgets_user_month_category",
+        "uq_budgets_user_month_no_category",
+    }
+
+
 # ============================================================
 # Create Budget
 # ============================================================
@@ -179,12 +189,18 @@ def create_budget():
         db.session.add(budget)
         db.session.commit()
 
-    except IntegrityError:
+    except IntegrityError as error:
         db.session.rollback()
 
+        if _is_budget_uniqueness_violation(error):
+            return error_response(
+                "A budget already exists for this month and category",
+                409
+            )
+
         return error_response(
-            "A budget already exists for this month and category",
-            409
+            "Failed to create budget",
+            500
         )
 
     except Exception:
@@ -459,12 +475,18 @@ def update_budget(budget_id):
     try:
         db.session.commit()
 
-    except IntegrityError:
+    except IntegrityError as error:
         db.session.rollback()
 
+        if _is_budget_uniqueness_violation(error):
+            return error_response(
+                "A budget already exists for this month and category",
+                409
+            )
+
         return error_response(
-            "A budget already exists for this month and category",
-            409
+            "Failed to update budget",
+            500
         )
 
     except Exception:
