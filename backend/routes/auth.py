@@ -182,6 +182,7 @@ def get_current_user():
         }
     )
 
+
 @auth_bp.put("/me")
 @jwt_required()
 def update_current_user():
@@ -207,7 +208,10 @@ def update_current_user():
         full_name = f"{first_name} {last_name}".strip()
 
         if len(full_name) > 100:
-            return error_response("Full name cannot exceed 100 characters", 400)
+            return error_response(
+                "Full name cannot exceed 100 characters",
+                400
+            )
 
         user.full_name = full_name
 
