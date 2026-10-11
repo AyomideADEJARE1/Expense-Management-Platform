@@ -91,7 +91,7 @@ The upstream `main` documentation currently identifies the live application URL 
 
 The project tutor has approved AWS as an alternative deployment target, as reported by the QA owner. AWS EC2 is the target for this capstone audit and the live environment documented by the project. Retain the tutor's approval with submission records. The public URL alone does not prove that the latest reviewed commit is deployed; capture workflow, instance/container, health-check, and browser evidence for the submitted version.
 
-The CI workflow performs static/build/schema checks. At the time of this review, the backend test command allows pytest's “no tests collected” exit code and the frontend package has no test script, so a green CI result must not be interpreted as complete functional test coverage. This is recorded as an open QA finding.
+The CI workflow runs backend pytest checks, frontend lint/build checks, and an optional frontend test command. The frontend package currently has no test script, so CI can skip frontend tests while still passing. A green CI result must not be interpreted as complete functional or browser test coverage. This is recorded as an open QA finding.
 
 The CD workflow publishes container images and can deploy to AWS EC2 when DEPLOY_ENABLED=true and the required AWS secrets/variables are configured. The deployment workflow uses AWS_EC2_HOST, AWS_EC2_USER, and AWS_EC2_SSH_KEY. Do not describe the latest code as deployed or production-ready until the deployed commit/image, public routing, health checks, and end-to-end user journeys have been verified.
 
