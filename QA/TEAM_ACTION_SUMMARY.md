@@ -62,7 +62,7 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Why it matters:** The live app might not be running the same version that passed CI. This makes failures harder to investigate and rollback less reliable.
 
-**DevOps owner:** Deploy an immutable image tag or digest tied to the tested commit. Record the running version and test rollback to a known-good version.
+**DevOps owner:** Deploy a commit-specific SHA-tagged image, and either enforce registry tag immutability or pin the image digest. Record the running digest and test rollback to a known-good version.
 
 **QA check:** Compare the CI commit, published image digest, and running container version. They must match.
 
@@ -117,7 +117,7 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Required correction:** Decide whether packages are public or private. If private, configure least-privilege read access on the EC2 VM and authenticate without exposing tokens.
 
-**QA verification and closure evidence:** Pull both images from the target VM, deploy the intended immutable tag, and retain logs with secrets redacted plus the deployed image digest.
+**QA verification and closure evidence:** Pull both images from the target VM, deploy the intended commit-specific tag or pinned digest, and retain logs with secrets redacted plus the deployed image digest.
 
 ### 12. Backend/security: configure shared production rate limiting
 **What happens:** Flask-Limiter reports that production rate-limit storage is in memory.
