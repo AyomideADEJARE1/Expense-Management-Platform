@@ -115,7 +115,7 @@ Run these tests against the deployed candidate using two separate test accounts 
 | BR-07 | Delete a category referenced by an expense | Controlled conflict or documented safe behavior; no orphaned/broken expense | Prevents referential integrity failures |
 | BR-08 | Compare dashboard summary, category chart, budget overview, and raw records | Totals match known test fixtures | Prevents incorrect financial decisions based on UI totals |
 | BR-09 | Reload page and sign in again after restart | Persisted data remains; authentication behaves as designed | Detects frontend-only or transient state mistaken for persistence |
-| BR-10 | Open README links and follow setup/deployment steps on a clean environment | Steps work without undocumented local state | Makes the project reproducible for the assessor |\n| BR-11 | Log in, refresh, and load the current-user profile | Name/initials and signed-in state match the API profile; refresh does not break the session | Detects a mismatch between the API response envelope and frontend user state |\n| BR-12 | Search for an existing expense and select the result | Transactions view opens and the selected record is visible | Prevents search navigation from pointing to a nonexistent tab |
+| BR-10 | Open README links and follow setup/deployment steps on a clean environment | Steps work without undocumented local state | Makes the project reproducible for the assessor |\n| BR-11 | Log in, refresh, and load the current-user profile | Name/initials and signed-in state match the API profile; refresh does not break the session | Detects a mismatch between the API response envelope and frontend user state |\n| BR-12 | Search for an existing expense and select the result | Transactions view opens and the selected record is visible | Prevents search navigation from pointing to a nonexistent tab |\n| BR-13 | Edit the amount on a budget from a past month, save, and reload | The budget month remains unchanged; a newly created budget defaults to the current month | Prevents editing from silently rewriting historical budget periods |
 
 For each browser test, retain: date/time, environment and deployed commit, steps, expected result, actual result, pass/fail, screenshot or sanitized response, and defect ID for failures.
 
@@ -169,3 +169,16 @@ Source correction present in PR #54 branch: the frontend extracts `response.data
 Action: Keep the correction in the reviewed release branch and ensure the API contract and frontend state shape remain consistent.
 
 Pass evidence: Automated or browser test logs show login and page refresh succeed; the displayed name/initials match the test account; and no user-profile fields are undefined in the rendered UI. Record the tested commit and sanitized evidence.
+
+
+## RV-14 — Preserve the original month when editing a budget
+Related finding: QA-FIND-045. Priority: Medium–High; financial record integrity.
+
+Why it matters: The upstream frontend constructs the current month for both create and edit requests. The backend update route accepts the supplied month and writes it to the existing budget, so editing an older budget can move it into the current month.
+
+Source correction present in PR #54 branch: the frontend now uses the existing budget's month when editing and defaults to the current month only for new budgets. Fixing commit: `666d79911d480eea2eec4e0d6e84711ef957ca97`.
+
+Action: Verify the edit flow against a historical budget, not only a newly created current-month budget.
+
+Pass evidence: Browser/API test showing the month before edit and after reload is identical; a new budget uses the current month; CI passes for the fixing commit; record the tested commit SHA.
+
