@@ -14,7 +14,7 @@ Classification: Documentation defect. Status: Correction proposed in PR #54; rev
 
 The current upstream `main` README already describes the integrated React/Flask/PostgreSQL stack and identifies AWS EC2 as the documented live environment. The `integration/deployable-main` README still contained legacy frontend/localStorage descriptions that did not match its integrated backend and Docker/Nginx implementation.
 
-PR #54 replaces the integration-branch README and preserves the architecture diagram and documented live URL, while explicitly noting the unresolved Azure-vs-AWS capstone requirement. Review the rendered README and verify its links before closing this finding.
+PR #54 replaces the integration-branch README and preserves the architecture diagram and documented live URL, while noting that the approved deployment target is AWS. Review the rendered README and verify its links before closing this finding.
 
 ## QA-FIND-003 — Dashboard budget data is not passed to all budget-dependent components
 Classification: Historical finding; source correction present. Status: Retest pending.
@@ -45,12 +45,17 @@ Classification: Duplicate/overlapping observation. Status: Consolidated into QA-
 
 The category write-authorization issue is tracked as the high-priority finding QA-FIND-010. Do not count this entry as a separate defect. The team still needs to confirm the intended global-category administration model before choosing the authorization implementation.
 
-## QA-FIND-008 — Deployment target conflicts with the supplied capstone specification
-Classification: Requirements/deployment mismatch. Status: Open; team/instructor decision required.
+## QA-FIND-008 — Deployment target decision and evidence
 
-The supplied capstone specification requires an Azure Virtual Machine. Upstream `main` documentation describes AWS EC2 as the current live environment, while the CD workflow contains an Azure VM deployment job that the CI/CD documentation describes as legacy/configurable. The supplied requirement document does not itself establish that AWS has been approved as a substitute.
+Classification: Requirements/deployment decision. Status: Target decision recorded; deployment evidence pending.
 
-The team must confirm the required submission target with the instructor and provide evidence from that environment. Neither AWS documentation nor Azure workflow code alone proves the Azure deployment requirement has been satisfied.
+The earlier audit flagged a mismatch between the capstone deployment requirement as it was initially understood and the AWS EC2 environment documented by the project. The QA owner has now reported that the project tutor approved AWS as an alternative deployment target. AWS EC2 is therefore the target used for this audit and the project documentation should consistently describe AWS.
+
+This resolves the target-choice question for this audit; it does not prove that the latest reviewed commit was deployed successfully. Retain the tutor's approval with the submission records and collect AWS deployment evidence.
+
+Required action: Align the deployment workflow, protected secret names, README, architecture/CI-CD documentation, and submission evidence with AWS EC2. Verify that the deployed instance is running the exact reviewed commit/image and that both public health checks work.
+
+Closure evidence: Tutor approval retained with project records; successful AWS deployment workflow; EC2/container status; tested public URL; and timestamped screenshots/logs.
 
 ## QA-FIND-009 — Live deployment verification has not been evidenced in this audit
 Classification: Verification gap. Status: Pending.
@@ -153,12 +158,15 @@ The category routes call `.strip()` on the supplied category name without first 
 The correction proposed in PR #54 validates category name and description types on create/update and adds regression tests for invalid create payloads. Update-path type validation and the full category CRUD workflow still need test coverage.
 
 
-## QA-FIND-021 — Documented production cloud target conflicts with the capstone deployment requirement
-Classification: Requirements/deployment mismatch. Status: Open; team decision required. Priority: High for capstone acceptance.
+## QA-FIND-021 — Deployment target documentation needs to reflect the approved AWS decision
 
-The capstone specification requires deployment to an Azure Virtual Machine. However, the upstream `main` README and `docs/architecture.md` describe the current live production environment as AWS EC2, while `.github/workflows/cd.yml` contains an Azure VM deployment job. `docs/ci-cd.md` explicitly describes the Azure workflow as legacy/configurable and AWS as the actual production environment.
+Classification: Documentation/configuration follow-up. Status: AWS decision recorded; consistency verification pending.
 
-These sources describe different deployment targets. Do not claim the Azure requirement is satisfied merely because Azure-specific workflow code exists. The team must confirm whether the deliverable will be deployed to Azure as required or whether the instructor has approved AWS as a substitute. Update the architecture, README, CI/CD documentation, and evidence only after that decision.
+The upstream README and architecture documentation describe AWS EC2 as the current production environment. The QA owner reports that the tutor approved AWS as an alternative target. Earlier notes treating the AWS target as unresolved are superseded by this decision.
+
+Required action: Ensure deployment workflow configuration, secret names, CI/CD documentation, architecture documentation, and the submitted deployment evidence consistently identify AWS EC2. The workflow must target the actual AWS VM and must not rely on stale cloud-specific settings.
+
+Closure evidence: Reviewed documentation and workflow diff, successful AWS deployment, and proof the running service matches the tested commit.
 
 ## QA-FIND-022 — Docker Compose contains hard-coded database credentials
 Classification: Security/configuration defect. Status: Open. Priority: High before production deployment.
@@ -279,7 +287,7 @@ This addendum records a direct comparison of the upstream `main` branch, upstrea
 
 The PR #54 head branch contains transaction date-range/category UI and API query support, CSV formula neutralization, stricter JSON and field validation, a strict pytest collection gate, image-name configuration for Compose, a database health route, and baseline Nginx headers. Its recorded CI run reports 26 backend tests passing and zero npm audit vulnerabilities. These results apply to the tested correction commit, not upstream `main` or a live deployment.
 
-Outstanding items explicitly remain: category write authorization, production-safe database credentials, fail-closed production signing-secret validation, shared production rate-limit storage, database-enforced budget uniqueness, VM GHCR pull authentication/visibility, Azure-versus-AWS requirement resolution, and browser/live-deployment verification. No source-level correction should be promoted to PASS until its required retest evidence exists.
+Outstanding items explicitly remain: category write authorization, production-safe database credentials, fail-closed production signing-secret validation, shared production rate-limit storage, database-enforced budget uniqueness, VM GHCR pull authentication/visibility, AWS deployment evidence, and browser/live-deployment verification. No source-level correction should be promoted to PASS until its required retest evidence exists.
 
 ### Additional test-coverage action
 
@@ -378,7 +386,7 @@ Closure evidence: reviewed route policy, production configuration, multi-worker 
 ## QA-FIND-040 — Deployment publishes and deploys mutable latest image tags
 Classification: Deployment reproducibility / release integrity. Priority: High. Status: Open.
 
-Evidence reviewed in `.github/workflows/cd.yml` on `stephen/qa-transaction-fixes`: the publish job creates both `sha-<short commit>` and `latest` tags, but the Azure deploy script sets `BACKEND_IMAGE` and `FRONTEND_IMAGE` to the mutable `:latest` tags. The deploy script also runs `git pull --ff-only` on the VM instead of explicitly checking out the same immutable commit whose images are being deployed.
+Historical evidence from `.github/workflows/cd.yml` on `stephen/qa-transaction-fixes`: the publish job creates both `sha-<short commit>` and `latest` tags, while the earlier deployment script used mutable `latest` tags and moved the VM source checkout separately. The follow-up correction now targets AWS EC2 and selects the commit-tagged image; this change still needs CI and deployment verification.
 
 Why it matters: the image deployed may not be the exact image produced from the commit whose CI run passed. Concurrent or later publishing can move `latest`, and the VM's source checkout can drift independently of the image. This complicates incident diagnosis and reliable rollback.
 
@@ -426,4 +434,14 @@ Required correction: prove CI always points to a dedicated disposable test datab
 Required tests: run the suite twice consecutively; run relevant tests in a different order or with parallelization where supported; confirm no leftover users/categories after teardown; intentionally point the test configuration at a non-test database and confirm the guard refuses to run.
 
 Closure evidence: CI database service/configuration, isolated fixture implementation, repeated-run output, and proof that tests cannot target the production database accidentally.
+
+
+
+## Deployment decision and follow-up verification — 2026-10-11
+
+The QA owner reports that the project tutor approved AWS as an alternative deployment target. AWS EC2 is therefore the target used in this audit. Earlier entries that treated the target choice as unresolved are superseded by this decision; retain the tutor's approval with the project submission evidence.
+
+A follow-up correction was committed to `.github/workflows/cd.yml` on the QA correction branch. It changes the deployment target to AWS EC2, uses AWS-specific secret names, checks out the commit associated with the deployment, and selects commit-tagged container images instead of the mutable latest tag. The workflow expects these GitHub Actions secrets: `AWS_EC2_HOST`, `AWS_EC2_USER`, and `AWS_EC2_SSH_KEY`, plus the existing protected deployment variables such as `DEPLOY_ENABLED`, `APP_URL`, and `DEPLOY_PATH` where configured.
+
+This is a source correction only. Before closure, verify that the required AWS secrets/variables are configured, the EC2 host can fetch the intended commit and pull the GHCR images, the migration succeeds on the existing database volume, and both public health checks pass. Do not publish secret values in evidence.
 
