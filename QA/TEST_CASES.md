@@ -153,3 +153,5 @@ Record date, commit/branch, environment, steps, expected result, actual result, 
 | TC-DOC-004 | Clean checkout follows documented Compose port and environment setup | Documented port, URL, environment-file steps, and health paths match actual startup behavior |
 
 | TC-BUD-005 | Budget spending display in create/edit form | Spending value is read-only, helper text explains calculation, and displayed value matches recorded expenses after reload |
+
+| TC-DB-006 | Budget uniqueness migration with legacy duplicates | Migration fails safely with an actionable diagnostic before adding indexes; deployment stops and existing data remains available for manual remediation |
