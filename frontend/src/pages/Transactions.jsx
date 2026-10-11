@@ -1,6 +1,6 @@
 import { api } from '../services/api';
 import { useState, useEffect, useMemo } from 'react';
-import { Search, Filter, ArrowUpRight, Trash2, Plus, Edit3, X } from 'lucide-react';
+import { Search, Filter, ArrowUpRight, Trash2, Plus, Edit3, X, Download } from 'lucide-react';
 import ConfirmationModal from '../Components/ConfirmationModal';
 import { useToast } from '../context/ToastContext';
 
@@ -33,6 +33,8 @@ export default function Transactions({ categories = [], onTransactionChange, isD
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('All');
+  const [filterMonth, setFilterMonth] = useState('');
+  const [filterCategory, setFilterCategory] = useState('All');
 
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -93,10 +95,15 @@ export default function Transactions({ categories = [], onTransactionChange, isD
 
       const matchesType =
         filterType === 'All' || tx.type === filterType;
+      const transactionDate = tx.expense_date || tx.date || '';
+      const matchesMonth =
+        !filterMonth || transactionDate.startsWith(filterMonth);
+      const matchesCategory =
+        filterCategory === 'All' || tx.category === filterCategory;
 
-      return matchesSearch && matchesType;
+      return matchesSearch && matchesType && matchesMonth && matchesCategory;
     });
-  }, [transactions, searchQuery, filterType]);
+  }, [transactions, searchQuery, filterType, filterMonth, filterCategory]);
 
   const handleOpenModal = (tx = null) => {
     if (tx) {
@@ -232,6 +239,33 @@ export default function Transactions({ categories = [], onTransactionChange, isD
     }
   };
 
+  // Export only the rows currently visible after search and filters.
+  const handleExportCsv = () => {
+    const headers = ['Date', 'Description', 'Category', 'Amount'];
+    const csvCell = (value) => {
+      const raw = String(value ?? '');
+      // Prevent spreadsheet formula execution for untrusted text fields.
+      const safe = /^[=+@-]/.test(raw) ? `'${raw}` : raw;
+      return `"${safe.replace(/"/g, '""')}"`;
+    };
+    const rows = filteredTransactions.map((tx) => [
+      tx.expense_date || tx.date || '',
+      tx.description || tx.desc || tx.source || tx.title || 'Expense',
+      tx.category || 'Uncategorized',
+      Number(tx.amount || 0).toFixed(2),
+    ]);
+    const csv = [headers, ...rows].map((row) => row.map(csvCell).join(',')).join('\r\n');
+    const blob = new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'expenses.csv';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
   return (
     <div className={`w-full min-h-screen p-4 sm:p-6 lg:p-8 ${isDarkMode ? 'bg-slate-900 text-slate-100' : 'bg-[#F8FAFC] text-gray-900'}`}>
 
@@ -260,10 +294,11 @@ export default function Transactions({ categories = [], onTransactionChange, isD
             />
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             <Filter className="w-4 h-4 text-gray-400 shrink-0" />
 
             <select
+              aria-label="Filter transactions by type"
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
               className={`${inputStyle} text-sm rounded-xl px-3 py-2 border focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 w-full sm:w-auto`}
@@ -271,6 +306,36 @@ export default function Transactions({ categories = [], onTransactionChange, isD
               <option value="All">All Transactions</option>
               <option value="Expense">Expense Only</option>
             </select>
+
+            <select
+              aria-label="Filter transactions by category"
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              className={`${inputStyle} text-sm rounded-xl px-3 py-2 border focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 w-full sm:w-auto`}
+            >
+              <option value="All">All Categories</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.name}>{category.name}</option>
+              ))}
+            </select>
+
+            <input
+              aria-label="Filter transactions by month"
+              type="month"
+              value={filterMonth}
+              onChange={(e) => setFilterMonth(e.target.value)}
+              className={`${inputStyle} text-sm rounded-xl px-3 py-2 border focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 w-full sm:w-auto`}
+            />
+
+            <button
+              type="button"
+              onClick={handleExportCsv}
+              disabled={filteredTransactions.length === 0}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Download className="h-4 w-4" />
+              Export CSV
+            </button>
           </div>
         </div>
       </div>
