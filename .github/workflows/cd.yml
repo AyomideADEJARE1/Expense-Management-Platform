@@ -121,6 +121,8 @@ jobs:
             export FRONTEND_IMAGE="ghcr.io/${repo_lower}-frontend:latest"
             docker compose pull backend frontend
             docker compose up -d --remove-orphans
+            # This migration is idempotent and must also run for existing volumes.
+            docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -f /docker-entrypoint-initdb.d/002_user_settings.sql'
             docker image prune -f
 
       - name: Health check
