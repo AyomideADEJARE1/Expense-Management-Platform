@@ -566,3 +566,79 @@ def test_only_budget_unique_index_violations_map_to_conflict():
         _is_budget_uniqueness_violation(unrelated_integrity_violation)
         is False
     )
+
+
+
+def test_delete_category_in_use_returns_conflict(client):
+    email = f"qa-category-delete-{uuid.uuid4().hex}@example.test"
+    password = "TestPassword123!"
+
+    registration = client.post(
+        "/api/auth/register",
+        json={
+            "full_name": "QA Category Delete Test",
+            "email": email,
+            "password": password,
+        },
+    )
+    assert registration.status_code == 201
+
+    login = client.post(
+        "/api/auth/login",
+        json={"email": email, "password": password},
+    )
+    assert login.status_code == 200
+    token = login.get_json()["data"]["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    category_response = client.post(
+        "/api/categories",
+        json={"name": f"QA delete category {uuid.uuid4().hex}"},
+    )
+    assert category_response.status_code == 201
+    category_id = category_response.get_json()["data"]["id"]
+
+    expense_response = client.post(
+        "/api/expenses",
+        headers=headers,
+        json={
+            "category_id": category_id,
+            "amount": 25,
+            "description": "Category delete protection test",
+            "expense_date": "2026-10-11",
+        },
+    )
+    assert expense_response.status_code == 201
+
+    deletion = client.delete(f"/api/categories/{category_id}")
+    assert deletion.status_code == 409
+
+    still_exists = client.get(f"/api/categories/{category_id}")
+    assert still_exists.status_code == 200
+
+
+def test_unexpected_category_delete_failure_returns_500_and_recovers(
+    client, monkeypatch
+):
+    category_response = client.post(
+        "/api/categories",
+        json={"name": f"QA delete failure {uuid.uuid4().hex}"},
+    )
+    assert category_response.status_code == 201
+    category_id = category_response.get_json()["data"]["id"]
+
+    def fail_commit(self):
+        raise RuntimeError("simulated database failure")
+
+    with monkeypatch.context() as patcher:
+        patcher.setattr(Session, "commit", fail_commit)
+        failed = client.delete(f"/api/categories/{category_id}")
+
+    assert failed.status_code == 500
+    assert "simulated database failure" not in failed.get_data(as_text=True)
+
+    still_exists = client.get(f"/api/categories/{category_id}")
+    assert still_exists.status_code == 200
+
+    recovered = client.delete(f"/api/categories/{category_id}")
+    assert recovered.status_code == 200
