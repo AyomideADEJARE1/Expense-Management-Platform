@@ -420,6 +420,8 @@ Required tests: clean database install; apply migration to a populated pre-migra
 
 Closure evidence: repeatable migration strategy, fresh/existing-volume test logs, schema version evidence, and tested recovery instructions.
 
+Correction status update — 2026-10-11: PR #54 now applies migration 002 and the new idempotent budget uniqueness migration 003 explicitly on existing volumes. Migration 003 stops deployment with a clear error if duplicate legacy budgets are found. CI has been extended to exercise the duplicate-data guard on a separate test database. This reduces the known risk but does not close the finding until the current CI run passes and a populated existing database is tested. A versioned migration history and recovery proof remain release requirements.
+
 ## QA-FIND-042 — Budget creation converts all database failures into HTTP 500
 Classification: API error handling / data integrity. Priority: Medium–High. Status: Open.
 
@@ -432,6 +434,8 @@ Required correction: once the budget uniqueness migration is implemented, catch 
 Required tests: duplicate budget returns 409; a simulated unexpected database failure returns 500; the SQLAlchemy session is rolled back and remains usable after either path; the response never exposes SQL or secrets.
 
 Closure evidence: implementation commit, targeted tests for both expected and unexpected failures, and successful regression suite.
+
+Correction status update — 2026-10-11: PR #54 now catches SQLAlchemy IntegrityError separately in both budget creation and update, rolls back the session, and returns HTTP 409 for a uniqueness conflict; other unexpected exceptions still return a generic HTTP 500. A new API test checks that a duplicate general budget returns 409 and does not create a second row. The current CI run must pass, and a targeted unexpected-error/rollback regression should be retained before this finding is closed.
 
 ## QA-FIND-043 — API tests do not establish database isolation between test cases
 Classification: Test reliability / reproducibility. Priority: Medium. Status: Open pending test-environment review.
