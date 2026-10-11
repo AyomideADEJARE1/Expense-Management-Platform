@@ -144,7 +144,7 @@ Related finding: QA-FIND-042. Priority: Medium–High.
 
 Why it matters: the budget route currently catches all commit exceptions and returns HTTP 500. Once a database uniqueness constraint is added, an expected duplicate is a conflict, not an internal server failure. Treating all errors alike makes client behavior and monitoring inaccurate.
 
-Correction status update — 2026-10-11: PR #54 now catches SQLAlchemy IntegrityError separately for budget create/update, rolls back, and returns HTTP 409; unexpected errors remain generic HTTP 500 responses. Tests now cover duplicate conflict, and a new test simulates an unexpected commit failure to verify rollback, sanitized output, and subsequent session recovery.\n\nAction: verify the new tests pass on the current commit and confirm no SQL, credentials, or stack traces are returned.
+Correction status update — 2026-10-11: PR #54 now catches SQLAlchemy IntegrityError separately for budget create/update, rolls back, and returns HTTP 409 only for the two known budget unique-index names. Other integrity violations remain generic HTTP 500 responses. Tests cover the classifier, duplicate conflict, and a simulated unexpected commit failure with rollback, sanitized output, and subsequent session recovery.\n\nAction: verify the new tests pass on the current commit and confirm no SQL, credentials, or stack traces are returned.
 
 Pass evidence: automated tests show duplicates return 409, simulated unexpected database errors return 500, session rollback succeeds, and no sensitive details appear in client responses.
 
