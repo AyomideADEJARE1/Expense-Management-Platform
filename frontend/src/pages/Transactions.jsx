@@ -33,7 +33,8 @@ export default function Transactions({ categories = [], onTransactionChange, isD
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('All');
-  const [filterMonth, setFilterMonth] = useState('');
+  const [filterStartDate, setFilterStartDate] = useState('');
+  const [filterEndDate, setFilterEndDate] = useState('');
   const [filterCategory, setFilterCategory] = useState('All');
 
   const [itemToDelete, setItemToDelete] = useState(null);
@@ -96,14 +97,29 @@ export default function Transactions({ categories = [], onTransactionChange, isD
       const matchesType =
         filterType === 'All' || tx.type === filterType;
       const transactionDate = tx.expense_date || tx.date || '';
-      const matchesMonth =
-        !filterMonth || transactionDate.startsWith(filterMonth);
+      const matchesStartDate =
+        !filterStartDate || transactionDate >= filterStartDate;
+      const matchesEndDate =
+        !filterEndDate || transactionDate <= filterEndDate;
       const matchesCategory =
         filterCategory === 'All' || tx.category === filterCategory;
 
-      return matchesSearch && matchesType && matchesMonth && matchesCategory;
+      return (
+        matchesSearch
+        && matchesType
+        && matchesStartDate
+        && matchesEndDate
+        && matchesCategory
+      );
     });
-  }, [transactions, searchQuery, filterType, filterMonth, filterCategory]);
+  }, [
+    transactions,
+    searchQuery,
+    filterType,
+    filterStartDate,
+    filterEndDate,
+    filterCategory,
+  ]);
 
   const handleOpenModal = (tx = null) => {
     if (tx) {
@@ -320,10 +336,20 @@ export default function Transactions({ categories = [], onTransactionChange, isD
             </select>
 
             <input
-              aria-label="Filter transactions by month"
-              type="month"
-              value={filterMonth}
-              onChange={(e) => setFilterMonth(e.target.value)}
+              aria-label="Filter transactions from date"
+              type="date"
+              value={filterStartDate}
+              max={filterEndDate || undefined}
+              onChange={(e) => setFilterStartDate(e.target.value)}
+              className={`${inputStyle} text-sm rounded-xl px-3 py-2 border focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 w-full sm:w-auto`}
+            />
+
+            <input
+              aria-label="Filter transactions to date"
+              type="date"
+              value={filterEndDate}
+              min={filterStartDate || undefined}
+              onChange={(e) => setFilterEndDate(e.target.value)}
               className={`${inputStyle} text-sm rounded-xl px-3 py-2 border focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 w-full sm:w-auto`}
             />
 
