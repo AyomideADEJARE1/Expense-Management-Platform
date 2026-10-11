@@ -58,9 +58,26 @@ def register():
             400
         )
 
+    if len(full_name) > 100:
+        return error_response(
+            "Full name cannot exceed 100 characters",
+            400
+        )
+
     if not email:
         return error_response(
             "Email cannot be empty",
+            400
+        )
+
+    if (
+        len(email) > 255
+        or "@" not in email
+        or "." not in email.rsplit("@", 1)[-1]
+        or any(char.isspace() for char in email)
+    ):
+        return error_response(
+            "A valid email address is required",
             400
         )
 
