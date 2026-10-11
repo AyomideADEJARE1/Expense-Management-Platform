@@ -284,3 +284,35 @@ Outstanding items explicitly remain: category write authorization, production-sa
 ### Additional test-coverage action
 
 PR #54 is being extended with a regression test for cross-user expense isolation across the authenticated expense list and CSV export. The test must pass in CI before this coverage gap can be marked covered. This test does not replace the broader requirement for complete CRUD, browser journey, and deployment testing.
+
+## Additional source audit — targeted retest notes (2026-10-11)
+
+### QA-FIND-031 — Category descriptions accept invalid types on the original main branch
+Classification: Confirmed input-validation defect. Status: Correction proposed in PR #54; authorization remains open separately.
+
+Evidence: upstream `main` `backend/routes/categories.py` assigns `description = data.get("description")` and passes it to the model without checking that a supplied description is a string. A JSON array/object or other unexpected type can reach persistence and trigger a database/driver exception rather than a controlled 400 response. The PR #54 fork branch validates description types for create and update and returns 400 for non-string values. Retest against the upstream integration target before closing.
+
+### QA-FIND-032 — Category mutation routes have no access-control policy
+Classification: Security finding. Status: Open; design decision required.
+
+Evidence: upstream `main` `backend/routes/categories.py` exposes POST, PUT, and DELETE without `@jwt_required()` or an explicit role/owner policy. These operations modify the shared category table. PR #54 improves request validation but does not add authorization. Do not close this finding based on the validation patch. The team must choose between administrator-managed shared categories and user-owned categories, then test unauthenticated, authenticated non-admin, and authorized administrator behavior.
+
+### QA-FIND-033 — Budget duplicate prevention is vulnerable to concurrent requests
+Classification: Data-integrity risk. Status: Open.
+
+Evidence: upstream `main` `backend/routes/budgets.py` checks for an existing (user, month, category) budget before inserting, while `backend/models/budget.py` has no corresponding database uniqueness constraint. Two simultaneous requests can both pass the pre-check and insert duplicates. The category-null case also requires explicit treatment because PostgreSQL ordinary UNIQUE constraints permit multiple NULL values. Recommended correction: migration-backed database enforcement appropriate to the supported PostgreSQL version (for example, separate partial unique indexes for non-null category IDs and null-category budgets), duplicate-safe error handling, and a concurrency regression test. Confirm existing duplicate rows before applying a constraint to any existing database.
+
+### QA-FIND-034 — Nginx database-health route differs between main and correction branch
+Classification: Deployment/health-check gap. Status: Open on upstream main; correction proposed in PR #54.
+
+Evidence: upstream `main` `nginx/default.conf` has an exact mapping for `/api/health` but no exact mapping for `/api/health/db`. The general `location /api/` forwards the latter path as `/api/health/db` to Flask, whereas the backend health endpoint is `/health/db`; therefore the documented public path is not explicitly mapped to the backend path on main. PR #54 adds the route mapping and checks it in CD. Verify both endpoints through Nginx in a running Compose environment before closure.
+
+### QA-FIND-035 — Compose credentials are hard-coded in the original main branch
+Classification: Security/configuration finding. Status: Open on upstream main; correction design still required.
+
+Evidence: upstream `main` `docker-compose.yml` embeds fixed PostgreSQL user/password/database values in both backend and database service configuration. The README warns not to reuse development credentials in production, but the Compose file itself still contains those values. The fork's current correction branch still has the same fixed values. Do not mark this as fixed merely because image names or deployment pull logic changed. Replace secrets with required environment interpolation or a supported secrets mechanism, provide a safe non-production example file, and fail startup when required production secrets are absent. Test fresh setup and existing deployments without exposing real credentials.
+
+### Retest rules
+- Keep findings 031–035 separate only where they represent different underlying failure modes; do not duplicate existing CSV/date filtering or general input-validation findings.
+- Mark a finding "fixed" only after reviewing the correction on the PR's target branch and recording relevant passing automated/manual evidence.
+- CI passing on PR #54 does not prove these remaining findings are fixed; the latest PR #54 run validates the current correction head, not the unchanged upstream `main` or live deployment.
