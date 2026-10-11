@@ -11,7 +11,7 @@ name: CI
 
 on:
   pull_request:
-    branches: [main, nginx]
+    branches: [main, nginx, integration/deployable-main]
   push:
     branches: [main, nginx]
   workflow_dispatch:
