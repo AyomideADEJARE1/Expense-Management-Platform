@@ -248,3 +248,9 @@ Classification: Deployment configuration risk. Status: Open. Priority: Medium.
 The CD workflow publishes images to GHCR and the deployment script pulls those images on the VM. The workflow logs in to GHCR on the GitHub Actions runner, but that login does not automatically authenticate the remote VM. If the packages are private, `docker compose pull` will fail unless the VM has a configured read-only package credential. If the packages are public, anonymous pull should be verified explicitly.
 
 Required action: confirm package visibility and test the VM pull from a clean authentication state. If credentials are required, provision a least-privilege read-only token through a secure host-side secret mechanism; do not place it in the repository or print it in logs.
+
+
+## QA-FIND-034 — Database health probe did not reset a failed SQLAlchemy session
+Classification: Reliability defect. Status: Correction proposed in PR #54; retest pending. Priority: Low.
+
+The `/health/db` handler caught database exceptions and returned HTTP 500, but did not roll back the SQLAlchemy session. After a failed query, that session may remain in a failed transaction state and interfere with subsequent operations in the same request context. PR #54 now rolls back the session in the exception path. Verify that a simulated database failure returns an unhealthy status and that the application recovers after database connectivity is restored.
