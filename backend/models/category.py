@@ -30,5 +30,6 @@ class ExpenseCategory(db.Model):
     # Relationships
     expenses = db.relationship(
         "Expense",
-        back_populates="category"
+        back_populates="category",
+        passive_deletes=True
     )
