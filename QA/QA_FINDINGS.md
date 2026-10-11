@@ -155,3 +155,25 @@ Classification: Input-validation defect. Status: Correction proposed in PR #54; 
 The category routes call `.strip()` on the supplied category name without first confirming that it is a string, and they pass arbitrary JSON types for descriptions toward persistence. A request with a numeric name or list/object description can therefore produce an unhandled exception instead of a client error.
 
 The correction proposed in PR #54 validates category name and description types on create/update and adds regression tests for invalid create payloads. Update-path type validation and the full category CRUD workflow still need test coverage.
+
+
+## QA-FIND-021 — Documented production cloud target conflicts with the capstone deployment requirement
+Classification: Requirements/deployment mismatch. Status: Open; team decision required. Priority: High for capstone acceptance.
+
+The capstone specification requires deployment to an Azure Virtual Machine. However, the upstream `main` README and `docs/architecture.md` describe the current live production environment as AWS EC2, while `.github/workflows/cd.yml` contains an Azure VM deployment job. `docs/ci-cd.md` explicitly describes the Azure workflow as legacy/configurable and AWS as the actual production environment.
+
+These sources describe different deployment targets. Do not claim the Azure requirement is satisfied merely because Azure-specific workflow code exists. The team must confirm whether the deliverable will be deployed to Azure as required or whether the instructor has approved AWS as a substitute. Update the architecture, README, CI/CD documentation, and evidence only after that decision.
+
+## QA-FIND-022 — Docker Compose contains hard-coded database credentials
+Classification: Security/configuration defect. Status: Open. Priority: High before production deployment.
+
+The upstream `main` `docker-compose.yml` hard-codes `expense_user`, `expense_password`, and `expense_db` in both the backend and PostgreSQL service configuration. These values are not secret-safe production configuration, and the backend service's `environment` values override similarly named values from `backend/.env`.
+
+The correction requires a coordinated configuration change: use Compose environment interpolation or a documented secret mechanism, provide safe example values only for local development, ensure the backend and PostgreSQL receive the same configured credentials, and verify a clean checkout can start without committing a real `.env`. Do not deploy until the production password is confirmed to be externally configured rather than relying on the repository defaults.
+
+## QA-FIND-023 — Deployment health check verifies application reachability but not database readiness
+Classification: Observability/release-verification gap. Status: Open. Priority: Medium.
+
+The public Nginx health route `/api/health` maps to backend `/health`, which returns `status: ok` without checking PostgreSQL. A separate `/health/db` endpoint checks database connectivity, and Nginx also exposes it as `/api/health/db`; however, the deployment workflow's post-deployment health check currently calls only `/api/health`.
+
+Consequently, a deployment can pass its public health check while the database is unavailable. The release workflow should verify both application reachability and database connectivity, and the result should be recorded separately.
