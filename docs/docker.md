@@ -8,7 +8,7 @@ The project runs four services:
 Browser
    |
    v
-Nginx :8080
+Nginx :80
    |
    +--------------------+
    |                    |
@@ -35,7 +35,7 @@ Nginx is the application's host-facing entry point. The frontend, backend, and P
 Only Nginx publishes a host port:
 
 ```text
-localhost:8080
+localhost
 ```
 
 The backend and PostgreSQL ports are not directly published to the host.
@@ -63,7 +63,15 @@ It also defines the persistent PostgreSQL volume:
 postgres_data
 ```
 
-Start the complete stack with:
+From the repository root, create the Compose environment file and set a unique database password:
+
+```bash
+cp .env.example .env
+```
+
+The root `.env` provides Compose interpolation for the PostgreSQL container and backend connection variables. Do not commit it. The Compose configuration fails at startup if the required database variables are missing.
+
+Then start the complete stack with:
 
 ```bash
 docker compose up -d --build
@@ -78,7 +86,7 @@ docker compose ps
 The application is then available at:
 
 ```text
-http://localhost:8080
+http://localhost
 ```
 
 Stop the stack:
@@ -223,16 +231,15 @@ PostgreSQL uses:
 postgres:16-alpine
 ```
 
-The local development database configuration is:
+The local development database settings are read from the repository-root `.env` file:
 
 ```text
-Database: expense_db
-User:     expense_user
-Password: expense_password
-Port:     5432
+POSTGRES_DB
+POSTGRES_USER
+POSTGRES_PASSWORD
 ```
 
-These are development credentials and must not be reused as production credentials.
+Use a unique strong password and never reuse a local password in production. Do not paste secret values into tickets, logs, screenshots, or documentation.
 
 The PostgreSQL container is named:
 
@@ -333,13 +340,13 @@ The container listens on port:
 Docker Compose maps:
 
 ```text
-8080:80
+80:80
 ```
 
 Therefore:
 
 ```text
-Host:      localhost:8080
+Host:      localhost
 Container: nginx:80
 ```
 
@@ -380,7 +387,7 @@ The resulting request flow is:
 Browser
    |
    v
-localhost:8080
+localhost
    |
    v
 Nginx
@@ -641,7 +648,7 @@ Database connection: OK
 Test the public Nginx health endpoint:
 
 ```bash
-curl http://localhost:8080/api/health
+curl http://localhost/api/health
 ```
 
 The backend's internal health endpoint is:
@@ -681,7 +688,7 @@ Check health
     ↓
 Check logs
     ↓
-Test through localhost:8080
+Test through localhost
 ```
 
 For a backend change:
