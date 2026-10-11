@@ -43,3 +43,5 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 | REQ-32 | Budget spending is derived from recorded expenses | TC-BUD-005 | Correction proposed in PR #54 makes the spending field read-only; browser verification against expense records remains pending |
 
 | REQ-33 | Prevent API tests from targeting non-test databases | TC-DB-007 | PR #54 adds an autouse guard that refuses a configured database name without a test/testing marker; CI and negative-configuration verification pending |
+
+| REQ-34 | Category deletion reports accurate conflict/server errors | TC-CAT-006–007 | PR #54 distinguishes the known expense foreign-key conflict (409) from unexpected database failures (500); CI and runtime evidence pending |
