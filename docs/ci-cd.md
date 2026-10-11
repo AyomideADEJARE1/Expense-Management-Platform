@@ -403,14 +403,9 @@ main
 
 The deployment job uses SSH to connect to the configured AWS VM.
 
-The configured deployment process performs:
+The corrected deployment process checks out the commit associated with the successful CI run, selects the corresponding `sha-<short commit>` backend/frontend image tags, pulls those images, and restarts the Compose services. The current workflow then applies the idempotent user-settings migration and checks both public health endpoints.
 
-```bash
-git pull --ff-only
-docker compose pull
-docker compose up -d --remove-orphans
-docker image prune -f
-```
+The image tag is commit-specific but is not inherently immutable. For stronger release integrity, configure registry tag immutability or pin and record each image digest.
 
 The deployment path defaults to:
 
@@ -629,9 +624,9 @@ The CI/CD pipeline follows these principles:
 | Aggregate `ci-success` check | Implemented |
 | GHCR image publishing | Implemented in CD workflow |
 | AWS VM deployment workflow | Implemented/configurable |
-| AWS production deployment | Not confirmed as active |
+| AWS production environment | Documented in README; current-release deployment evidence pending in this audit |
 | Production health-check verification | Not confirmed |
-| Production Compose/image configuration | Requires verification before enabling deployment |
+| Commit-tagged Compose image configuration | Updated in correction branch; CI/runtime verification pending |
 
 ---
 
