@@ -222,3 +222,33 @@ def test_profile_update_rejects_non_string_name_and_currency(client):
         json={"currency": ["NGN (₦)"]},
     )
     assert bad_currency.status_code == 400
+
+
+def test_non_finite_budget_amount_is_rejected(client):
+    email = f"qa-budget-{uuid.uuid4().hex}@example.test"
+    password = "TestPassword123!"
+
+    registration = client.post(
+        "/api/auth/register",
+        json={
+            "full_name": "QA Budget Test",
+            "email": email,
+            "password": password,
+        },
+    )
+    assert registration.status_code == 201
+
+    login = client.post(
+        "/api/auth/login",
+        json={"email": email, "password": password},
+    )
+    assert login.status_code == 200
+    token = login.get_json()["data"]["access_token"]
+
+    for amount in ["NaN", "Infinity", "-Infinity", "10000000000"]:
+        response = client.post(
+            "/api/budgets",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"amount": amount, "month": "2026-10-01"},
+        )
+        assert response.status_code == 400
