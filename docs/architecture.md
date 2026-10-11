@@ -501,9 +501,9 @@ All four application containers were successfully verified as healthy during loc
 
 ---
 
-## 12. Planned Azure Deployment
+## 12. AWS EC2 Deployment and Verification
 
-Azure deployment is planned but is **not currently represented as a completed production deployment**.
+The project README documents AWS EC2 as the production environment, and the QA owner reports that the tutor approved AWS as the capstone deployment target. This audit has not independently verified that the latest reviewed commit is running on the EC2 instance.
 
 The intended deployment architecture is:
 
@@ -511,7 +511,7 @@ The intended deployment architecture is:
 Internet
    │
    ▼
-Azure VM
+AWS EC2 VM
    │
    ▼
 Nginx Container
@@ -524,9 +524,9 @@ Nginx Container
                   PostgreSQL Container
 ```
 
-The exact Azure infrastructure, networking, secrets management, TLS configuration, monitoring, and production database strategy may evolve when deployment is implemented.
+The AWS infrastructure, networking, secrets management, TLS configuration, monitoring, and production database strategy must be documented and verified against the actual EC2 environment.
 
-The current architecture should therefore be treated as the implemented Docker Compose architecture, with Azure deployment remaining a planned deployment target.
+Treat the Docker Compose diagram as the application service architecture. Treat the AWS deployment as complete for a release only when the deployed commit/image, EC2/container status, public health checks, and end-to-end user journeys are supported by recorded evidence.
 
 ---
 
