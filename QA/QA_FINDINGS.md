@@ -172,11 +172,11 @@ The upstream `main` `docker-compose.yml` hard-codes `expense_user`, `expense_pas
 The correction requires a coordinated configuration change: use Compose environment interpolation or a documented secret mechanism, provide safe example values only for local development, ensure the backend and PostgreSQL receive the same configured credentials, and verify a clean checkout can start without committing a real `.env`. Do not deploy until the production password is confirmed to be externally configured rather than relying on the repository defaults.
 
 ## QA-FIND-023 — Deployment health check verifies application reachability but not database readiness
-Classification: Observability/release-verification gap. Status: Open. Priority: Medium.
+Classification: Observability/release-verification gap. Status: Correction proposed in PR #54; retest pending. Priority: Medium.
 
 The public Nginx health route `/api/health` maps to backend `/health`, which returns `status: ok` without checking PostgreSQL. A separate `/health/db` endpoint checks database connectivity, and Nginx also exposes it as `/api/health/db`; however, the deployment workflow's post-deployment health check currently calls only `/api/health`.
 
-Consequently, a deployment can pass its public health check while the database is unavailable. The release workflow should verify both application reachability and database connectivity, and the result should be recorded separately.
+Additionally, the upstream Nginx configuration did not have an exact rewrite for `/api/health/db`; the generic `/api/` proxy passed that path through unchanged, so the backend's `/health/db` endpoint was not reachable at the documented public path. PR #54 adds the exact Nginx route and changes CD to check both `/api/health` and `/api/health/db`. Retest the routes through Nginx and the deployed URL before closing this finding.
 
 
 ## QA-FIND-024 — User-settings migration is not applied consistently by Compose and deployment
