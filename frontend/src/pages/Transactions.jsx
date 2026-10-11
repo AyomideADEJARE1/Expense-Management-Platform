@@ -1,6 +1,6 @@
 import { api } from '../services/api';
 import { useState, useEffect, useMemo } from 'react';
-import { Search, Filter, ArrowUpRight, Trash2, Plus, Edit3, X, Download } from 'lucide-react';
+import { Search, Filter, ArrowUpRight, Trash2, Plus, Edit3, Download } from 'lucide-react';
 import ConfirmationModal from '../Components/ConfirmationModal';
 import { useToast } from '../context/ToastContext';
 
