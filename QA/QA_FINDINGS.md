@@ -573,18 +573,18 @@ Retest: Attempt to delete a category referenced by an expense and verify HTTP 40
 
 Closure evidence: Passing CI for the fixing commit, API test results for both paths, session recovery result, and tested commit SHA.
 
-Retest update — 2026-10-11: the first category-delete regression test exposed that SQLAlchemy tried to null a non-null expense category reference, producing HTTP 500 instead of 409. PR #54 now checks for referencing expenses before deletion and sets passive_deletes=True so the database RESTRICT constraint can handle a concurrent reference safely. The latest CI run 38179293397 is in progress; this fix remains pending until that test passes.
+Retest update — 2026-10-11: the first category-delete regression test exposed that SQLAlchemy tried to null a non-null expense category reference, producing HTTP 500 instead of 409. PR #54 now checks for referencing expenses before deletion and sets passive_deletes=True so the database RESTRICT constraint can handle a concurrent reference safely. CI run 38179293397 passed for code commit 2f13cac6da1a02a776f3cea206f98522e25eb940. The backend suite passed both category deletion tests, and all eight CI jobs passed. The remaining open part is runtime verification against the deployed database and user-facing flows.
 
 
 ## QA-FIND-053 — Docker build contexts lacked ignore rules for local environment files
 
-Classification: Secret exposure / container build hygiene. Status: Correction proposed in PR #54; CI verification pending. Priority: High if developers build images with local secrets present.
+Classification: Secret exposure / container build hygiene. Status: Source correction and CI checks passed on code commit 2f13cac6da1a02a776f3cea206f98522e25eb940; sentinel-based image inspection remains pending. Priority: High if developers build images with local secrets present.
 
 Evidence: The reviewed repository had no root, backend, or frontend .dockerignore file. The backend Dockerfile uses `COPY . .`, so a local `backend/.env` file could be sent in the Docker build context and copied into the image even though Git ignores it. The frontend build also uses `COPY . .`; local `.env.*` files or host `node_modules` could be sent to the build context, and Vite-prefixed environment values may be embedded in built assets.
 
 Impact: A local secret can be included in a container image layer or published image, and host dependencies can make builds larger or less reproducible. A Git ignore rule alone does not exclude files from Docker build contexts.
 
-Correction: PR #54 adds backend/.dockerignore to exclude environment files, Git metadata, Python caches/virtual environments, coverage output, and tests. It adds frontend/.dockerignore to exclude environment files, Git metadata, host node_modules, dist, coverage, and logs. CI now checks that both ignore files exist and contain the required secret exclusions.
+Correction: PR #54 adds backend/.dockerignore to exclude environment files, Git metadata, Python caches/virtual environments, coverage output, and tests. It adds frontend/.dockerignore to exclude environment files, Git metadata, host node_modules, dist, coverage, and logs. CI now checks that both ignore files exist and contain the required secret exclusions. Run 38179293397 passed the ignore-rule check and both Docker image builds.
 
 Retest: Build backend and frontend images with local sentinel environment files present in the workspace. Confirm the files are excluded from the build context and no sentinel value appears in the resulting image or frontend bundle. Verify both Docker builds still succeed.
 
@@ -595,6 +595,6 @@ Closure evidence: CI result for the ignore-rule check and image builds, reviewed
 
 The last completed green CI run, 38178811441, passed for code commit 7cf03021514b26df9ddec6a8ae0da29be525f397. It passed all eight jobs and 31 backend tests, including the test-database guard. That run predates the latest category deletion error-handling tests and Docker build-context ignore-rule checks.
 
-The current code head is 76d5488ce82a97ae13031a7ad39e8d76ea95d90c. CI run 38179177424 was in progress at the last check. Its database migration and frontend lint/build jobs had passed; the backend job and Docker builds were not all complete yet. Do not mark QA-FIND-052 or QA-FIND-053 CI-verified until the current run finishes successfully.
+The current code head is 2f13cac6da1a02a776f3cea206f98522e25eb940. CI run 38179293397 completed successfully: all eight jobs passed, including database migrations, backend lint/tests, frontend lint/build, both Docker builds, and the aggregate check. The backend suite collected and passed 33 tests. The CI Docker job validated the required ignore rules.
 
 The frontend package still has no test script, so CI can pass without executing frontend functional tests. CI does not prove live AWS deployment, populated existing-volume migration, browser end-to-end behavior, category authorization, the negative non-test-database guard case, or proxy-aware production rate limiting. Those remain open and require their documented evidence.
