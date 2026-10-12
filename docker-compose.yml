@@ -3,6 +3,7 @@ services:
     image: ${FRONTEND_IMAGE:-expense-frontend:local}
     build: ./frontend
     container_name: expense-frontend
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1/"]
       interval: 10s
@@ -14,6 +15,7 @@ services:
     image: ${BACKEND_IMAGE:-expense-backend:local}
     build: ./backend
     container_name: expense-backend
+    restart: unless-stopped
     env_file:
       - ./backend/.env
     environment:
@@ -35,6 +37,7 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: expense-postgres
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in the root .env file}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the root .env file}
@@ -56,6 +59,7 @@ services:
   nginx:
     build: ./nginx
     container_name: expense-nginx
+    restart: unless-stopped
     ports:
       - "80:80"
     depends_on:
