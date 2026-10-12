@@ -229,6 +229,7 @@ def get_current_user():
             "id": user.id,
             "full_name": user.full_name,
             "email": user.email,
+            "phone": user.phone,
             "currency": user.currency,
             "budget_threshold": user.budget_threshold,
             "notifications_enabled": user.notifications_enabled,
@@ -309,6 +310,22 @@ def update_current_user():
 
         user.email = email
 
+    # Update and validate the optional phone number.
+    if "phone" in data:
+        phone = data["phone"]
+
+        if not isinstance(phone, str):
+            return error_response("Phone number must be a string", 400)
+
+        phone = phone.strip()
+        if len(phone) > 30 or any(ord(char) < 32 for char in phone):
+            return error_response(
+                "Phone number cannot exceed 30 characters or contain control characters",
+                400
+            )
+
+        user.phone = phone or None
+
     # Update and validate currency.
     if "currency" in data:
         allowed_currencies = {
@@ -381,6 +398,7 @@ def update_current_user():
             "first_name": name_parts[0],
             "last_name": name_parts[1] if len(name_parts) > 1 else "",
             "email": user.email,
+            "phone": user.phone,
             "currency": user.currency,
             "budget_threshold": user.budget_threshold,
             "notifications_enabled": user.notifications_enabled,
