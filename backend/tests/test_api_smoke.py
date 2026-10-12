@@ -13,6 +13,7 @@ from routes.expenses import safe_csv_cell
 from routes.budgets import _is_budget_uniqueness_violation
 from conftest import is_test_database
 
+
 def test_trusted_proxy_uses_only_the_rightmost_forwarded_client_address():
     test_app = Flask("proxy-fix-test")
     configure_trusted_proxy(test_app)
@@ -33,6 +34,7 @@ def test_trusted_proxy_uses_only_the_rightmost_forwarded_client_address():
     assert response.status_code == 200
     assert response.get_json()["client_ip"] == "203.0.113.24"
     assert isinstance(app.wsgi_app, ProxyFix)
+
 
 @pytest.fixture()
 def client():
