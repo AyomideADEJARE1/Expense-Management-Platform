@@ -386,9 +386,9 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Why it matters:** If the capstone expects an overall monthly spending limit, a user cannot create it through the interface. If the app is intentionally category-only, the extra API/database capability may be unnecessary and should be documented.
 
-**Required decision:** Confirm whether overall monthly budgets are in scope. If yes, add an explicit “Overall monthly budget” option that sends `category_id: null`, and show it distinctly in the budget list/dashboard. If no, record the category-only decision and align documentation/API scope.
+**Required decision:** Confirm whether overall monthly budgets are in scope. If yes, add an explicit “Overall monthly budget” option that sends `category_id: null`, count all same-month expenses for its spent amount, and show it distinctly in the budget list/dashboard. If no, record the category-only decision and align documentation/API scope.
 
-**How QA will verify:** For overall-budget support, create both an overall and category budget for the same month, check persistence, duplicate rejection, editing, and dashboard totals. For category-only scope, verify the requirements and UI text clearly state the rule.
+**How QA will verify:** For overall-budget support, create both an overall and category budget for the same month, check persistence, duplicate rejection, editing, and dashboard totals; the overall budget must count all same-month expenses while a category budget counts only matching-category expenses. For category-only scope, verify the requirements and UI text clearly state the rule.
 
 **Evidence to close:** A recorded team requirement decision plus browser/API results or updated scope documentation. This remains an observation until the requirement is confirmed.
 
