@@ -10,7 +10,7 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Status rule:** “Found” means the code has a problem. “Correction proposed” means code has been changed but still needs review and tests. “CI passed” means automated checks passed for the named commit. “Runtime pending” means the app still needs to be run and checked. These statuses must not be treated as the same thing.
 
-**Current audit size:** 72 numbered findings, 46 team actions, and 33 runtime verification gates. CI run 38221595123 passed the latest source branch head; the latest QA-documentation branch run is in progress. AWS live/runtime evidence remains separate from CI evidence.
+**Current audit size:** 76 numbered findings/observations (including consolidated historical entries), 50 team actions, and 37 runtime verification gates. Code CI run 38270547450 passed all eight jobs for commit 8d5fddc6c163a3f48986d22b770bd76d4547a81c; the backend suite passed 59 tests twice. QA documentation CI run 38270564325 passed for the current documentation head before this status refresh. AWS live/runtime evidence remains separate from CI evidence.
 
 ## Actions for the team
 
