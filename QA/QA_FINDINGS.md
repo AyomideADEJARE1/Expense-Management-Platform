@@ -79,7 +79,9 @@ Classification: Confirmed security defect. Status: Open. Priority: High.
 
 In `backend/routes/categories.py` on `integration/deployable-main`, the category POST, PUT, and DELETE handlers have no `@jwt_required()` guard. An unauthenticated caller can attempt to create, rename, or delete shared category records. The routes currently model categories as global rather than user-owned, so write access is publicly available.
 
-Impact: unauthenticated callers can mutate global categories that other accounts use. The risk includes unauthorized renames and delete attempts against referenced records. The category UI cannot be treated as a security boundary.\n\nRequired action: agree on the intended category administration model with the team. Then enforce authentication and authorization appropriate to that model, add negative tests for unauthenticated and unauthorized writes, and verify that category deletion cannot damage expenses or leave inconsistent records. Closure requires a documented shared-category policy, role/ownership checks in the API, and passing API/browser tests.
+Impact: unauthenticated callers can mutate global categories that other accounts use. The risk includes unauthorized renames and delete attempts against referenced records. The category UI cannot be treated as a security boundary.
+
+Required action: agree on the intended category administration model with the team. Then enforce authentication and authorization appropriate to that model, add negative tests for unauthenticated and unauthorized writes, and verify that category deletion cannot damage expenses or leave inconsistent records. Closure requires a documented shared-category policy, role/ownership checks in the API, and passing API/browser tests.
 
 ## QA-FIND-011 — Automated test coverage was missing/incomplete
 Classification: Confirmed verification gap; initial backend smoke tests proposed in PR #54. Status: Retest pending. Priority: High.
