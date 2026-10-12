@@ -177,3 +177,5 @@ Record date, commit/branch, environment, steps, expected result, actual result, 
 
 | TC-AUTH-012 | Email unique constraint race during registration/profile update | Known `users_email_key` conflict returns HTTP 409; failed profile update preserves original email |
 | TC-AUTH-013 | Unexpected registration commit failure | Generic HTTP 500 without internal details; rollback allows a subsequent valid registration |
+
+| TC-SEC-011 | Production signing-secret validation | Startup rejects missing, short, placeholder, or shared Flask/JWT signing keys; accepts distinct strong keys; non-production tests remain usable |
