@@ -641,3 +641,13 @@ Run `38272803374` passed all eight jobs for correction commit `f58bd3fbc4e75ae22
 ## Latest code CI checkpoint — 2026-10-12
 
 CI run 38273922288 passed all eight jobs for correction commit 77620d6547cad3ee3774657df9dd0b9256ed9ff6. Backend lint passed and 62 backend tests passed twice. The frontend Node suite passed all seven tests, including whole-month spending, category-specific spending, and budget-search filtering. Migrations 001–005, budget-category RESTRICT, the phone column, and migration order passed CI; frontend lint/build, secret scan, both Docker builds, and aggregate CI passed. npm audit reported zero vulnerabilities. Flask-Limiter still warns that storage is in-memory. The whole-month spending calculation is CI-verified, but creating a whole-month budget through the browser remains a scope decision and must not be marked as implemented. AWS runtime/browser, populated-volume migration, reboot recovery, backup restore, and shared rate-limit storage remain open.
+
+
+## RV-52 — Verify user profile updates refresh `updated_at`
+**Owner:** Backend/test owner. **Environment:** CI PostgreSQL; optional staging spot-check.
+
+**Steps:** Use the regression test that sets a user's `updated_at` to a known old timestamp, updates the profile through `PUT /api/auth/me`, and checks that the timestamp advances. Also verify a GET request does not modify it.
+
+**Pass criteria:** Current-head CI passes the timestamp regression test, and only write operations refresh the timestamp.
+
+**Evidence:** CI run ID, exact commit SHA, test result, and (if staging spot-checked) sanitized before/after timestamp values. This gate does not require a live AWS deployment to validate the model-level update behavior.
