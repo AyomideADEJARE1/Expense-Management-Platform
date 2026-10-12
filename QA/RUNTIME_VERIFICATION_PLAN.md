@@ -282,3 +282,11 @@ Pass evidence: passing CI for the exact correction commit; `fk_budgets_category`
 
 ## Latest CI checkpoint — 2026-10-12
 Run `38212158351` passed all eight jobs for commit `927e35eaf3af827d8b52ef93f6f883c6bfcaa667`; the backend suite passed 35 tests. The database job applied migrations 001–004 and verified the category-budget foreign key is RESTRICT. This is CI evidence only. Do not mark AWS staging, populated-volume migration, failure/recovery, public health, or browser journey gates as passed without their own recorded results.
+
+
+## RV-26 — Verify category create/update error handling and session recovery
+Related finding: QA-FIND-057. Priority: Medium.
+
+PR #54 now catches database commit errors in category create/update, rolls back, and returns HTTP 409 only for the named category-name unique constraint. Other integrity errors and unexpected exceptions return a generic HTTP 500. Automated tests simulate the known constraint conflict for both create and update, plus an unexpected create failure followed by a successful request.
+
+Pass evidence: latest CI passes the category error tests; duplicate conflict returns 409; unexpected failure returns sanitized 500; a failed update leaves the original category name unchanged; and a later valid request succeeds. Do not close this gate from source review alone.
