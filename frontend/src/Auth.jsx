@@ -118,6 +118,7 @@ export function AuthProvider({ children }) {
         first_name: firstName,
         last_name: lastName,
         email: profile.email ?? user?.email ?? '',
+        phone: profile.phone ?? user?.phone ?? '',
         currency: profile.currency ?? user?.currency ?? 'NGN (₦)',
         budget_threshold:
           profile.budgetThreshold ??
