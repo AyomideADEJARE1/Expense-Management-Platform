@@ -686,6 +686,13 @@ Impact: A valid duplicate-email conflict caused by concurrent requests can be re
 
 Correction proposed in PR #54: Registration and profile update now catch SQLAlchemy IntegrityError, roll back, and return HTTP 409 only when PostgreSQL reports the `users_email_key` constraint. Other integrity failures and unexpected exceptions still return a generic HTTP 500. Tests simulate the unique-constraint race for both routes and verify that an unexpected registration commit failure returns a sanitized 500 and a subsequent valid registration succeeds.
 
-Required retest: Confirm the new tests pass on the current correction commit. Verify the duplicate-email race returns 409, the original profile email remains unchanged after a failed update, unrelated errors remain 500, and the session can handle a later valid request.
+Retest update — 2026-10-12: CI run `38212818430` passed all eight jobs for correction commit `0207384272129a22c719425fee062a87fc0f29ae`. The backend suite passed 39 tests, including simulated email-constraint conflicts for registration/profile update and recovery after an unexpected registration commit failure. AWS/runtime checks remain separate requirements. Verify the duplicate-email race returns 409, the original profile email remains unchanged after a failed update, unrelated errors remain 500, and the session can handle a later valid request.
 
 Closure evidence: Passing CI for the exact commit, API results for registration/profile conflict and recovery paths, and confirmation that no SQL or internal exception details are returned.
+
+
+## Latest correction CI checkpoint — 2026-10-12 (supersedes earlier checkpoints)
+
+CI run [38212818430](https://github.com/AyomideADEJARE1/Expense-Management-Platform/actions/runs/38212818430) passed all eight jobs for correction commit `0207384272129a22c719425fee062a87fc0f29ae`. The backend suite passed 39 tests. This run includes migrations 001–004, category-budget deletion protection, category create/update error handling, and email uniqueness conflict handling for registration/profile updates. Secret scanning, frontend lint/build, both Docker builds, database migration checks, and the aggregate CI check passed.
+
+The frontend package still has no test script, so the optional frontend test command may skip functional tests. CI does not prove populated AWS-volume migration, staging failure/recovery, deployed image identity, public health checks, browser end-to-end behavior, category write authorization, production rate-limit storage/proxy handling, or public CSP/HSTS. These remain open until evidence is recorded.
