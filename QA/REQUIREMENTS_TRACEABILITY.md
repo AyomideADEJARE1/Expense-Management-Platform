@@ -224,3 +224,7 @@ CI run `38275606391` passed all eight jobs for code commit `11d1756f083f51e6e18d
 
 ## QA-FIND-083 trace — Report CSV Blob URL lifecycle
 The Reports export previously revoked its Blob URL immediately after clicking the download link. PR #54 now delays revocation by one second to match the Transactions export. Browser verification remains pending; closure requires evidence that small and larger report downloads complete consistently.
+
+
+## Latest source CI evidence — QA-FIND-082 and QA-FIND-083
+Run `38276034129` passed all eight jobs for code commit `97e6515f00c15e240532da653235421a2c6fb055`. Backend lint and 62 backend tests passed; frontend lint/build and nine Node tests passed; migrations, secret scan, both Docker builds, and aggregate CI passed. This verifies the code corrections, not actual browser download behavior. Both export paths still require browser verification.
