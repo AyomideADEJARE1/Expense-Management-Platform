@@ -727,13 +727,13 @@ The latest green CI result does not prove that AWS is running this commit, that 
 
 Classification: API input validation and contract consistency. Status: Correction proposed in PR #54; CI verified, deployed runtime retest pending. Priority: Low–Medium.
 
-Evidence: The expense create and update handlers use Python's `date.fromisoformat()` but previously did not compare the parsed date back to the submitted string. That parser accepts some ISO date representations beyond the documented `YYYY-MM-DD` format (for example, the compact `YYYYMMDD` form). The date-range query filters already check that the parsed date round-trips to the exact submitted `YYYY-MM-DD` value, so write and filter endpoints did not enforce the same contract.
+Evidence: The expense create/update handlers use Python's `date.fromisoformat()`, which accepts ISO date representations beyond the documented `YYYY-MM-DD` format, including compact dates such as `20261001` and week-date forms such as `2026-W40-4`. The date-range query filters enforce the exact hyphenated format, so write and filter endpoints did not enforce the same contract.
 
 Impact: API clients can submit values that the endpoint claims are invalid, while equivalent filter parameters reject them. Inconsistent validation makes integration and debugging harder.
 
 Correction proposed in PR #54: Expense create/update now require `parsed_date.isoformat() == expense_date`. The regression tests submit compact and week-date forms to create, expect HTTP 400, and verify that a compact date is rejected on update without changing the existing expense date.
 
-Required retest: CI run `38215898127` passed all eight jobs for commit `9b00f76863b48686bb5fe232926e20ee1d383eb0`; all 47 backend tests passed, including the expense date regression test. Verify canonical dates still create/update successfully, compact and other noncanonical forms return 400, and a rejected update leaves the stored record unchanged.
+Required retest: CI run `38217288387` passed all eight jobs for commit `52438ec387ed2c9bfaff56081930e6df317604dd`; both pytest runs passed all 57 tests, including compact and week-date rejection. Verify canonical dates still create/update successfully, compact and other noncanonical forms return 400, and a rejected update leaves the stored record unchanged.
 
 Closure evidence: Current passing CI run and commit SHA, API results for canonical/noncanonical create and update requests, and a database/API read confirming the failed update did not modify the expense.
 
