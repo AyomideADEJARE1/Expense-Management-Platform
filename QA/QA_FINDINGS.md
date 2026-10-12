@@ -1039,3 +1039,19 @@ Run `38271222415` passed all eight CI jobs for commit `2316a358ca37495ecc41eff8a
 
 ## Latest correction CI checkpoint — 2026-10-12
 CI run `38272033341` passed all eight jobs for correction commit `ea775178ea545b48bfea9cdaadd77b7b0965d4b8`. Backend lint passed and 61 backend tests passed, including the category-delete budget foreign-key race. Database migration checks, secret scan, frontend lint/build, both Docker builds, and aggregate CI passed. Flask-Limiter continues to warn about in-memory rate-limit storage. AWS deployment, populated-volume migration, browser journeys, reboot recovery, backup restore, and shared production rate-limit storage remain unverified.
+
+
+
+## QA-FIND-079 — Whole-month budget spending is calculated as zero in the dashboard
+
+**Classification:** Functional correctness / financial reporting. **Priority:** High. **Status:** Correction committed to PR #54; current-head CI and UI verification pending.
+
+**Source evidence:** In `frontend/src/App.jsx`, budget spending was calculated by comparing `Number(expenseCategoryId)` with `Number(budget.category_id)`. For a whole-month budget, `budget.category_id` is `null`, so `Number(null)` is `0`. Expense category IDs are positive IDs, so none of the user's expenses match. The displayed `spent`, percentage used, remaining amount, and on-track/exceeded state can therefore all be wrong for a whole-month budget.
+
+**Impact:** A user may believe they have spent nothing against their overall monthly budget when they have recorded expenses. That can hide overspending and undermine trust in the dashboard.
+
+**Correction committed to PR #54:** Spending calculation is moved into `frontend/src/utils/budgetSpending.js`. It sums all of the authenticated user's expense rows for the budget month when `category_id` is null, and only the matching category for a category budget. The helper ignores non-finite amounts instead of allowing `NaN` to poison the total. Native Node tests cover whole-month totals, category-specific totals, month boundaries, alternate expense field shapes, and invalid amounts. A `npm test` script has been added so the existing CI test step will execute these tests rather than silently skipping frontend tests.
+
+**Required retest:** Confirm current-head CI runs the frontend tests and they pass. In a browser, create a whole-month budget, add expenses in two categories for that month and one expense in another month, then confirm the total spent includes only the two same-month expenses. Confirm a category budget counts only its own category. Check percentage, remaining amount, and exceeded/on-track state.
+
+**Closure evidence:** Passing CI for the exact commit, visible frontend test results, redacted browser screenshots or a recorded test run showing the expected amounts, and confirmation that category-specific budgets still calculate correctly. AWS deployment evidence is separate and must not be inferred from CI.
