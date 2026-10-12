@@ -674,3 +674,18 @@ Closure evidence: Passing current CI run, tested commit SHA, API results for dup
 CI run [38212554474](https://github.com/AyomideADEJARE1/Expense-Management-Platform/actions/runs/38212554474) passed all eight jobs for correction commit `57c13c60386419d84594ce64d7db015351d105f5`. The backend suite passed 37 tests. The latest source includes migration 004 and category-budget deletion protection, plus category create/update conflict handling and rollback tests. Frontend lint/build, secret scanning, both Docker builds, database migrations, and the aggregate check passed.
 
 This checkpoint supersedes the prior 35-test CI checkpoint for the correction branch. The frontend package still has no test script, so frontend functional tests may be skipped by the optional command. Populated AWS volume migration, staging failure/recovery, deployed image identity, public health checks, category write authorization, production rate limiting, CSP/HSTS, and browser end-to-end evidence remain open.
+
+
+## QA-FIND-058 — Email uniqueness races return a server error instead of a conflict
+
+Classification: API error handling and account consistency. Status: Correction proposed in PR #54; current CI/runtime retest pending. Priority: Medium.
+
+Evidence: Registration checks whether an email already exists before inserting a user, and profile update checks whether another user already owns the requested email. Both checks can race with another request. The database enforces unique email values, but the reviewed commit handlers previously mapped every commit exception to HTTP 500 instead of distinguishing a duplicate-email constraint violation.
+
+Impact: A valid duplicate-email conflict caused by concurrent requests can be reported as a server failure. This gives clients the wrong result and makes normal conflict handling less reliable.
+
+Correction proposed in PR #54: Registration and profile update now catch SQLAlchemy IntegrityError, roll back, and return HTTP 409 only when PostgreSQL reports the `users_email_key` constraint. Other integrity failures and unexpected exceptions still return a generic HTTP 500. Tests simulate the unique-constraint race for both routes and verify that an unexpected registration commit failure returns a sanitized 500 and a subsequent valid registration succeeds.
+
+Required retest: Confirm the new tests pass on the current correction commit. Verify the duplicate-email race returns 409, the original profile email remains unchanged after a failed update, unrelated errors remain 500, and the session can handle a later valid request.
+
+Closure evidence: Passing CI for the exact commit, API results for registration/profile conflict and recovery paths, and confirmation that no SQL or internal exception details are returned.
