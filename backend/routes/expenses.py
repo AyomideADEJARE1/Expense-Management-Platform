@@ -1,4 +1,5 @@
 from datetime import date
+import re
 from decimal import Decimal, InvalidOperation
 import csv
 import io
@@ -60,6 +61,12 @@ def build_expense_query(user_id):
 
     if month is not None:
         try:
+            if not isinstance(month, str) or re.fullmatch(
+                r"\d{4}-(0[1-9]|1[0-2])",
+                month
+            ) is None:
+                raise ValueError
+
             year, month_number = month.split("-")
 
             year = int(year)
