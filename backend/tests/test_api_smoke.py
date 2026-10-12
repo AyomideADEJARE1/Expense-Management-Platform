@@ -284,13 +284,40 @@ def test_non_finite_budget_amount_is_rejected(client):
     )
     assert invalid_category.status_code == 400
 
+    headers = {"Authorization": f"Bearer {token}"}
     for amount in ["NaN", "Infinity", "-Infinity", "10000000000"]:
         response = client.post(
             "/api/budgets",
-            headers={"Authorization": f"Bearer {token}"},
+            headers=headers,
             json={"amount": amount, "month": "2026-10-01"},
         )
         assert response.status_code == 400
+
+    created = client.post(
+        "/api/budgets",
+        headers=headers,
+        json={"amount": 100, "month": "2026-10-01"},
+    )
+    assert created.status_code == 201
+    budget_id = created.get_json()["data"]["id"]
+
+    compact_create = client.post(
+        "/api/budgets",
+        headers=headers,
+        json={"amount": 100, "month": "20261101"},
+    )
+    assert compact_create.status_code == 400
+
+    compact_update = client.put(
+        f"/api/budgets/{budget_id}",
+        headers=headers,
+        json={"month": "20261101"},
+    )
+    assert compact_update.status_code == 400
+
+    unchanged = client.get(f"/api/budgets/{budget_id}", headers=headers)
+    assert unchanged.status_code == 200
+    assert unchanged.get_json()["data"]["month"] == "2026-10-01"
 
 
 def test_registration_rejects_invalid_email_and_oversized_name(client):
