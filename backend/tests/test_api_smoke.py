@@ -1019,8 +1019,12 @@ def test_delete_category_in_use_returns_conflict(client):
     assert still_exists.status_code == 200
 
 
-def test_category_delete_budget_foreign_key_race_returns_409(
-    client, monkeypatch
+@pytest.mark.parametrize(
+    "constraint_name",
+    ["fk_expenses_category", "fk_budgets_category"],
+)
+def test_category_delete_reference_foreign_key_race_returns_409(
+    client, monkeypatch, constraint_name
 ):
     category_name = f"QA budget FK race {uuid.uuid4().hex}"
     created = client.post(
@@ -1036,7 +1040,7 @@ def test_category_delete_budget_foreign_key_race_returns_409(
             {},
             SimpleNamespace(
                 diag=SimpleNamespace(
-                    constraint_name="fk_budgets_category"
+                    constraint_name=constraint_name
                 )
             ),
         )
