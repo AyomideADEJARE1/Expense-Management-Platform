@@ -220,3 +220,7 @@ The report export previously escaped CSV quotes but did not neutralize formula-l
 
 ## Current source CI evidence — QA-FIND-082
 CI run `38275606391` passed all eight jobs for code commit `11d1756f083f51e6e18d51651f76bcb5d74a9af2`. The frontend suite passed all nine Node tests, including CSV formula protection and quote escaping; backend lint and 62 backend tests passed; database migrations, secret scan, both Docker builds, and aggregate CI passed. This closes the CI portion of QA-FIND-082 only. Browser export verification and AWS runtime evidence remain open.
+
+
+## QA-FIND-083 trace — Report CSV Blob URL lifecycle
+The Reports export previously revoked its Blob URL immediately after clicking the download link. PR #54 now delays revocation by one second to match the Transactions export. Browser verification remains pending; closure requires evidence that small and larger report downloads complete consistently.
