@@ -151,7 +151,7 @@ function MainAppContent() {
     });
 
     return results;
-  }, [searchQuery, expenses, budgets, categories]);
+  }, [searchQuery, expenses, budgets, categories, user?.currency]);
 
   const handleSelectSearchResult = (result) => {
     setActiveTab(result.tab);
