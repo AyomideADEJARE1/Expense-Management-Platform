@@ -175,3 +175,8 @@ PR #54 now maps both expense and budget foreign-key violations to HTTP 409. A re
 ## QA-FIND-078 trace — Concurrent category delete and budget reference
 
 PR #54 now classifies both `fk_expenses_category` and `fk_budgets_category` as expected category-reference conflicts and returns HTTP 409; unrelated database failures remain HTTP 500. The new regression test simulates a budget foreign-key race and checks that the category remains. Closure requires passing current-head CI and the unexpected-failure/session-recovery test.
+
+
+## Latest category-deletion correction CI — 2026-10-12
+
+Run 38272033341 passed all eight jobs for correction commit ea775178ea545b48bfea9cdaadd77b7b0965d4b8, including the test for a simulated fk_budgets_category delete race. Both known category-reference foreign keys now map to HTTP 409; unexpected database failures remain HTTP 500. AWS staging concurrency and session-recovery evidence remains pending.
