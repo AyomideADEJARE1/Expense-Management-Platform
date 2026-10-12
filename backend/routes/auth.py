@@ -320,7 +320,7 @@ def update_current_user():
         phone = phone.strip()
         if len(phone) > 30 or any(ord(char) < 32 for char in phone):
             return error_response(
-                "Phone number cannot exceed 30 characters or contain control characters",
+                "Phone number is too long or contains control characters",
                 400
             )
 
