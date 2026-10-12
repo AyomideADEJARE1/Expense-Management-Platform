@@ -10,7 +10,7 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 | REQ-04 | Delete expenses | TC-EXP-003 | PENDING |
 | REQ-05 | Expense categories | TC-CAT-001–003 | OBSERVATION |
 | REQ-06 | Monthly summaries | TC-REP-001 | PENDING |
-| REQ-07 | Budget limits | TC-BUD-001–006, TC-DB-006 | PR #54 adds partial unique indexes for category and whole-month budgets, maps only known budget uniqueness violations to HTTP 409, and tests the indexes/duplicate response. CI run 38179293397 passed migrations and 33 backend tests; populated existing-volume verification and concurrent-request testing remain pending |
+| REQ-07 | Budget limits | TC-BUD-001–006, TC-DB-006, TC-BUD-DATE-007 | PR #54 adds partial unique indexes for category and whole-month budgets, maps only known budget uniqueness violations to HTTP 409, and now validates canonical `YYYY-MM-DD` month values on create/update. New compact-date tests are pending CI; populated existing-volume and concurrent-request verification remain open |
 | REQ-08 | Dashboard with charts | TC-DASH-001–003 | FINDING OPEN |
 | REQ-09 | Date/category filtering | TC-FLT-001–005 | Date-range/category UI and API corrections proposed in PR #54; CI and browser retest pending |
 | REQ-10 | CSV export | TC-EXP-004–005 | UI correction proposed in PR #54; retest pending |
@@ -64,3 +64,8 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 ## QA-FIND-059 trace — expense date format
 
 The expense create/update routes now reject noncanonical ISO date strings by requiring the parsed date to round-trip exactly to the submitted `YYYY-MM-DD` value. The regression test expects compact `YYYYMMDD` dates to return HTTP 400 for create and update, and confirms the existing expense date remains unchanged after a rejected update. Latest CI for the correction branch is pending at the time this note was added; do not mark the trace as passed until that run completes.
+
+
+## QA-FIND-060 trace — budget month format
+
+Budget create/update now require the submitted month to parse as a date, be the first day of a month, and round-trip to the exact submitted `YYYY-MM-DD` value. Regression tests check that compact `YYYYMMDD` values return HTTP 400 for both create and update and that a rejected update preserves the stored month. Current CI for the newest correction is pending; do not mark this trace passed until that run completes.
