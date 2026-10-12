@@ -253,8 +253,10 @@ jobs:
       - name: Lint
         run: flake8 . --count --show-source --statistics --exclude .venv,venv,migrations
 
-      - name: Test
-        run: pytest -v
+      - name: Test and verify repeatability
+        run: |
+          pytest -v
+          pytest -v
 
   frontend:
     name: Frontend (lint, test & build)
