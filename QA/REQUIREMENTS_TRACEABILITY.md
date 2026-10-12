@@ -216,3 +216,7 @@ Run 38273922288 passed all eight jobs for correction commit 77620d6547cad3ee3774
 
 ## QA-FIND-082 trace — Formula protection in Reports CSV export
 The report export previously escaped CSV quotes but did not neutralize formula-leading text, unlike the Transactions export. PR #54 now introduces a shared CSV cell helper used by both paths and adds Node regression tests. Current-head CI and browser download verification are pending. Closure requires passing tests and evidence from both export paths.
+
+
+## Current source CI evidence — QA-FIND-082
+CI run `38275606391` passed all eight jobs for code commit `11d1756f083f51e6e18d51651f76bcb5d74a9af2`. The frontend suite passed all nine Node tests, including CSV formula protection and quote escaping; backend lint and 62 backend tests passed; database migrations, secret scan, both Docker builds, and aggregate CI passed. This closes the CI portion of QA-FIND-082 only. Browser export verification and AWS runtime evidence remain open.
