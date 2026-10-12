@@ -585,7 +585,7 @@ Run `38270979144` stopped at Flake8 because one line in the new partial-name pre
 
 **How to verify:** In the frontend test results, confirm the whole-month and category-specific tests pass. In a browser, add two same-month expenses in different categories and one expense from another month. Confirm the whole-month budget counts the first two only; the category budget counts only the selected category. Confirm the progress percentage and remaining amount update correctly.
 
-**Evidence required:** Passing current-head CI, test output, and a redacted browser test recording or screenshots showing the expected totals. AWS runtime verification is a separate release check.
+**CI evidence:** Run `38272803374` passed all eight jobs for commit `f58bd3fbc4e75ae224c3bb3981a704d3c3ba1c45`; all four frontend budget-spending tests passed and the backend suite passed 62 tests twice. **Still required:** A redacted browser test recording or screenshots showing the expected totals; CI does not prove the live UI or AWS deployment. AWS runtime verification is a separate release check.
 
 
 ### 54. DevOps/documentation: show both environment-file setup steps
@@ -597,4 +597,4 @@ Run `38270979144` stopped at Flake8 because one line in the new partial-name pre
 
 **How to verify:** On a disposable clean checkout, remove local `.env` files, follow the guide exactly, replace placeholders, and start Compose. Confirm frontend, backend, PostgreSQL, and Nginx are healthy.
 
-**Evidence required:** CI for the current head, the exact setup commands, and a redacted `docker compose ps` result showing all four services healthy.
+**CI evidence:** Run `38272803374` passed all eight jobs for commit `f58bd3fbc4e75ae224c3bb3981a704d3c3ba1c45`. **Still required:** Follow the guide on a clean local checkout and retain the exact setup commands plus a redacted `docker compose ps` result showing all four services healthy.
