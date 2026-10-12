@@ -11,6 +11,7 @@ from routes.expenses import safe_csv_cell
 from routes.budgets import _is_budget_uniqueness_violation
 from conftest import is_test_database
 
+
 @pytest.fixture()
 def client():
     app.config.update(TESTING=True, RATELIMIT_ENABLED=False)
