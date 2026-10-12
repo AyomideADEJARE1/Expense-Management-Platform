@@ -242,6 +242,48 @@ def test_login_rejects_non_string_fields(client):
     assert response.status_code == 400
 
 
+def test_profile_partial_name_updates_preserve_the_other_name_part(client):
+    email = f"qa-profile-partial-{uuid.uuid4().hex}@example.test"
+    password = "TestPassword123!"
+
+    registration = client.post(
+        "/api/auth/register",
+        json={
+            "full_name": "QA Profile",
+            "email": email,
+            "password": password,
+        },
+    )
+    assert registration.status_code == 201
+
+    login = client.post(
+        "/api/auth/login",
+        json={"email": email, "password": password},
+    )
+    assert login.status_code == 200
+    headers = {
+        "Authorization": f"Bearer {login.get_json()['data']['access_token']}"
+    }
+
+    first_update = client.put(
+        "/api/auth/me",
+        headers=headers,
+        json={"first_name": "Stephen"},
+    )
+    assert first_update.status_code == 200
+    assert first_update.get_json()["data"]["full_name"] == "Stephen Profile"
+
+    last_update = client.put(
+        "/api/auth/me",
+        headers=headers,
+        json={"last_name": "Chukwunonso"},
+    )
+    assert last_update.status_code == 200
+    assert last_update.get_json()["data"]["full_name"] == (
+        "Stephen Chukwunonso"
+    )
+
+
 def test_profile_update_rejects_non_string_name_and_currency(client):
     email = f"qa-profile-{uuid.uuid4().hex}@example.test"
     password = "TestPassword123!"
