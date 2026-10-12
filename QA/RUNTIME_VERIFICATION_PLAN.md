@@ -316,4 +316,7 @@ Latest correction CI checkpoint: run `38212818430` passed all eight jobs for com
 Latest code CI checkpoint: run `38213095648` passed all eight jobs for commit `2c7d244067d7ca3727f4c346995380dbc4a95fea`. This confirms CI for the current correction source, including the README update; it does not close AWS staging, populated-volume migration, live health, or browser verification gates.
 
 
-Latest code CI checkpoint: run `38213583630` passed all eight jobs for commit `fc96ad9bf7e075907eb31e4d9acee719263d3ccb`; 47 backend tests passed. Production AWS secret configuration and live startup still need verification.
+Latest code CI checkpoint: run `38213904072` passed all eight jobs for commit `3bce1183a2916a62cca0018bccaeb8527adb8ebc`; 47 backend tests passed. Production AWS secret configuration and live startup still need verification.
+
+
+Latest correction CI result: run `38213904072` passed all eight jobs for commit `3bce1183a2916a62cca0018bccaeb8527adb8ebc`; 47 backend tests passed. AWS runtime evidence remains pending.
