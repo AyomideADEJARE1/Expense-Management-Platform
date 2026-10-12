@@ -371,15 +371,17 @@ PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit tes
 **Evidence to close:** Passing current CI for the exact commit, API results for create/update, and read-back showing no change after the rejected update. CI run `38215898127` passed all eight jobs for commit `9b00f76863b48686bb5fe232926e20ee1d383eb0`, including the budget month regression assertions.
 
 ### 35. Team lead + frontend/backend: decide whether overall monthly budgets are required
-**What happens:** The API/database support a whole-month budget with no category, but the browser form requires a category and cannot submit it. The dashboard also matches expenses only when an expense category ID equals the budget category ID; when the budget category is null, normal expenses are not counted.
 
-**Why it matters:** If the capstone expects an overall monthly spending limit, a user cannot create it through the interface, and an API-created overall budget would show zero spending. If the app is intentionally category-only, the extra API/database capability may be unnecessary and should be documented.
+**What happens:** The API/database support budgets with no category, but the browser form still requires a category and cannot create an overall monthly budget. The dashboard spending calculation has now been corrected in PR #54 to count all expenses in the same month for a whole-month budget; CI run `38272803374` passed the four new frontend tests.
 
-**Required decision:** Confirm whether overall monthly budgets are in scope. If yes, add an explicit “Overall monthly budget” option that sends `category_id: null`, count all same-month expenses for its spent amount, and show it distinctly in the budget list/dashboard. If no, record the category-only decision and align documentation/API scope.
+**Why it matters:** If the capstone expects an overall monthly spending limit, users still cannot configure it through the interface. If the intended feature is category-only, the unused API/database support needs a documented scope decision.
 
-**How QA will verify:** For overall-budget support, create both an overall and category budget for the same month, check persistence, duplicate rejection, editing, and dashboard totals; the overall budget must count all same-month expenses while a category budget counts only matching-category expenses. For category-only scope, verify the requirements and UI text clearly state the rule.
+**Required decision:** Confirm whether overall monthly budgets are in scope. If yes, add an explicit “Overall monthly budget” option that sends `category_id: null` and displays the budget distinctly. If no, record the category-only decision and align the UI and API documentation.
 
-**Evidence to close:** A recorded team requirement decision plus browser/API results or updated scope documentation. This remains an observation until the requirement is confirmed.
+**How QA will verify:** If supported, create an overall and a category budget for the same month, check persistence, duplicate rejection, editing, and totals. The overall budget must count all same-month expenses; a category budget must count only its category. If category-only is intended, verify the written scope decision and UI wording.
+
+**Evidence required:** Written product decision, passing browser/API tests or updated scope documentation, and a screenshot or recorded run showing the final behavior. CI does not prove the UI can create an overall budget.
+
 
 ### 36. Backend: validate month filters and summary query formats
 **What happens:** Expense filtering and monthly/category summaries previously converted the year/month pieces to integers without enforcing the exact `YYYY-MM` format. Inputs such as `2026-1` or `2026-010` could be interpreted as valid months.
