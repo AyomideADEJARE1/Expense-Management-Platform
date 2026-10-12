@@ -31,6 +31,7 @@ export default function Settings({ isDarkMode }) {
         firstName: user.first_name || user.firstName || '',
         lastName: user.last_name || user.lastName || '',
         email: user.email || '',
+        phone: user.phone || '',
         currency: user.currency || 'NGN (₦)',
         budgetThreshold:
           user.budget_threshold ?? user.budgetThreshold ?? 85,
@@ -138,7 +139,8 @@ export default function Settings({ isDarkMode }) {
                 <div className="relative">
                   <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
                   <input
-                    type="text"
+                    type="tel"
+                    autoComplete="tel"
                     value={userProfile.phone}
                     onChange={(e) => setUserProfile({ ...userProfile, phone: e.target.value })}
                     className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-xs sm:text-sm outline-none focus:ring-2 focus:ring-blue-500 ${inputBg}`}
