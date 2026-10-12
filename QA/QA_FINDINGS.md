@@ -919,7 +919,7 @@ Classification: Functional gap / misleading settings. Status: Requires product c
 
 ## QA-FIND-071 — Compose does not define automatic service restart after a VM/daemon reboot
 
-Classification: Deployment availability / recovery. Status: Correction proposed in PR #54; CI and AWS runtime verification pending. Priority: High for a single-VM deployment.
+Classification: Deployment availability / recovery. Status: CI verified for code commit `5912343a9b07b1976456bacdb8c5023d1cfdb8aa`; AWS reboot/recovery verification pending. Priority: High for a single-VM deployment.
 
 **What happens:** Before correction, the Compose services did not define a Docker restart policy, and the reviewed CD workflow did not install a systemd unit that brings the stack back after the EC2 host or Docker daemon restarts. PR #54 now adds `restart: unless-stopped` to PostgreSQL, backend, frontend, and Nginx, and CI checks that all four policies are present. A staging reboot test is still needed to prove the stack recovers without manual intervention.
 
@@ -930,3 +930,8 @@ Classification: Deployment availability / recovery. Status: Correction proposed 
 **Required retest:** In AWS staging, deploy the intended commit, record all container states, reboot the VM or restart Docker, and verify the complete stack returns without manual SSH commands. Confirm the database volume and user records persist, both public health endpoints recover, and the running image remains the expected commit.
 
 **Closure evidence:** Reviewed Compose/systemd configuration, a timestamped reboot/recovery log, before/after container and image version evidence, successful public health checks, and a data-persistence check using non-sensitive test records.
+
+
+## Latest code CI checkpoint — reboot recovery configuration
+
+CI run [38221334646](https://github.com/AyomideADEJARE1/Expense-Management-Platform/actions/runs/38221334646) passed all eight jobs for code commit `5912343a9b07b1976456bacdb8c5023d1cfdb8aa`. The Compose configuration check confirmed restart policies for all four services; the database job applied migrations 001–005 and checked the phone column and budget-category restriction; the backend suite passed 58 tests twice; frontend lint/build, secret scan, both Docker builds, and the aggregate job passed. This does not prove an actual AWS reboot recovers the stack. The source branch has later documentation-only commits; its latest CI run is pending.
