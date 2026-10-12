@@ -515,6 +515,107 @@ def test_monthly_and_category_summaries_validate_month_and_aggregate(
             )
             assert invalid.status_code == 400
 
+    second_email = f"qa-summary-other-{uuid.uuid4().hex}@example.test"
+    second_registration = client.post(
+        "/api/auth/register",
+        json={
+            "full_name": "QA Other Summary User",
+            "email": second_email,
+            "password": password,
+        },
+    )
+    assert second_registration.status_code == 201
+
+    second_login = client.post(
+        "/api/auth/login",
+        json={"email": second_email, "password": password},
+    )
+    assert second_login.status_code == 200
+    second_headers = {
+        "Authorization": f"Bearer {second_login.get_json()['data']['access_token']}"
+    }
+
+    other_monthly = client.get(
+        "/api/summaries/monthly?month=2026-10",
+        headers=second_headers,
+    )
+    assert other_monthly.status_code == 200
+    assert other_monthly.get_json()["data"]["total_amount"] == 0.0
+
+    other_category_summary = client.get(
+        "/api/summaries/category?month=2026-10",
+        headers=second_headers,
+    )
+    assert other_category_summary.status_code == 200
+    assert other_category_summary.get_json()["data"] == []
+
+
+def test_budgets_are_isolated_between_users(client):
+    password = "TestPassword123!"
+
+    def register_and_login(label):
+        email = f"qa-budget-isolation-{label}-{uuid.uuid4().hex}@example.test"
+        registration = client.post(
+            "/api/auth/register",
+            json={
+                "full_name": f"QA Budget {label}",
+                "email": email,
+                "password": password,
+            },
+        )
+        assert registration.status_code == 201
+        login = client.post(
+            "/api/auth/login",
+            json={"email": email, "password": password},
+        )
+        assert login.status_code == 200
+        return {
+            "Authorization": (
+                f"Bearer {login.get_json()['data']['access_token']}"
+            )
+        }
+
+    owner_headers = register_and_login("Owner")
+    other_headers = register_and_login("Other")
+
+    created = client.post(
+        "/api/budgets",
+        headers=owner_headers,
+        json={"amount": 250, "month": "2026-10-01"},
+    )
+    assert created.status_code == 201
+    budget_id = created.get_json()["data"]["id"]
+
+    other_list = client.get("/api/budgets", headers=other_headers)
+    assert other_list.status_code == 200
+    assert other_list.get_json()["data"] == []
+
+    for method in ("get", "put", "delete"):
+        if method == "get":
+            response = client.get(
+                f"/api/budgets/{budget_id}",
+                headers=other_headers,
+            )
+        elif method == "put":
+            response = client.put(
+                f"/api/budgets/{budget_id}",
+                headers=other_headers,
+                json={"amount": 999},
+            )
+        else:
+            response = client.delete(
+                f"/api/budgets/{budget_id}",
+                headers=other_headers,
+            )
+        assert response.status_code == 404
+
+    owner_read = client.get(
+        f"/api/budgets/{budget_id}",
+        headers=owner_headers,
+    )
+    assert owner_read.status_code == 200
+    assert owner_read.get_json()["data"]["amount"] == 250.0
+
 
 def test_non_object_json_bodies_are_rejected(client):
     for endpoint in (
