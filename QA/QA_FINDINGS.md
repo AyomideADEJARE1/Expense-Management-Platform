@@ -735,7 +735,7 @@ Correction proposed in PR #54: Expense create/update now require `parsed_date.is
 
 Required retest: CI run `38217288387` passed all eight jobs for commit `52438ec387ed2c9bfaff56081930e6df317604dd`; both pytest runs passed all 57 tests, including compact and week-date rejection. Verify canonical dates still create/update successfully, compact and other noncanonical forms return 400, and a rejected update leaves the stored record unchanged.
 
-Closure evidence: Current passing CI run and commit SHA, API results for canonical/noncanonical create and update requests, and a database/API read confirming the failed update did not modify the expense.
+Closure evidence: Passing CI run `38219803561` for commit `92eefc22555c7c98df240014721084e2f41698f8`, API results for canonical/noncanonical create and update requests, and a database/API read confirming the failed update did not modify the expense.
 
 
 ## QA-FIND-060 — Budget month create/update accept noncanonical date formats
