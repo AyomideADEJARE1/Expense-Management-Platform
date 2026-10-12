@@ -684,3 +684,15 @@ Run `38276034129` passed all eight jobs for code commit `97e6515f00c15e240532da6
 **How to verify:** Export a report with non-ASCII text and open/import it in the supported spreadsheet workflow. Confirm the characters are intact.
 
 **Evidence to close:** Passing CI, tested commit SHA, and a sanitized report sample showing the characters correctly.
+
+
+### 61. DevOps/backend/database: use a restricted PostgreSQL runtime account
+**What happens:** The Compose file passes the same PostgreSQL user/password to both the database service and the backend. The PostgreSQL image uses its configured initial user as the bootstrap superuser, so the app runs with database-administration privileges.
+
+**Why it matters:** A backend compromise could gain far more database control than the application needs.
+
+**Required correction:** Separate the bootstrap/migration account from the application account. Give the runtime account only the permissions required for the application's tables and sequences. Keep the admin credential out of the backend container.
+
+**How to verify:** Test a fresh database and a disposable copy of an existing AWS database. Confirm normal app operations work as the restricted user and privileged operations (such as creating roles/databases or changing unrelated schemas) fail. Confirm migrations run through the separate administrative account.
+
+**Evidence to close:** Role/grant design, migration/provisioning script, privilege-test output, passing application CRUD tests, and AWS staging evidence. Plan the change before rotating existing credentials.
