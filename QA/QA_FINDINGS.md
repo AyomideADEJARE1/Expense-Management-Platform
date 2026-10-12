@@ -1012,3 +1012,18 @@ Classification: Account lifecycle / recoverability. Status: Open; product/securi
 **Required retest:** Run CI for the latest correction commit. Verify partial first-name and last-name updates preserve the omitted part, a request with an explicitly empty first name is still rejected, and the stored profile returned by `GET /api/auth/me` matches the successful update.
 
 **Closure evidence:** Passing CI for the exact commit, API request/response evidence for both partial update cases, and a read-back confirming the stored full name is correct.
+
+
+## QA-FIND-077 — Partial profile name updates can erase the omitted name part
+
+Classification: API data-integrity defect. Status: Correction proposed in PR #54; current-head CI and browser retest pending. Priority: Medium.
+
+**What happens:** In the earlier profile update route, when either first_name or last_name was supplied, the other field defaulted to an empty string. A caller updating only one name part could therefore erase the other part or receive a validation error because the first name became empty. This is especially relevant for partial API updates even if the current Settings form sends both fields.
+
+**Why it matters:** A profile update can unintentionally change or reject the user's name even though the request only intended to change one part. It creates confusing API behavior for mobile/third-party clients that update a single field.
+
+**Correction proposed in PR #54:** The route now splits the existing full_name and uses the stored first/last parts as defaults when a request omits one field. The correction branch also adds a regression test for updating first name alone and last name alone. CI must pass for the exact current commit before this source correction is considered verified.
+
+**Required retest:** Register a test user with a two-part name. Update only first_name and verify last_name remains unchanged; then update only last_name and verify first_name remains unchanged. Also test one-part existing names, whitespace-only first name, non-string values, and full_name length limits. Read the profile back after every request.
+
+**Closure evidence:** Passing current-head CI with the partial-update test, API request/response evidence, profile read-back showing the omitted part remains unchanged, and browser save/reload evidence.
