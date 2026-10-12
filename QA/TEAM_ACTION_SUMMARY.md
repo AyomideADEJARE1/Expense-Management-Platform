@@ -516,11 +516,11 @@ This document tells the team what is wrong, why it matters, and who needs to act
 **Evidence to close:** Backup schedule/configuration, retention/access policy, redacted successful restore log, data-integrity checks, and pre-migration backup recovery evidence.
 
 ### 47. Backend/DevOps: make rate limits correct for real clients
-**What happens:** The backend uses Flask-Limiter's remote-address key, but requests pass through Nginx and the Flask app does not configure trusted-proxy handling. Users may share the proxy's rate-limit counter. The limiter also uses in-memory storage, which resets on restart and is not shared between backend instances.
+**What happens:** PR #54 now configures Flask `ProxyFix` for exactly one trusted Nginx hop and adds a unit test for forwarded client identity. The deployment topology still needs runtime confirmation. The limiter still uses in-memory storage, which resets on restart and is not shared between backend instances.
 
 **Why it matters:** One user's login attempts can block other users, while restarts or multiple instances can weaken abuse protection.
 
-**Required correction:** Agree on the trusted proxy boundary, configure the backend to use the real client address only from the trusted Nginx hop, prevent direct/untrusted access from spoofing forwarded headers, and configure approved shared rate-limit storage for AWS through environment settings. Keep local development configuration separate.
+**Required correction:** Review the new one-hop `ProxyFix` configuration against the actual AWS topology, prevent direct/untrusted access from spoofing forwarded headers, and configure approved shared rate-limit storage for AWS through environment settings. Keep local development configuration separate.
 
 **How QA will verify:** Through AWS/Nginx, test two distinct clients, verify independent counters and the expected 429 limit, try spoofed forwarded headers, restart the backend, and verify the counter behavior. If more than one backend instance is used, verify counters are shared.
 
