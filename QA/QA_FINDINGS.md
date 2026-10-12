@@ -731,7 +731,7 @@ Evidence: The expense create and update handlers use Python's `date.fromisoforma
 
 Impact: API clients can submit values that the endpoint claims are invalid, while equivalent filter parameters reject them. Inconsistent validation makes integration and debugging harder.
 
-Correction proposed in PR #54: Expense create/update now require `parsed_date.isoformat() == expense_date`. The regression test submits a compact date to both create and update, expects HTTP 400, and verifies the existing expense date remains unchanged.
+Correction proposed in PR #54: Expense create/update now require `parsed_date.isoformat() == expense_date`. The regression tests submit compact and week-date forms to create, expect HTTP 400, and verify that a compact date is rejected on update without changing the existing expense date.
 
 Required retest: CI run `38215898127` passed all eight jobs for commit `9b00f76863b48686bb5fe232926e20ee1d383eb0`; all 47 backend tests passed, including the expense date regression test. Verify canonical dates still create/update successfully, compact and other noncanonical forms return 400, and a rejected update leaves the stored record unchanged.
 
@@ -826,21 +826,6 @@ Correction proposed in PR #54: The dashboard now derives `YYYY-MM` from local ye
 Required retest: Confirm frontend lint/build passes. Test at a timezone and clock time where local date differs from UTC, including the first day of a month: the dashboard must request the local month, a new transaction must default to the local date, and reports must group date-only expenses into the month encoded in the API value.
 
 Closure evidence: Passing CI for the exact commit, browser test results with timezone/local date recorded, and proof that the displayed/defaulted date and report month match the API's date-only value.
-
-
-## QA-FIND-066 — Expense create/update accepted date formats outside the API contract
-
-Classification: Input validation / date consistency. Status: Source correction and regression tests added in PR #54; CI retest pending. Priority: Medium.
-
-**What happens:** The API contract says expense dates must use `YYYY-MM-DD`. Python's `date.fromisoformat()` also accepts other ISO date forms, including compact dates such as `20261001` and week dates such as `2026-W40-4`. Before the correction, create/update validation could accept these values even though the API error message and frontend contract specify the hyphenated calendar-date format.
-
-**Why it matters:** Different clients can send multiple representations for the same date. That weakens the API contract and can lead to inconsistent validation between frontend forms, filters, imports, and external API clients.
-
-**Correction proposed in PR #54:** Both create and update now require the parsed date's canonical `isoformat()` value to exactly match the submitted string. The regression test now checks that compact and week-date forms return HTTP 400 on create, and that a compact date is rejected on update without changing the stored date.
-
-**Required retest:** Run CI for the latest commit. Confirm valid `YYYY-MM-DD` values still work; compact and week-date inputs return 400 on create/update; and a rejected update leaves the stored date unchanged. Also verify that date-range filters use the same strict format.
-
-**Closure evidence:** Passing CI for the exact commit, recorded API responses for accepted/rejected date forms, and a read-back proving the stored date did not change after a rejected update.
 
 
 ## QA-FIND-066 — Saved currency preference is not applied consistently across financial screens
