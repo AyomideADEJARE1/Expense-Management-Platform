@@ -641,3 +641,13 @@ Run `38272803374` passed all eight jobs for correction commit `f58bd3fbc4e75ae22
 ## Latest code CI checkpoint — 2026-10-12
 
 CI run 38273922288 passed all eight jobs for correction commit 77620d6547cad3ee3774657df9dd0b9256ed9ff6. Backend lint passed and 62 backend tests passed twice. The frontend Node suite passed all seven tests, including whole-month spending, category-specific spending, and budget-search filtering. Migrations 001–005, budget-category RESTRICT, the phone column, and migration order passed CI; frontend lint/build, secret scan, both Docker builds, and aggregate CI passed. npm audit reported zero vulnerabilities. Flask-Limiter still warns that storage is in-memory. The whole-month spending calculation is CI-verified, but creating a whole-month budget through the browser remains a scope decision and must not be marked as implemented. AWS runtime/browser, populated-volume migration, reboot recovery, backup restore, and shared rate-limit storage remain open.
+
+
+## RV-52 — Verify formula protection in both CSV export paths
+**Owner:** Frontend/QA. **Environment:** CI plus browser verification.
+
+**Steps:** Confirm `Transactions.jsx` and `Reports.jsx` import and use the shared `escapeCsvCell` helper for every exported cell. Run the frontend Node tests and lint/build. In a browser, create or use a disposable test expense with description `=1+1`, export it from both Transactions and Reports, and inspect the downloaded CSV.
+
+**Pass criteria:** Formula-leading values are prefixed so spreadsheet software treats them as text; embedded quotes remain valid CSV; ordinary date and amount cells remain correctly quoted; both export paths behave consistently.
+
+**Evidence:** CI run ID, exact commit SHA, test output, and sanitized sample rows from both downloads. Do not open a deliberately unsafe test export in a spreadsheet application; inspect the CSV as text.
