@@ -129,6 +129,7 @@ jobs:
             # These migrations are also applied explicitly for already-initialized volumes.
             docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -f /docker-entrypoint-initdb.d/002_user_settings.sql'
             docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -f /docker-entrypoint-initdb.d/003_budget_uniqueness.sql'
+            docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -f /docker-entrypoint-initdb.d/004_restrict_category_budget_delete.sql'
             # Restart application services only after migrations succeed.
             docker compose up -d --remove-orphans backend frontend nginx
             docker image prune -f
