@@ -766,3 +766,18 @@ Required decision/correction: The product/team lead should confirm whether whole
 Required retest: If enabled, create one whole-month budget and one category budget for the same month; verify both persist, duplicate whole-month creation returns 409, edits preserve the correct type/month, and the dashboard displays the intended totals. If category-only is confirmed, verify UI copy and requirements documentation consistently state that limit.
 
 Closure evidence: Team's recorded requirement decision; if overall budgets are required, passing browser/API tests and screenshots; if not, updated requirements documentation and an agreed API/schema disposition.
+
+
+## QA-FIND-062 — Month query parameters accept noncanonical values
+
+Classification: API input validation and reporting consistency. Status: Correction proposed in PR #54; current CI retest pending. Priority: Low–Medium.
+
+Evidence: The expense list and both summary endpoints split a month string at the hyphen and convert each part to an integer. Without an exact format check, values such as `2026-1` or `2026-010` can be interpreted as month 1 or month 10 even though the documented contract is `YYYY-MM`. This means invalid formats can be accepted by expense filtering and reporting endpoints.
+
+Impact: Clients receive inconsistent validation for month values, and malformed query strings can be silently interpreted as a different canonical month.
+
+Correction proposed in PR #54: Expense month filtering and both monthly/category summary endpoints now validate the query against the exact four-digit-year/two-digit-month pattern before parsing. Tests verify malformed month strings return HTTP 400 and that valid monthly/category summary totals are correct.
+
+Required retest: Confirm the current CI run passes. Test valid `YYYY-MM` queries, reject `2026-1` and `2026-010` on expense filters and both summary endpoints, and verify monthly/category totals match known expense records.
+
+Closure evidence: Passing CI run and commit SHA, API responses for valid/invalid month parameters, and expected-vs-actual summary totals using controlled test data.
