@@ -240,6 +240,8 @@ def create_expense():
     # Validate expense date
     try:
         parsed_date = date.fromisoformat(expense_date)
+        if parsed_date.isoformat() != expense_date:
+            raise ValueError
     except (TypeError, ValueError):
         return error_response(
             "Expense date must use YYYY-MM-DD format",
@@ -498,6 +500,8 @@ def update_expense(expense_id):
     if expense_date is not None:
         try:
             parsed_date = date.fromisoformat(expense_date)
+            if parsed_date.isoformat() != expense_date:
+                raise ValueError
         except (TypeError, ValueError):
             return error_response(
                 "Expense date must use YYYY-MM-DD format",
