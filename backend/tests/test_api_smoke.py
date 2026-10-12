@@ -969,7 +969,7 @@ def test_category_name_length_is_validated_for_create_and_update(client):
 
     valid_boundary = client.post(
         "/api/categories",
-        json={"name": "V" * 100},
+        json={"name": ("V" * 90) + uuid.uuid4().hex[:10]},
     )
     assert valid_boundary.status_code == 201
     assert len(valid_boundary.get_json()["data"]["name"]) == 100
