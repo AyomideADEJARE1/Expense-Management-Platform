@@ -326,13 +326,12 @@ Latest correction CI result: run `38213904072` passed all eight jobs for commit 
 
 **Related finding:** QA-FIND-059.
 
-**Check:** Through the API, create an expense with `2026-10-12` and confirm it succeeds. Attempt to create and update an expense with a compact or otherwise noncanonical date such as `20261012`; each must return HTTP 400. After a rejected update, fetch the expense and confirm the original date is unchanged.
+**Check:** Submit a canonical `YYYY-MM-DD` date and confirm create/update succeed. Try compact date `20261001` and week date `2026-W40-4` on create; both must return HTTP 400. For an existing expense, try updating with `20261011`; expect HTTP 400 and verify the saved date remains unchanged. Confirm date-range query parameters enforce the same hyphenated format.
 
-**Current source correction:** PR #54 compares `date.fromisoformat(value).isoformat()` to the submitted value in both create and update. CI run `38215898127` passed all eight jobs for commit `9b00f76863b48686bb5fe232926e20ee1d383eb0`, including the new regression test.
+**Current source correction:** PR #54 checks that parsing and re-serializing the submitted date returns exactly the same string. CI run `38217288387` passed all eight jobs for commit `52438ec387ed2c9bfaff56081930e6df317604dd`; both pytest runs passed all 57 tests, including compact/week-date rejection.
 
-**Pass evidence:** Passing current CI and the exact commit SHA, successful canonical-date request, rejected noncanonical create/update responses, and the unchanged stored date after a rejected update. AWS runtime testing is optional for this input-contract gate unless the deployed API differs from the tested commit; live browser journeys remain a separate release gate.
-
-
+**Pass evidence:** Passing CI for the exact code commit, request/response results for accepted/rejected formats, and the unchanged stored date after a rejected update. This API test does not replace browser verification of date defaults and report grouping.
+ 
 ## RV-30 — Enforce the documented month format on budget writes
 
 **Related finding:** QA-FIND-060.
@@ -401,12 +400,12 @@ Latest correction CI result: run `38213904072` passed all eight jobs for commit 
 **Pass evidence:** Passing frontend lint/build for the exact commit, recorded timezone/local date, dashboard request month, new-expense default date, and report grouping for a known date-only transaction.
 
 
-## RV-36 — Enforce canonical expense dates on create and update
+## RV-36 — Apply the saved currency preference across financial screens
 
 **Related finding:** QA-FIND-066.
 
-**Check:** Submit an expense using a valid `YYYY-MM-DD` date and confirm it succeeds. Try compact date `20261001` and week date `2026-W40-4` on create; both must return HTTP 400. For an existing expense, try to update its date to `20261011`; the API must return HTTP 400 and a read-back must show the original date remains unchanged. Confirm date-range query parameters use the same `YYYY-MM-DD` rule.
+**Check:** Set the profile currency to each supported option (NGN, USD, EUR, GBP), then inspect Dashboard, Transactions, Budgets, Reports, dashboard chart tooltips, budget overview, and budget search results. All monetary labels should use the selected currency symbol consistently. Change back to NGN and confirm the display updates without changing the underlying numeric amounts.
 
-**Current source correction:** PR #54 now checks that Python's parsed date serializes back to exactly the submitted value on create and update. Regression tests for the noncanonical forms have been added; CI for that test commit is pending.
+**Current source correction:** PR #54 adds a shared currency-symbol helper, passes the saved user currency to financial pages, and replaces hardcoded naira formatting with the shared formatter. Frontend lint/build is pending for the latest commit; automated frontend tests are not configured.
 
-**Pass evidence:** Passing CI for the exact commit, recorded request/response results for accepted and rejected formats, and the unchanged stored date after a rejected update. This is an API test; it does not replace browser verification of date defaults and report grouping.
+**Pass evidence:** Passing frontend lint/build for the exact commit and browser screenshots for all supported currencies across the named screens. Keep this gate open until browser evidence is recorded.
