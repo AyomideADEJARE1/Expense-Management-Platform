@@ -1,4 +1,5 @@
 from datetime import date
+import re
 
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -31,6 +32,12 @@ def get_monthly_summary():
         )
 
     try:
+        if not isinstance(month, str) or re.fullmatch(
+            r"\d{4}-(0[1-9]|1[0-2])",
+            month
+        ) is None:
+            raise ValueError
+
         year, month_number = month.split("-")
 
         year = int(year)
