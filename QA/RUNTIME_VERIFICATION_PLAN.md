@@ -350,7 +350,7 @@ Latest correction CI result: run `38213904072` passed all eight jobs for commit 
 
 **Decision required:** The backend/database support budgets with `category_id = NULL`, but the browser form requires a category. Confirm the capstone's intended behavior before treating this as a defect.
 
-**If overall monthly budgets are required:** Add an explicit overall-budget choice in the form and test that it sends `category_id: null`. Create an overall and a category-specific budget for the same month, verify both persist, test duplicate rejection and edits, and confirm dashboard totals/counts are correct.
+**If overall monthly budgets are required:** Add an explicit overall-budget choice in the form and test that it sends `category_id: null`. Create an overall and a category-specific budget for the same month, verify both persist, test duplicate rejection and edits, and confirm the overall budget counts all same-month expenses while category budgets count only matching-category expenses.
 
 **If category-only budgets are intended:** Record the decision in the requirements documentation and ensure the UI/API documentation consistently describes the scope.
 
