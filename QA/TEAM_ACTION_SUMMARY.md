@@ -614,7 +614,7 @@ Run `38270979144` stopped at Flake8 because one line in the new partial-name pre
 **CI evidence:** Run `38273922288` passed all eight jobs for commit `77620d6547cad3ee3774657df9dd0b9256ed9ff6`; all three budget-search tests passed. **Still required:** Browser evidence for matching and non-matching searches.
 
 
-### 57. Team lead/product owner: decide whether whole-month budgets are in scope
+### 56. Team lead/product owner: decide whether whole-month budgets are in scope
 **What happens:** The API and database allow budgets with no category, but the browser form currently requires a category. The QA correction fixes spending calculation for a whole-month budget if one exists; it does not add UI creation because the product requirement has not been confirmed.
 
 **Why it matters:** Adding the option changes the user-facing feature scope. Removing API/database support would also be a design change and could affect existing data.
