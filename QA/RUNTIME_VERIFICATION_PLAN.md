@@ -160,7 +160,7 @@ Related finding: QA-FIND-043. Priority: Medium; test reliability gate.
 
 Why it matters: the API test fixture toggles test mode and resets rate limiting, but does not itself isolate the database or clean up records created by registration/category tests. Repeated or reordered runs can collide with leftovers, and a misconfigured local environment could target an unintended database.
 
-Correction status update — 2026-10-11: PR #54 adds an autouse session fixture that refuses to run tests unless the configured database name contains a test/testing marker. This is a fail-safe guard, not full transaction isolation or cleanup.
+Correction status update — 2026-10-12: PR #54 now uses an explicit test-database name guard that rejects production/staging/live markers, truncates the test tables and resets identities after each API test, and adds tests for guard behavior. CI now runs the backend suite twice consecutively. The latest correction CI is pending; keep this gate open until both runs pass.
 
 Action: confirm CI uses a dedicated disposable database, add or execute a negative check with a non-test database name, and establish cleanup or disposable-database behavior for repeatable runs.
 
