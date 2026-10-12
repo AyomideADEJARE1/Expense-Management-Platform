@@ -377,3 +377,14 @@ Latest correction CI result: run `38213904072` passed all eight jobs for commit 
 **Current source correction:** PR #54 now checks the 100-character limit on both create and update. Regression coverage has been added; the latest CI run is pending.
 
 **Pass evidence:** Passing CI for the exact commit, responses for 100- and 101-character values, and a read-back proving a rejected update did not modify the record.
+
+
+## RV-34 — Remove API-response debug logs from the browser bundle
+
+**Related finding:** QA-FIND-064.
+
+**Check:** Search the active frontend source for `console.log` calls that print API response objects. Confirm the categories, expenses, and budgets response logs are absent. Run frontend lint/build CI and load the dashboard to verify categories, expenses, and budgets still render.
+
+**Current source correction:** The three API response log statements were removed from `frontend/src/App.jsx`. The current correction CI is pending.
+
+**Pass evidence:** Passing CI for the exact commit, a source search showing those response logs are absent, and a browser smoke-test record showing the dashboard still loads.
