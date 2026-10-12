@@ -22,7 +22,7 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 | REQ-16 | Docker build/deployment | TC-CI-003, TC-CD-001–006, TC-DB-005–006 | CI run 38179293397 passed migrations, Docker ignore-rule checks, and both image builds. Live AWS deployment, existing-volume upgrade, and public health verification remain pending |
 | REQ-17 | Nginx reverse proxy | TC-DEV-004 | PENDING |
 | REQ-18 | Health checks | TC-HLT-001–004, TC-CD-006–007 | Nginx database-health route and CD dual health gate proposed in PR #54; CI/live retest pending |
-| REQ-19 | Secure environment variables | TC-SEC-001–004, TC-ENV-001 | Secret scanning exists; hard-coded Compose credentials and production signing-secret enforcement remain open |
+| REQ-19 | Secure environment variables | TC-SEC-001–004, TC-SEC-011, TC-ENV-001 | Compose credential correction and production signing-secret validation are proposed in PR #54; CI for the newest secret-validation commit is pending |
 | REQ-20 | Logs/monitoring | TC-MON-001–002 | PENDING |
 | REQ-21 | Architecture documentation | TC-DOC-001 | PENDING |
 | REQ-22 | Accurate README/setup | TC-DOC-002, TC-DOC-003, TC-ENV-001 | README correction proposed in PR #54; review pending |
@@ -57,3 +57,5 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 | REQ-39 | Category create/update handle database commit failures safely | TC-CAT-010–011, RV-27 | PR #54 adds named-constraint conflict handling and rollback; CI run 38213095648 passed all 39 backend tests. AWS runtime retest remains pending |
 
 | REQ-40 | Account email uniqueness conflicts are handled safely | TC-AUTH-012–013, RV-28 | PR #54 adds named-constraint handling and rollback tests; CI run 38213095648 passed all 39 backend tests. AWS runtime verification remains pending |
+
+| REQ-41 | Production Flask/JWT signing secrets fail closed | TC-SEC-011, RV-06, RV-10 | PR #54 adds startup validation and tests for missing, weak, placeholder, or shared keys; latest CI result is pending |
