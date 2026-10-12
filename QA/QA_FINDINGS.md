@@ -919,7 +919,7 @@ Classification: Functional gap / misleading settings. Status: Requires product c
 
 ## QA-FIND-071 — Compose does not define automatic service restart after a VM/daemon reboot
 
-Classification: Deployment availability / recovery. Status: CI verified for code commit `5912343a9b07b1976456bacdb8c5023d1cfdb8aa`; AWS reboot/recovery verification pending. Priority: High for a single-VM deployment.
+Classification: Deployment availability / recovery. Status: CI verified for code commit `72ff22992e8561b5c85422f664854a7bce964ff7`; AWS reboot/recovery verification pending. Priority: High for a single-VM deployment.
 
 **What happens:** Before correction, the Compose services did not define a Docker restart policy, and the reviewed CD workflow did not install a systemd unit that brings the stack back after the EC2 host or Docker daemon restarts. PR #54 now adds `restart: unless-stopped` to PostgreSQL, backend, frontend, and Nginx, and CI checks that all four policies are present. A staging reboot test is still needed to prove the stack recovers without manual intervention.
 
@@ -935,3 +935,8 @@ Classification: Deployment availability / recovery. Status: CI verified for code
 ## Latest code CI checkpoint — reboot recovery configuration
 
 CI run [38221334646](https://github.com/AyomideADEJARE1/Expense-Management-Platform/actions/runs/38221334646) passed all eight jobs for code commit `5912343a9b07b1976456bacdb8c5023d1cfdb8aa`. The Compose configuration check confirmed restart policies for all four services; the database job applied migrations 001–005 and checked the phone column and budget-category restriction; the backend suite passed 58 tests twice; frontend lint/build, secret scan, both Docker builds, and the aggregate job passed. This does not prove an actual AWS reboot recovers the stack. The source branch has later documentation-only commits; its latest CI run is pending.
+
+
+## Latest source-branch CI checkpoint — 2026-10-12
+
+CI run [38221595123](https://github.com/AyomideADEJARE1/Expense-Management-Platform/actions/runs/38221595123) passed all eight jobs for source-branch head `72ff22992e8561b5c85422f664854a7bce964ff7`. The backend suite passed 58 tests twice. CI verified migrations 001–005, the `users.phone` column, the category-budget `RESTRICT` rule, and restart policies for all four Compose services. Frontend lint/build, secret scan, both Docker builds, and aggregate CI passed. CI still emits a Flask-Limiter warning for in-memory storage; production shared storage and Nginx client-IP behavior remain open. Actual AWS populated-volume migration, live deployment/health, browser workflows, reboot recovery, currency semantics, and notification/threshold behavior are not closed by CI.
