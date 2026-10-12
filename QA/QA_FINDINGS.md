@@ -845,7 +845,7 @@ Closure evidence: Passing frontend lint/build for the exact commit and browser s
 
 ## QA-FIND-067 — Phone number appears editable in Settings but was not persisted
 
-Classification: Profile data integrity / UI-to-API mismatch. Status: Correction proposed in PR #54; latest CI retest pending. Priority: Medium.
+Classification: Profile data integrity / UI-to-API mismatch. Status: CI verified for correction commit `92eefc22555c7c98df240014721084e2f41698f8`; populated AWS migration and browser retest pending. Priority: Medium.
 
 **What happens:** The Settings page exposes an editable Phone Number field. Before this correction, the user model had no phone column, the `GET /api/auth/me` response did not include phone, and `PUT /api/auth/me` did not save it. The frontend profile update payload also omitted phone. The page could therefore report that settings were saved even though the entered phone number was lost after reload.
 
@@ -878,3 +878,10 @@ Classification: Feature completeness / misleading preference controls. Status: R
 CI run [38219570139](https://github.com/AyomideADEJARE1/Expense-Management-Platform/actions/runs/38219570139) passed all eight jobs for correction commit `8c8c05b8a25cba190746aa3c5b33a7933ec76013`. The backend suite ran twice; both runs passed all 58 tests, including the phone persistence/validation test. The database job applied migrations 001–005 and verified both the budget-category `RESTRICT` rule and the new `users.phone` column. Frontend lint/build, secret scanning, both Docker builds, and the aggregate CI check passed.
 
 The current correction branch has subsequent documentation-only commits; CI for the newer branch head was running at the last check. The green run verifies the code commit above, not the newest docs head. It also does not prove migration 005 against a populated AWS volume, live AWS deployment, public health endpoints, browser settings save/reload, or actual notification delivery. CI still emits a Flask-Limiter warning because its test/default configuration uses in-memory rate-limit storage; production must use approved shared storage and verify client identity through Nginx.
+
+
+## Latest branch-head CI checkpoint — 2026-10-12
+
+CI run [38219803561](https://github.com/AyomideADEJARE1/Expense-Management-Platform/actions/runs/38219803561) passed all eight jobs for branch-head commit `92eefc22555c7c98df240014721084e2f41698f8`. The backend suite ran twice and passed all 58 tests on both runs. The database job applied migrations 001–005, verified the budget-category `RESTRICT` rule and `users.phone`, and checked that deployment applies migrations before restarting application services. Frontend lint/build, secret scan, both Docker builds, and the aggregate check passed.
+
+Still not proven: applying migration 005 to an existing populated AWS volume, the live AWS deployment and public health endpoints, browser profile save/reload, and actual notification delivery. CI also reports Flask-Limiter's in-memory storage warning; production shared rate-limit storage and client-IP behavior through Nginx remain open.
