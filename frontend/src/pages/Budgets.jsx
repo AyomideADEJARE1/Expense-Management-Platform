@@ -10,9 +10,6 @@ import {
   Gift, HelpCircle, AlertTriangle, CheckCircle2 
 } from 'lucide-react';
 
-const ALL_CATEGORIES_VALUE = '__all_categories__';
-const ALL_CATEGORIES_LABEL = 'All Categories';
-
 const ICON_MAP = {
   Utensils, Car, ShoppingBag, Wifi, Film, Briefcase, HeartPulse, BookOpen, DollarSign, Gift
 };
@@ -69,14 +66,14 @@ export default function Budgets({
     if (budget) {
       setEditingBudget(budget);
       setFormData({
-        category: budget.category_id == null ? ALL_CATEGORIES_VALUE : budget.category,
+        category: budget.category,
         limit: budget.limit,
         spent: budget.spent,
       });
     } else {
       setEditingBudget(null);
       setFormData({
-        category: expenseCategories.length > 0 ? expenseCategories[0].name : ALL_CATEGORIES_VALUE,
+        category: expenseCategories.length > 0 ? expenseCategories[0].name : '',
         limit: '',
         spent: '0',
       });
@@ -93,22 +90,14 @@ export default function Budgets({
       return;
     }
 
-    const isWholeMonthBudget = formData.category === ALL_CATEGORIES_VALUE;
-    const selectedCategory = isWholeMonthBudget
-      ? null
-      : expenseCategories.find(
-          (category) => category.name === formData.category
-        );
+    const selectedCategory = expenseCategories.find(
+      (category) => category.name === formData.category
+    );
 
-    if (!isWholeMonthBudget && !selectedCategory) {
+    if (!selectedCategory) {
       showToast('Selected category could not be found', 'error');
       return;
     }
-
-    const categoryId = isWholeMonthBudget ? null : selectedCategory.id;
-    const categoryLabel = isWholeMonthBudget
-      ? ALL_CATEGORIES_LABEL
-      : selectedCategory.name;
 
     const amount = parseFloat(formData.limit);
 
@@ -126,7 +115,7 @@ export default function Budgets({
     const month = editingBudget?.month || currentMonth;
 
     const payload = {
-      category_id: categoryId,
+      category_id: selectedCategory.id,
       amount,
       month,
     };
@@ -140,7 +129,6 @@ export default function Budgets({
 
         const updated = {
           ...response?.data,
-          category: response?.data?.category ?? (response?.data?.category_id == null ? ALL_CATEGORIES_LABEL : 'Uncategorized'),
           limit: Number(response?.data?.amount || 0),
           spent: Number(editingBudget.spent || 0),
         };
@@ -155,13 +143,13 @@ export default function Budgets({
       } else {
         const exists = budgets.find(
           (budget) =>
-            (budget.category_id ?? null) === categoryId &&
+            budget.category_id === selectedCategory.id &&
             budget.month === month
         );
 
         if (exists) {
           showToast(
-            `A budget for ${categoryLabel} already exists this month!`,
+            `A budget for ${formData.category} already exists this month!`,
             'error'
           );
           return;
@@ -171,7 +159,6 @@ export default function Budgets({
 
         const created = {
           ...response?.data,
-          category: response?.data?.category ?? (response?.data?.category_id == null ? ALL_CATEGORIES_LABEL : 'Uncategorized'),
           limit: Number(response?.data?.amount || 0),
           spent: 0,
         };
@@ -261,7 +248,7 @@ export default function Budgets({
                         {renderCategoryIcon(b.category)}
                       </div>
                       <div>
-                        <h3 className={`font-bold ${primaryText} text-lg`}>{b.category || (b.category_id == null ? ALL_CATEGORIES_LABEL : 'Uncategorized')}</h3>
+                        <h3 className={`font-bold ${primaryText} text-lg`}>{b.category}</h3>
                         <p className="text-xs text-gray-400 font-medium">Monthly Limit</p>
                       </div>
                     </div>
@@ -364,12 +351,15 @@ export default function Budgets({
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   className={`w-full ${inputStyle} border rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 disabled:opacity-60`}
                 >
-                  <option value="__all_categories__">All Categories (whole-month budget)</option>
-                  {expenseCategories.map((cat) => (
-                    <option key={cat.id || cat.name} value={cat.name}>
-                      {cat.name}
-                    </option>
-                  ))}
+                  {expenseCategories.length === 0 ? (
+                    <option value="">No expense categories available</option>
+                  ) : (
+                    expenseCategories.map((cat) => (
+                      <option key={cat.id || cat.name} value={cat.name}>
+                        {cat.name}
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
 
