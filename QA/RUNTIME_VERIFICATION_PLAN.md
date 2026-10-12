@@ -560,3 +560,8 @@ Code CI run 38270547450 passed all eight jobs for correction commit 8d5fddc6c163
 **Pass evidence:** Current-head CI result, API request/response and read-back evidence, and browser save/reload proof.
 
 **Fail conditions:** An omitted name part becomes blank or changes unexpectedly, invalid input is accepted, or the browser state differs from the persisted profile.
+
+
+## Latest code CI checkpoint — 2026-10-12
+
+CI run 38271222415 passed all eight jobs for correction commit 2316a358ca37495ecc41eff8aaf48f888654e5b8. Backend lint passed and the backend suite passed 60 tests twice, including trusted-proxy and partial-profile-name regression tests. Migrations 001–005, the budget-category RESTRICT rule, the phone column, and migration order passed CI; frontend lint/build, secret scan, both Docker builds, and aggregate CI passed. Flask-Limiter still warns that it uses in-memory storage. This does not close AWS populated-volume migration, live deployment, public health, browser, reboot recovery, backup restore, or shared rate-limit storage gates.
