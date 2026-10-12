@@ -37,7 +37,7 @@ backend-development
 nginx
 docker
 ci-cd
-azure
+aws
 qa
 ```
 
