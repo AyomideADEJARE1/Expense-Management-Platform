@@ -696,3 +696,10 @@ Closure evidence: Passing CI for the exact commit, API results for registration/
 CI run [38212818430](https://github.com/AyomideADEJARE1/Expense-Management-Platform/actions/runs/38212818430) passed all eight jobs for correction commit `0207384272129a22c719425fee062a87fc0f29ae`. The backend suite passed 39 tests. This run includes migrations 001–004, category-budget deletion protection, category create/update error handling, and email uniqueness conflict handling for registration/profile updates. Secret scanning, frontend lint/build, both Docker builds, database migration checks, and the aggregate CI check passed.
 
 The frontend package still has no test script, so the optional frontend test command may skip functional tests. CI does not prove populated AWS-volume migration, staging failure/recovery, deployed image identity, public health checks, browser end-to-end behavior, category write authorization, production rate-limit storage/proxy handling, or public CSP/HSTS. These remain open until evidence is recorded.
+
+
+## Latest code CI checkpoint — 2026-10-12
+
+CI run [38213095648](https://github.com/AyomideADEJARE1/Expense-Management-Platform/actions/runs/38213095648) passed all eight jobs for code commit `2c7d244067d7ca3727f4c346995380dbc4a95fea`. This includes the README clarification after the previously passing 39-test correction run. The run passed database migrations, backend lint/tests, frontend lint/build, secret scanning, both Docker builds, and the aggregate check.
+
+The latest application-code regression coverage includes category-budget deletion protection, category create/update commit error handling, and email uniqueness conflict/recovery. The frontend package still has no test script, so the optional frontend test step does not establish frontend functional coverage. AWS populated-volume migration, staging failure/recovery, deployed image identity, public health checks, and browser end-to-end verification remain pending.
