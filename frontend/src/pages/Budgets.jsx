@@ -93,14 +93,22 @@ export default function Budgets({
       return;
     }
 
-    const selectedCategory = expenseCategories.find(
-      (category) => category.name === formData.category
-    );
+    const isWholeMonthBudget = formData.category === ALL_CATEGORIES_VALUE;
+    const selectedCategory = isWholeMonthBudget
+      ? null
+      : expenseCategories.find(
+          (category) => category.name === formData.category
+        );
 
-    if (!selectedCategory) {
+    if (!isWholeMonthBudget && !selectedCategory) {
       showToast('Selected category could not be found', 'error');
       return;
     }
+
+    const categoryId = isWholeMonthBudget ? null : selectedCategory.id;
+    const categoryLabel = isWholeMonthBudget
+      ? ALL_CATEGORIES_LABEL
+      : selectedCategory.name;
 
     const amount = parseFloat(formData.limit);
 
