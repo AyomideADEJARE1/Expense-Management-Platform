@@ -873,23 +873,33 @@ def test_registration_unexpected_commit_failure_rolls_back_and_recovers(
     assert recovered.status_code == 201
 
 
-
 @pytest.mark.parametrize(
     ("secret_key", "jwt_secret"),
     [
         (None, "jwt-test-secret-that-is-long-enough-123456"),
-        ("replace-with-a-strong-random-flask-secret", "jwt-test-secret-that-is-long-enough-123456"),
+        (
+            "replace-with-a-strong-random-flask-secret",
+            "jwt-test-secret-that-is-long-enough-123456",
+        ),
         ("flask-test-secret-that-is-long-enough-123456", None),
-        ("flask-test-secret-that-is-long-enough-123456", "replace-with-a-different-strong-random-jwt-secret"),
+        (
+            "flask-test-secret-that-is-long-enough-123456",
+            "replace-with-a-different-strong-random-jwt-secret",
+        ),
         ("short", "jwt-test-secret-that-is-long-enough-123456"),
-        ("flask-test-secret-that-is-long-enough-123456", "flask-test-secret-that-is-long-enough-123456"),
+        (
+            "flask-test-secret-that-is-long-enough-123456",
+            "flask-test-secret-that-is-long-enough-123456",
+        ),
     ],
 )
 def test_production_secret_validation_rejects_unsafe_signing_keys(
     secret_key, jwt_secret
 ):
     with pytest.raises(RuntimeError):
-        validate_secret_configuration(secret_key, jwt_secret, "production")
+        validate_secret_configuration(
+            secret_key, jwt_secret, "production"
+        )
 
 
 def test_production_secret_validation_accepts_distinct_strong_keys():
