@@ -919,13 +919,13 @@ Classification: Functional gap / misleading settings. Status: Requires product c
 
 ## QA-FIND-071 — Compose does not define automatic service restart after a VM/daemon reboot
 
-Classification: Deployment availability / recovery. Status: Correction required; AWS runtime verification pending. Priority: High for a single-VM deployment.
+Classification: Deployment availability / recovery. Status: Correction proposed in PR #54; CI and AWS runtime verification pending. Priority: High for a single-VM deployment.
 
-**What happens:** The reviewed Compose services do not define a Docker restart policy, and the reviewed CD workflow does not install a systemd unit that brings the stack back after the EC2 host or Docker daemon restarts. A successful deployment can therefore stop serving traffic after a host reboot until someone manually starts the stack.
+**What happens:** Before correction, the Compose services did not define a Docker restart policy, and the reviewed CD workflow did not install a systemd unit that brings the stack back after the EC2 host or Docker daemon restarts. PR #54 now adds `restart: unless-stopped` to PostgreSQL, backend, frontend, and Nginx, and CI checks that all four policies are present. A staging reboot test is still needed to prove the stack recovers without manual intervention.
 
 **Why it matters:** A routine VM reboot, host maintenance, or Docker daemon restart can leave the expense tracker unavailable even though the EC2 instance itself is healthy.
 
-**Required correction:** Choose and document a boot-recovery method. Prefer explicit restart policies for the database, backend, frontend, and Nginx, with appropriate health checks; if startup ordering requires it, add a systemd unit that runs the Compose startup and waits for database/application health. Ensure this does not bypass the migration-before-app deployment order.
+**Required correction:** Review the new restart policies and confirm the AWS host starts Docker on boot. If startup ordering still fails after a reboot, add a systemd unit that runs Compose startup and waits for database/application health. Ensure recovery does not bypass migration-before-app deployment order.
 
 **Required retest:** In AWS staging, deploy the intended commit, record all container states, reboot the VM or restart Docker, and verify the complete stack returns without manual SSH commands. Confirm the database volume and user records persist, both public health endpoints recover, and the running image remains the expected commit.
 
