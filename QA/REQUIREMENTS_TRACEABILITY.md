@@ -166,3 +166,7 @@ PR #54 changes the profile API to preserve the stored first/last name when the r
 ## Latest correction CI checkpoint — 2026-10-12
 
 Run 38271222415 passed all eight jobs for correction commit 2316a358ca37495ecc41eff8aaf48f888654e5b8. The backend suite passed 60 tests twice, including the proxy-identity and partial profile-name regression tests. This verifies the CI environment only; AWS runtime and browser evidence remains pending, and the in-memory rate-limit storage warning remains open under QA-FIND-073.
+
+
+## QA-FIND-078 — Concurrent budget-reference conflict during category deletion
+PR #54 now maps both expense and budget foreign-key violations to HTTP 409. A regression test simulates a budget reference being created between the route pre-check and database commit, and confirms the category remains present. CI retest for the latest correction commit is pending; AWS concurrency testing remains optional and must use disposable staging data.
