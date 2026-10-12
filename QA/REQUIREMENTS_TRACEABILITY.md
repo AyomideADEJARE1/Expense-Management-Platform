@@ -58,4 +58,4 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 
 | REQ-40 | Account email uniqueness conflicts are handled safely | TC-AUTH-012–013, RV-28 | PR #54 adds named-constraint handling and rollback tests; CI run 38213095648 passed all 39 backend tests. AWS runtime verification remains pending |
 
-| REQ-41 | Production Flask/JWT signing secrets fail closed | TC-SEC-011, RV-06, RV-10 | PR #54 adds startup validation and tests for missing, weak, placeholder, or shared keys; latest CI result is pending |
+| REQ-41 | Production Flask/JWT signing secrets fail closed | TC-SEC-011, RV-06, RV-10 | PR #54 adds startup validation and tests for missing, weak, placeholder, or shared keys; CI run 38213583630 passed all 47 backend tests. AWS configuration verification remains pending |
