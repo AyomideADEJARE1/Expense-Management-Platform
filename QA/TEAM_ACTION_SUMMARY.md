@@ -121,14 +121,9 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **QA verification and closure evidence:** Pull both images from the target VM, deploy the intended commit-specific tag or pinned digest, and retain logs with secrets redacted plus the deployed image digest.
 
-### 12. Backend/security: configure shared production rate limiting
-**What happens:** Flask-Limiter reports that production rate-limit storage is in memory.
+### 12. Backend/security: shared rate-limit storage (consolidated)
 
-**Why it matters:** Limits held in one process are not shared across multiple workers or instances and can reset after restart.
-
-**Required correction:** Configure a supported shared production store, such as Redis, with protected credentials and documented outage behavior. Keep in-memory storage scoped to local development and tests.
-
-**QA verification and closure evidence:** Test requests across workers and retain production configuration, results, and monitoring/failure-behavior evidence.
+The missing shared production store remains open and is tracked in action 47 alongside the proxy-identity and AWS runtime checks. Configure the approved shared store, protect its credentials, and document outage behavior. This is not a separate completed task.
 
 ### 13. Backend/database: verify budget-save conflict handling
 **What happens:** The original budget route mapped every commit error to HTTP 500.
@@ -256,17 +251,9 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Evidence to close:** Header capture, reviewed CSP configuration, and browser results. Do not claim HSTS is enabled unless it is observed on HTTPS responses.
 
-### 24. Backend/DevOps: make authentication rate limits proxy-aware
+### 24. Backend/DevOps: make authentication rate limits proxy-aware (consolidated)
 
-**What happens:** Login and registration are limited to five requests per minute, but the limiter uses the request's remote address. Behind Nginx, that address may be the proxy address shared by all users. The default in-memory store also does not share limits reliably across workers or restarts.
-
-**Why it matters:** One user's repeated requests may throttle unrelated users, while limits may reset or differ between workers.
-
-**Required correction:** Trust only the known Nginx proxy hop(s), ensure forwarding headers are handled safely, and configure shared production rate-limit storage. Do not trust arbitrary client-supplied forwarding headers.
-
-**How QA will verify:** Send login/register requests through the public Nginx endpoint from two independent client addresses. Confirm one client's limit does not throttle the other and that repeated requests return 429 as expected. Repeat across workers/restarts.
-
-**Evidence to close:** Reviewed proxy/storage configuration, separate-client test results, response codes, and deployed commit/version.
+PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit test for forwarded client identity. The AWS topology check and shared-store requirement remain open under action 47. Do not close this action until the public AWS test proves independent client quotas and safe forwarding-header handling.
 
 ### 25. Frontend: make the budget spending value read-only
 
