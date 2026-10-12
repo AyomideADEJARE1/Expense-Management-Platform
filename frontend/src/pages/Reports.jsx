@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { api } from '../services/api';
+import { formatCurrency } from '../utils/currency';
 import {
   Calendar,
   TrendingDown,
@@ -9,7 +10,10 @@ import {
   X,
 } from 'lucide-react';
 
-export default function Reports({ isDarkMode = false }) {
+export default function Reports({
+  currency = 'NGN (₦)',
+  isDarkMode = false,
+}) {
   const pageStyle = isDarkMode
     ? 'text-slate-100'
     : 'text-gray-900';
@@ -210,7 +214,7 @@ export default function Reports({ isDarkMode = false }) {
                         </span>
 
                         <span className="font-semibold text-red-600">
-                          ₦{report.totalExpense.toLocaleString()}
+                          {formatCurrency(report.totalExpense, currency)}
                         </span>
                       </div>
 
@@ -281,7 +285,7 @@ export default function Reports({ isDarkMode = false }) {
                 </p>
 
                 <p className="text-xl font-bold text-red-800 mt-1">
-                  ₦{activeReport.totalExpense.toLocaleString()}
+                  {formatCurrency(activeReport.totalExpense, currency)}
                 </p>
               </div>
 
@@ -339,7 +343,7 @@ export default function Reports({ isDarkMode = false }) {
                             <span>{categoryName}</span>
 
                             <span>
-                              ₦{amount.toLocaleString()} ({percentage}%)
+                              {formatCurrency(amount, currency)} ({percentage}%)
                             </span>
                           </div>
 
@@ -386,7 +390,7 @@ export default function Reports({ isDarkMode = false }) {
                     </div>
 
                     <span className="text-sm font-bold text-red-600 whitespace-nowrap">
-                      ₦{Number(tx.amount || 0).toLocaleString()}
+                      {formatCurrency(tx.amount, currency)}
                     </span>
                   </div>
                 ))}
