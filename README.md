@@ -42,7 +42,7 @@ cp .env.example .env
 cp backend/.env.example backend/.env
 ```
 
-Edit both environment files before starting the app. In `backend/.env`, set separate strong values for `SECRET_KEY` and `JWT_SECRET`. In the root `.env`, replace the PostgreSQL password placeholder with a unique strong password. Keep both `.env` files out of version control. Compose now requires these database variables instead of embedding a fixed password in the YAML.
+Edit both environment files before starting the app. In `backend/.env`, set separate strong values for `SECRET_KEY` and `JWT_SECRET`. Production startup rejects missing, placeholder, shorter-than-32-character, or identical Flask/JWT signing keys. If neither `APP_ENV` nor `FLASK_ENV` is set, the app treats itself as production; set a non-production mode only for local development/testing, never on the AWS deployment. In the root `.env`, replace the PostgreSQL password placeholder with a unique strong password. Keep both `.env` files out of version control. Compose now requires these database variables instead of embedding a fixed password in the YAML.
 
 Start the application from the repository root:
 
