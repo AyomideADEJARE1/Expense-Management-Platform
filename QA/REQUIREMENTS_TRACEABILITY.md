@@ -151,3 +151,8 @@ The registration route currently requires a non-empty string and hashes it, but 
 ## QA-FIND-076 trace — Password change and recovery
 
 No password-change or password-recovery endpoint or complete user flow was found in the reviewed repository. The team must decide whether these functions are required for the capstone/release. If required, implement authenticated password change and a secure recovery process with expiring one-time tokens, rate limits, and non-enumerating responses. Closure requires a written scope decision and automated/staging evidence for successful and rejected flows.
+
+
+## Current code CI checkpoint — 2026-10-12
+
+Run 38270547450 passed all eight jobs for correction commit 8d5fddc6c163a3f48986d22b770bd76d4547a81c, including 59 backend tests on two runs and the new trusted-proxy test. The in-memory rate-limit storage warning remains; QA-FIND-073 stays open until shared storage and AWS per-client rate-limit behavior are verified. All AWS runtime and browser evidence remains pending unless separately attached.
