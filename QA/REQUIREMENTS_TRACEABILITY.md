@@ -194,3 +194,7 @@ The Docker guide now instructs readers to create both the root `.env` and `backe
 ## Latest correction CI checkpoint — 2026-10-12
 
 Run 38272803374 passed all eight jobs for correction commit f58bd3fbc4e75ae224c3bb3981a704d3c3ba1c45. The backend suite passed 62 tests twice and the new frontend Node suite passed all four tests, including whole-month budget spending. This confirms CI for the current code head; browser and AWS runtime evidence remains pending. The in-memory rate-limit storage warning remains open under QA-FIND-073.
+
+
+## Current source CI evidence — QA-FIND-080
+CI run `38272803374` passed all eight jobs for correction commit `f58bd3fbc4e75ae224c3bb3981a704d3c3ba1c45`. The frontend job ran four Node tests covering whole-month spending, category-specific spending, month boundaries, and invalid amounts; all passed. Backend tests passed 62 tests twice. Browser verification and AWS runtime verification remain separate open checks.
