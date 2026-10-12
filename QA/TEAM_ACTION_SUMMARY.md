@@ -526,6 +526,17 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Evidence to close:** Reviewed configuration, CI tests for client identity and spoofed headers, shared-store configuration, and AWS staging logs showing independent limits, restart behavior, and expected 429 responses.
 
+### 48. Backend/product/security: protect account email changes
+**What happens:** The authenticated profile endpoint saves a new login email immediately after basic validation and uniqueness checking. It does not require the current password/recent re-authentication or verify control of the new address.
+
+**Why it matters:** A typo can change the account's login identity, and a stolen valid session could change the email before the account owner notices.
+
+**Required correction:** Agree on the identity-change policy. Prefer current-password/recent re-authentication, an expiring one-time verification link, keeping the old email active until verification, notification to the old address, rate limiting, and a clear session/token policy. If email delivery is outside scope, document that decision and do not treat an unverified address as a verified identity.
+
+**How QA will verify:** Test change attempts without re-authentication, pending/unverified address, expired/reused verification tokens, duplicate addresses, valid verification, and rate limits. Confirm the old email remains active until successful verification.
+
+**Evidence to close:** Written policy, automated API tests, verification/expiry/duplicate tests, and a staging browser/API trace of a successful and rejected change.
+
 ## Release checklist
 
 Do not mark a check as passed until evidence is attached.
