@@ -1059,7 +1059,7 @@ CI run `38272033341` passed all eight jobs for correction commit `ea775178ea545b
 
 ## QA-FIND-080 — Docker setup guide omits a required backend environment file
 
-**Classification:** Setup documentation defect. **Status:** Documentation correction is committed in PR #54; current-head CI passed, clean local startup verification pending. **Priority:** Medium.
+**Classification:** Setup documentation defect. **Status:** Documentation correction is committed in PR #54; CI passed for commit `77620d6547cad3ee3774657df9dd0b9256ed9ff6`; clean local startup verification pending. **Priority:** Medium.
 
 **Evidence:** `docker-compose.yml` declares `./backend/.env` as a required `env_file` for the backend service. The README's clean-start instructions tell the reader to create both the root `.env` and `backend/.env`, but the Docker guide previously instructed the reader to create only the root `.env` before running Compose. A reader following the Docker guide alone could reach startup with the required backend environment file missing.
 
