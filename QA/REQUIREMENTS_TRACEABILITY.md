@@ -138,3 +138,7 @@ The reviewed repository does not define a scheduled off-host backup or tested re
 
 ## QA-FIND-073 trace — Proxy-aware rate limiting
 Flask-Limiter currently keys requests by `get_remote_address`, while Flask is behind Nginx and has no trusted-proxy middleware; no shared rate-limit storage URI is configured. PR #54 needs a reviewed trusted-proxy boundary and approved shared store for production. Verify independent client quotas, spoofed-header resistance, restart behavior, and shared counters through the public AWS endpoint. CI/source inspection is not a substitute for the staging network test.
+
+
+## QA-FIND-074 trace — Account email change verification
+The current `PUT /api/auth/me` flow saves a new email after syntax/uniqueness checks, without current-password/recent re-authentication or a verification step for the new address. Product/security must define whether email delivery and verification are required. Closure requires policy-aligned API tests and staging evidence that an unverified address cannot become the active login identity if verification is required.
