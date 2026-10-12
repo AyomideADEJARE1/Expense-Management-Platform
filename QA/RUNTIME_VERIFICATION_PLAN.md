@@ -585,7 +585,7 @@ CI run 38272033341 passed all eight jobs for correction commit ea775178ea545b48b
 
 ## RV-49 — Verify whole-month budget totals and frontend regression tests
 
-**Finding:** QA-FIND-079. **Owner:** Frontend + QA. **Status:** Open until current-head CI and browser verification pass.
+**Finding:** QA-FIND-080. **Owner:** Frontend + QA. **Status:** Open until current-head CI and browser verification pass.
 
 **Source-level correction:** PR #54 adds `calculateBudgetSpent` in `frontend/src/utils/budgetSpending.js`, tests in `frontend/tests/budgetSpending.test.js`, and a `npm test` script. This is not closed until the new source head passes CI.
 
