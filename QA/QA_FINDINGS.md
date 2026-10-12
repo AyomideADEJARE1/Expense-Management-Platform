@@ -1164,3 +1164,18 @@ CI run `38276034129` passed all eight jobs for code commit `97e6515f00c15e240532
 CI run [38277037377](https://github.com/AyomideADEJARE1/Expense-Management-Platform/actions/runs/38277037377) passed all eight jobs for code commit `8151bb56e730c6f6eb0205691b334a121abc934e`. Backend lint and all 69 backend tests passed, including the new debug-mode selection cases. Frontend lint/build and all nine Node tests passed. Database migration checks, secret scan, both Docker builds, and aggregate CI passed.
 
 QA-FIND-084 is verified at the source/CI level. The production container still uses Gunicorn, and the direct-run entry point now enables debug only for explicit development/test modes. The known in-memory rate-limit warning remains open; live AWS deployment, populated-volume migration, browser journeys/downloads, reboot recovery, and backup restore are still unverified.
+
+
+## QA-FIND-085 — Reports CSV export omits the UTF-8 byte-order mark
+
+**Classification:** Export compatibility. **Priority:** Low. **Status:** Correction proposed in PR #54; browser retest pending.
+
+**Evidence:** The Transactions CSV export prepends a UTF-8 byte-order mark (BOM) to the generated file. The Reports CSV export previously created a UTF-8 Blob without the BOM, even though report descriptions and category names can contain non-ASCII text.
+
+**Why it matters:** Some spreadsheet versions, especially older Excel configurations, may guess the wrong encoding for a CSV without a BOM and display non-ASCII text incorrectly.
+
+**Correction in PR #54:** The Reports export now prepends the same UTF-8 BOM used by Transactions.
+
+**Required retest:** Export a report containing non-ASCII test text (for example, a category or description with `₦`, `é`, or `漢`) and confirm the downloaded file opens with those characters intact in the supported spreadsheet/browser workflow.
+
+**Closure evidence:** Passing current-head CI, exact commit SHA, and a sanitized report download/import check showing non-ASCII characters remain intact. This is a compatibility check, not a data-integrity guarantee for every spreadsheet application.
