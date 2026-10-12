@@ -99,3 +99,8 @@ The three `console.log` statements that printed the categories, expenses, and bu
 ## QA-FIND-065 trace — timezone-safe date handling
 
 The dashboard month now uses local year/month fields; transaction defaults use a local-calendar date helper; Reports parses date-only API values as local midnight. This corrects the source-level UTC/local conversion mismatch. Frontend automated tests are not configured, so closure requires a passing frontend build plus browser verification at timezone/month boundaries with the timezone and local date recorded.
+
+
+## QA-FIND-066 trace — canonical expense date validation
+
+The API contract requires `YYYY-MM-DD`. PR #54 now checks that parsing and re-serializing an expense date returns exactly the submitted value on create and update. Regression tests reject compact and week-date forms on create and reject a compact date on update without changing the saved value. CI must pass for the exact commit containing these tests; date-range filter validation and AWS runtime behavior remain separate checks.
