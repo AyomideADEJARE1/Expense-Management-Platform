@@ -436,6 +436,17 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Evidence to close:** Passing frontend lint/build for the exact commit and browser results with timezone, local date, dashboard query, default form date, and report month recorded. Frontend automated tests are not currently configured.
 
+### 40. Backend: enforce one expense-date format
+**What happens:** The API contract requires `YYYY-MM-DD`, but Python's date parser also accepts compact and week-date forms unless the route checks the canonical value.
+
+**Why it matters:** Clients can send different date representations even though the frontend and API contract expect one consistent format. This can make integrations and validation harder to maintain.
+
+**Required correction:** PR #54 now requires the parsed date's `isoformat()` to match the submitted value on both create and update. Regression tests reject `20261001` and `2026-W40-4` on create and reject a compact date on update.
+
+**How QA will verify:** Run the current CI. Check that `YYYY-MM-DD` succeeds; compact/week-date values return HTTP 400; and a rejected update leaves the original stored date unchanged. Check date-range filters too.
+
+**Evidence to close:** Passing CI for the exact commit, request/response examples, and a read-back of the unchanged date after the rejected update.
+
 ## Release checklist
 
 Do not mark a check as passed until evidence is attached.
@@ -458,4 +469,7 @@ Do not mark a check as passed until evidence is attached.
 - [ ] Public HTTPS security headers are checked and the approved CSP is tested.
 - [ ] Screenshots, workflow run links, commit SHA, and test results are attached.
 
-**Current overall status:** CI run `38217288387` passed all eight jobs for correction commit `52438ec387ed2c9bfaff56081930e6df317604dd`. The backend job ran the full pytest suite twice; both runs passed all 57 tests, including database-name guard cases, per-test cleanup, date/month validation, summary totals, category name boundaries, and ownership checks. Both Docker builds, frontend lint/build, secret scan, database migrations, and aggregate CI passed. This is CI evidence only. AWS deployment, populated-volume migrations, staging failure/recovery, public health checks, and browser end-to-end verification remain pending. The findings register contains 65 findings and this summary contains 39 team actions. The frontend package still has no test script, so frontend functional tests can be skipped by the optional CI command.
+**Current overall status:** CI run `38217288387` passed all eight jobs for correction commit `52438ec387ed2c9bfaff56081930e6df317604dd`. The backend job ran the full pytest suite twice; both runs passed all 57 tests, including database-name guard cases, per-test cleanup, date/month validation, summary totals, category name boundaries, and ownership checks. Both Docker builds, frontend lint/build, secret scan, database migrations, and aggregate CI passed. This is CI evidence only. AWS deployment, populated-volume migrations, staging failure/recovery, public health checks, and browser end-to-end verification remain pending. The findings register contains 66 findings and this summary contains 40 team actions. The frontend package still has no test script, so frontend functional tests can be skipped by the optional CI command.
+
+
+**Latest date-validation addition:** QA-FIND-066 and action 40 track the strict `YYYY-MM-DD` contract. Regression tests were added to the correction branch; the next CI result must include those tests before this item can be considered verified.
