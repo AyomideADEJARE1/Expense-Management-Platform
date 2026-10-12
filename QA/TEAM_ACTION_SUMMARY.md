@@ -354,11 +354,13 @@ Do not mark a check as passed until evidence is attached.
 
 - [ ] Category permissions are implemented and tested for anonymous users, ordinary users, and the permitted role.
 - [ ] Database-enforced budget uniqueness is implemented and tested, including NULL-category budgets and concurrent requests.
-- [ ] Budget conflicts return HTTP 409; unexpected errors remain server errors and failed sessions are rolled back.\n- [ ] Budget spending is read-only and matches recorded expenses after reload.
+- [ ] Budget conflicts return HTTP 409; unexpected errors remain server errors and failed sessions are rolled back.
+- [ ] Budget spending is read-only and matches recorded expenses after reload.
 - [ ] Production database and JWT secrets are required and are not sample values.
 - [ ] Tests use an isolated database and pass repeatedly.
 - [ ] CI is green for the exact release commit, backend tests are collected, and frontend tests execute rather than being silently skipped.
-- [ ] Migrations 002–004 succeed on fresh and existing databases; migration 004 enforces `ON DELETE RESTRICT` for category-linked budgets.\n- [ ] Deployment applies migrations before restarting backend/frontend/Nginx.
+- [ ] Migrations 002–004 succeed on fresh and existing databases; migration 004 enforces `ON DELETE RESTRICT` for category-linked budgets.
+- [ ] Deployment applies migrations before restarting backend/frontend/Nginx.
 - [ ] AWS is the documented and approved deployment target, and the deployed AWS VM is evidenced.
 - [ ] The running image matches the tested commit.
 - [ ] The AWS VM can pull the published images using the intended permissions.
