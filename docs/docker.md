@@ -442,7 +442,7 @@ This keeps the application services behind the Nginx entry point.
 
 ## 13. Health Checks
 
-All four services have Docker health checks.
+All four services have Docker health checks and use `restart: unless-stopped` so Docker can restart them after a daemon or VM reboot. This depends on the Docker daemon starting on the host; verify recovery on AWS and do not assume the policy alone proves the public app is available.
 
 ### Frontend
 
