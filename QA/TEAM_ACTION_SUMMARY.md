@@ -496,10 +496,10 @@ Do not mark a check as passed until evidence is attached.
 **Latest date-validation addition:** Action 40 expands the verification for existing finding QA-FIND-059. Regression tests were added to the correction branch; the next CI result must include those tests before this item can be considered verified.
 
 
-**Latest profile correction:** Action 41 and QA-FIND-067 track phone persistence through migration 005. CI for the latest source and the populated AWS database migration check must pass before closure.
+**Latest profile correction:** Action 41 and QA-FIND-067 track phone persistence through migration 005. CI run `38219803561` passed all eight jobs for branch-head commit `92eefc22555c7c98df240014721084e2f41698f8`, including 58 backend tests on two consecutive runs and migration 005 schema/order checks. The populated AWS database migration and browser save/reload check remain open.
 
 
 **Notification status:** QA-FIND-068 is open pending a product decision. Stored preference flags are not proof of actual alert delivery.
 
 
-**Latest CI note:** Run `38219570139` verified migration 005 and phone persistence tests in CI. The subsequent docs-only branch head is being rechecked; use the exact tested commit in the release record.
+**Latest CI note:** Run `38219803561` passed all eight jobs for the branch-head commit `92eefc22555c7c98df240014721084e2f41698f8`. The backend suite passed 58 tests twice; migrations 001–005, the `users.phone` column, and deployment order were checked. Existing-volume AWS migration, live deployment/health, browser flows, and notification delivery are still pending.
