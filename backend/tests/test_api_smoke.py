@@ -398,6 +398,19 @@ def test_expense_date_range_filters_and_validation(client):
     assert category_response.status_code == 201
     category_id = category_response.get_json()["data"]["id"]
 
+    for malformed_expense_date in ["20261001", "2026-W40-4"]:
+        malformed_create = client.post(
+            "/api/expenses",
+            headers=headers,
+            json={
+                "category_id": category_id,
+                "amount": 10,
+                "description": "Invalid date format test",
+                "expense_date": malformed_expense_date,
+            },
+        )
+        assert malformed_create.status_code == 400
+
     for expense_date in ["2026-10-01", "2026-10-10"]:
         response = client.post(
             "/api/expenses",
@@ -418,6 +431,21 @@ def test_expense_date_range_filters_and_validation(client):
     assert filtered.status_code == 200
     assert len(filtered.get_json()["data"]) == 1
     assert filtered.get_json()["data"][0]["expense_date"] == "2026-10-10"
+    expense_id = filtered.get_json()["data"][0]["id"]
+
+    malformed_update = client.put(
+        f"/api/expenses/{expense_id}",
+        headers=headers,
+        json={"expense_date": "20261011"},
+    )
+    assert malformed_update.status_code == 400
+
+    unchanged_expense = client.get(
+        f"/api/expenses/{expense_id}",
+        headers=headers,
+    )
+    assert unchanged_expense.status_code == 200
+    assert unchanged_expense.get_json()["data"]["expense_date"] == "2026-10-10"
 
     invalid_date = client.get(
         "/api/expenses?start_date=2026-10-31&end_date=2026-10-05",
