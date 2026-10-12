@@ -684,6 +684,8 @@ CI run 38273922288 passed all eight jobs for correction commit 77620d6547cad3ee3
 
 **Steps:** Create disposable report data containing non-ASCII characters in a category name or description. Export the report and confirm the Blob begins with a UTF-8 BOM and the downloaded file preserves the characters when opened/imported.
 
+**CI status:** Run `38277483412` passed all eight jobs for commit `2cc775b4ddc514e8dea5c6c1d80d633d47991ff1`.
+
 **Pass criteria:** The exported report contains the expected Unicode text and opens without encoding corruption in the supported spreadsheet workflow.
 
 **Evidence:** Browser/application versions, test value, downloaded file inspection, and successful display/import result. Do not include real user financial data in evidence.
