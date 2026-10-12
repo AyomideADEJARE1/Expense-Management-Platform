@@ -664,6 +664,13 @@ Impact: A duplicate-name race can become a generic 500 rather than HTTP 409. Une
 
 Correction proposed in PR #54: Create and update now catch SQLAlchemy IntegrityError, roll back, and return HTTP 409 only when the database identifies the `uq_expense_category_name` constraint. Other integrity errors and unexpected exceptions return a generic HTTP 500 after rollback. Tests simulate the known unique-constraint race for both create and update, and a separate test verifies that an unexpected create failure returns a sanitized 500 and a later valid create succeeds.
 
-Required retest: Confirm the tests pass on the latest correction commit. Verify duplicate-name requests return 409; unrelated integrity/database failures return 500; no SQL or internal exception text is returned; and a valid request succeeds after rollback.
+Retest update — 2026-10-12: CI run `38212554474` passed all eight jobs for code commit `57c13c60386419d84594ce64d7db015351d105f5`. The backend suite passed 37 tests, including the new category-name conflict tests for create/update and recovery after an unexpected create failure. AWS/runtime checks remain separate requirements. Verify duplicate-name requests return 409; unrelated integrity/database failures return 500; no SQL or internal exception text is returned; and a valid request succeeds after rollback.
 
 Closure evidence: Passing current CI run, tested commit SHA, API results for duplicate and unexpected-failure paths, and proof that the stored category remains unchanged after a failed update.
+
+
+## Latest correction CI checkpoint — 2026-10-12
+
+CI run [38212554474](https://github.com/AyomideADEJARE1/Expense-Management-Platform/actions/runs/38212554474) passed all eight jobs for correction commit `57c13c60386419d84594ce64d7db015351d105f5`. The backend suite passed 37 tests. The latest source includes migration 004 and category-budget deletion protection, plus category create/update conflict handling and rollback tests. Frontend lint/build, secret scanning, both Docker builds, database migrations, and the aggregate check passed.
+
+This checkpoint supersedes the prior 35-test CI checkpoint for the correction branch. The frontend package still has no test script, so frontend functional tests may be skipped by the optional command. Populated AWS volume migration, staging failure/recovery, deployed image identity, public health checks, category write authorization, production rate limiting, CSP/HSTS, and browser end-to-end evidence remain open.
