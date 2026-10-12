@@ -348,6 +348,17 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Evidence to close:** Passing CI for the latest commit, API results for both conflict/error paths, and proof the failed update did not change stored data.
 
+### 32. Backend: return a conflict for duplicate-email races
+**What happens:** Registration and profile update check whether an email already exists before saving. Two requests can race after that check, and PostgreSQL can reject the second commit because email is unique.
+
+**Why it matters:** A normal duplicate-email conflict may be reported as HTTP 500 instead of HTTP 409. A failed update must also preserve the existing email and roll back safely.
+
+**Required correction:** PR #54 now catches SQLAlchemy integrity errors, rolls back, and returns HTTP 409 only for the named `users_email_key` constraint. Other integrity errors and unexpected failures remain generic HTTP 500 responses. Tests simulate the conflict on registration and profile update, plus an unexpected registration commit failure and recovery.
+
+**How QA will verify:** Confirm the duplicate conflict returns 409, a failed profile update leaves the original email unchanged, unexpected failures return a sanitized 500, and a later valid registration succeeds.
+
+**Evidence to close:** Passing CI for the latest commit, API results for conflict and recovery tests, and the exact tested commit SHA.
+
 ## Release checklist
 
 Do not mark a check as passed until evidence is attached.
@@ -370,4 +381,4 @@ Do not mark a check as passed until evidence is attached.
 - [ ] Public HTTPS security headers are checked and the approved CSP is tested.
 - [ ] Screenshots, workflow run links, commit SHA, and test results are attached.
 
-**Current overall status:** Several issues are documented and some source corrections have been proposed. Prior CI run `38212158351` passed all eight jobs for commit `927e35eaf3af827d8b52ef93f6f883c6bfcaa667`; the backend suite passed 35 tests and migrations 001–004 were verified in CI. The later source update adds category create/update commit error handling and is now covered by passing CI run `38212554474` (37 backend tests). AWS deployment, populated-volume migration, staging recovery, public health checks, and browser verification remain pending. AWS deployment, populated-volume migration, staging failure/recovery, public health checks, and browser verification remain pending. AWS deployment, populated-volume migration, staging failure/recovery, public health checks, and browser verification remain pending. The frontend package still has no test script, so frontend functional tests can be skipped by the optional CI command. Do not describe the whole project as release-ready until the blocking items above are closed with evidence.
+**Current overall status:** Several issues are documented and some source corrections have been proposed. Prior CI run `38212158351` passed all eight jobs for commit `927e35eaf3af827d8b52ef93f6f883c6bfcaa667`; the backend suite passed 35 tests and migrations 001–004 were verified in CI. The category create/update error-handling update is covered by passing CI run `38212554474` (37 backend tests). A newer change now adds email unique-constraint handling for registration/profile updates; that newer commit needs its own CI result. AWS deployment, populated-volume migration, staging recovery, public health checks, and browser verification remain pending. AWS deployment, populated-volume migration, staging failure/recovery, public health checks, and browser verification remain pending. AWS deployment, populated-volume migration, staging failure/recovery, public health checks, and browser verification remain pending. The frontend package still has no test script, so frontend functional tests can be skipped by the optional CI command. Do not describe the whole project as release-ready until the blocking items above are closed with evidence.
