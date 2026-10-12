@@ -178,7 +178,7 @@ Required action: Confirm the protected AWS secrets and variables are configured 
 Closure evidence: Reviewed documentation/workflow diff, successful AWS deployment, and proof the running service matches the tested commit.
 
 ## QA-FIND-022 — Docker Compose contains hard-coded database credentials
-Classification: Security/configuration defect. Status: Open. Priority: High before production deployment.
+Classification: Security/configuration defect. Status: Open on upstream main; PR #54 replaces fixed values with required root environment variables, and CI run 38213904072 passes. Clean AWS setup and secret-rotation evidence remain pending. Priority: High before production deployment.
 
 The upstream `main` `docker-compose.yml` hard-codes `expense_user`, `expense_password`, and `expense_db` in both the backend and PostgreSQL service configuration. These values are not secret-safe production configuration, and the backend service's `environment` values override similarly named values from `backend/.env`.
 
@@ -360,7 +360,7 @@ Impact if left unresolved: operators may believe they rotated JWT_SECRET while t
 Closure evidence: correction merged to the intended target branch, passing configuration tests, secret-scan success, and a reviewed example/deployment configuration. Until the production fail-closed checks and tests are added, status remains RETEST PENDING. This finding overlaps the broader production-secret enforcement concern but is retained separately because the ignored JWT environment variable is a specific, directly evidenced configuration defect.
 
 ## QA-FIND-037 — Compose hard-codes database credentials in both services
-Classification: Security/configuration. Priority: High; production release blocker. Status: Open.
+Classification: Security/configuration. Priority: High; production release blocker. Status: Open on upstream main; PR #54 uses required environment variables and passes CI run 38213904072. Clean setup, AWS secret configuration, and credential-rotation confirmation remain pending.
 
 Evidence reviewed in `docker-compose.yml` on `stephen/qa-transaction-fixes`: the backend environment block sets `POSTGRES_USER=expense_user`, `POSTGRES_PASSWORD=expense_password`, and `POSTGRES_DB=expense_db`; the PostgreSQL service repeats the same fixed values. The backend also loads `backend/.env`, but the later Compose `environment` entries explicitly set these database values, so the fixed Compose values override same-named values from the env file.
 
