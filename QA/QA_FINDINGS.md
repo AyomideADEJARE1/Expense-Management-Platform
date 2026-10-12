@@ -2,7 +2,7 @@
 
 Findings are evidence-based. QA is not judged by defect count.
 
-Latest fully green correction checkpoint: CI run 38273922288 passed all eight jobs for correction-branch commit 77620d6547cad3ee3774657df9dd0b9256ed9ff6. Backend lint passed and the backend suite passed 62 tests twice, including trusted-proxy, partial-profile-name, and category-delete race tests. The frontend suite executed seven Node tests and all seven passed, covering whole-month spending, category-specific spending, and global budget search relevance. CI verified migrations 001–005, the budget-category RESTRICT rule, the users.phone column, and migration order; frontend lint/build, secret scanning, both Docker builds, and aggregate CI passed. npm audit reported zero vulnerabilities. Flask-Limiter still warns that rate-limit counters use in-memory storage. This is CI evidence only; AWS live deployment, populated-volume migration, browser workflows, reboot recovery, backup restore, and shared production rate-limit storage remain unverified.
+Latest fully green correction checkpoint: CI run 38275606391 passed all eight jobs for code commit 11d1756f083f51e6e18d51651f76bcb5d74a9af2. Backend lint passed and the backend suite passed 62 tests, including trusted-proxy, partial-profile-name, and category-delete race tests. The frontend suite executed nine Node tests and all nine passed, including the new CSV formula-neutralization and quote-escaping tests. CI verified migrations 001–005, the budget-category RESTRICT rule, the users.phone column, and migration order; frontend lint/build, secret scanning, both Docker builds, and aggregate CI passed. Flask-Limiter still warns that rate-limit counters use in-memory storage. This is CI evidence only; AWS live deployment, populated-volume migration, browser workflows, reboot recovery, backup restore, and shared production rate-limit storage remain unverified.
 
 ## QA-FIND-001 — Duplicate frontend source structures
 Classification: Observation. Status: Open.
@@ -1105,3 +1105,10 @@ Run `38272803374` passed all eight jobs for correction commit `f58bd3fbc4e75ae22
 **Required retest:** Wait for CI on the current code head. Confirm all CSV utility tests pass, frontend lint/build passes, and both Transactions and Reports call the shared helper for every cell. In a browser, export a report containing a test description beginning with `=1+1` and confirm the downloaded CSV stores it as text rather than a formula.
 
 **Closure evidence:** Passing current-head CI, exact tested commit SHA, the Node test results, and a sanitized sample of the exported report showing the formula prefix neutralized.
+
+
+## Latest correction CI checkpoint — 2026-10-12 (QA-FIND-082)
+
+CI run [38275606391](https://github.com/AyomideADEJARE1/Expense-Management-Platform/actions/runs/38275606391) passed all eight jobs for code commit `11d1756f083f51e6e18d51651f76bcb5d74a9af2`. Backend lint and 62 backend tests passed. Frontend lint/build and all nine Node tests passed, including tests for CSV formula neutralization, embedded-quote escaping, safe dates/numbers, and empty cells. The database migration job, secret scan, both Docker builds, and aggregate check passed.
+
+QA-FIND-082's code-level correction is therefore verified in CI. Browser downloads from both Transactions and Reports still need to be checked; this is not evidence of live AWS deployment. The known open items still include category-write authorization, shared production rate-limit storage, CSP/HSTS review, populated-volume migration, AWS deployment/version proof, browser journeys, reboot recovery, and backup restore.
