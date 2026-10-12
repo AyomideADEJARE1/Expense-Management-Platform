@@ -585,7 +585,7 @@ Run `38270979144` stopped at Flake8 because one line in the new partial-name pre
 
 **Required correction:** PR #54 now uses a shared calculation helper: a budget with no category includes all expenses in its month; a category budget includes only expenses in that category and month. Tests cover both cases and invalid amounts. The frontend now has a test script so CI executes these tests.
 
-**How to verify:** In the frontend test results, confirm the whole-month and category-specific tests pass. In a browser, add two same-month expenses in different categories and one expense from another month. Confirm the whole-month budget counts the first two only; the category budget counts only the selected category. Confirm the progress percentage and remaining amount update correctly.
+**How to verify:** In the frontend test results, confirm the whole-month and category-specific tests pass. Seed or create a whole-month budget through the authenticated API in a disposable test environment, then load it in the browser with two same-month expenses in different categories and one expense from another month. Confirm the whole-month budget counts the first two only; the category budget counts only the selected category. This verifies calculation behavior, not the separate unresolved question of whether the browser should create whole-month budgets. Confirm the progress percentage and remaining amount update correctly.
 
 **CI evidence:** Run `38272803374` passed all eight jobs for commit `f58bd3fbc4e75ae224c3bb3981a704d3c3ba1c45`; all four frontend budget-spending tests passed and the backend suite passed 62 tests twice. **Still required:** A redacted browser test recording or screenshots showing the expected totals; CI does not prove the live UI or AWS deployment. AWS runtime verification is a separate release check.
 
@@ -612,3 +612,15 @@ Run `38270979144` stopped at Flake8 because one line in the new partial-name pre
 **How QA will verify:** Search by category name, month, and unrelated text. Confirm only matching budgets appear and the whole-month budget has a clear title. Confirm expense and category results still work.
 
 **Evidence to close:** Passing current-head CI with the frontend search tests, plus browser evidence for matching and non-matching searches.
+
+
+### 55. Team lead/product owner: decide whether whole-month budgets are in scope
+**What happens:** The API and database allow budgets with no category, but the browser form currently requires a category. The QA correction fixes spending calculation for a whole-month budget if one exists; it does not add UI creation, because the product requirement has not been confirmed.
+
+**Why it matters:** Adding the option changes the user-facing feature scope. Removing API/database support would also be a design change and could affect existing data.
+
+**Required decision:** Confirm one of two options: (A) whole-month budgets are required—then approve an explicit “All Categories” form option and UI regression tests; or (B) budgets are category-only—then document that requirement consistently and decide whether unused whole-month API/database support should be removed in a separately reviewed change.
+
+**How to verify:** Record the decision in the requirements/PR discussion. If option A is selected, verify create, duplicate conflict (HTTP 409), edit, reload, delete, and whole-month spending totals. If option B is selected, verify the UI and documentation say category-only and review the API/schema disposition.
+
+**Evidence required:** A written team decision and, for the selected option, passing CI plus API/browser evidence. Do not close QA-FIND-061 solely because the calculation helper passes.
