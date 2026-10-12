@@ -285,9 +285,6 @@ def test_profile_partial_name_updates_preserve_the_other_name_part(client):
     )
 
 
-
-
-
 def test_profile_update_refreshes_updated_at_timestamp(client):
     email = f"qa-profile-updated-at-{uuid.uuid4().hex}@example.test"
     password = "TestPassword123!"
@@ -315,8 +312,8 @@ def test_profile_update_refreshes_updated_at_timestamp(client):
     with app.app_context():
         db.session.execute(
             db.text(
-                "UPDATE users SET updated_at = TIMESTAMP '2000-01-01 00:00:00' "
-                "WHERE email = :email"
+                "UPDATE users SET updated_at = "
+                "TIMESTAMP '2000-01-01 00:00:00' WHERE email = :email"
             ),
             {"email": email},
         )
