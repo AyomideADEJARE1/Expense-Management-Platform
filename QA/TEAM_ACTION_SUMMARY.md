@@ -53,9 +53,9 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Why it matters:** A test may pass once but fail the next time because old users or categories remain. A wrong local configuration could also point tests at a database that should not be changed.
 
-**Backend/test owner:** Use a dedicated disposable test database and reliable cleanup or transaction rollback. Refuse destructive test setup when the database is not clearly a test database.
+**Backend/test owner:** Use a dedicated disposable test database, reject database names marked production/staging/live, clean up the test tables after every test, and run the suite twice in CI.
 
-**QA check:** Run the test suite twice and in a different order. Results should remain stable and test data should not leak between runs.
+**QA check:** Confirm the test-database guard rejects unsafe names, cleanup resets data between tests, and two consecutive full test runs pass. The newest CI run is pending.
 
 ### 6. DevOps owner: deploy the exact version that passed CI
 **What happens:** The deployment workflow publishes commit-tagged images but deploys the moving `latest` tag. The VM also runs `git pull`, which can move its source checkout separately from the image.
@@ -142,9 +142,9 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Why it matters:** Leftover data can make tests unreliable, and incorrect database configuration could affect data outside the test environment.
 
-**Required correction:** Use a dedicated disposable test database. The correction branch now has a guard that refuses to run tests unless the configured database name contains a test/testing marker. This is a safety guard, not complete cleanup; reliable rollback/cleanup and repeatable-run behavior still need verification.
+**Required correction:** Use a dedicated disposable test database. The correction branch now uses an explicit test-database name guard, rejects production/staging/live markers, truncates the test tables and resets identities after each API test, and runs the backend suite twice in CI. The newest CI run must pass to verify the full correction.
 
-**QA verification and closure evidence:** Run the suite repeatedly and in a different order; retain the database guard/cleanup tests, CI output, and test database configuration.
+**QA verification and closure evidence:** Retain passing CI output showing both full test runs, database guard boundary tests, cleanup implementation, and the dedicated CI test database configuration.
 
 ### 15. Frontend/backend: normalize the signed-in user profile
 
