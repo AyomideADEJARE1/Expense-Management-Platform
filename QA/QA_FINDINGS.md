@@ -841,3 +841,18 @@ Correction proposed in PR #54: The shared currency utility now exposes `getCurre
 Required retest: Save each supported currency, revisit Dashboard, Transactions, Budgets, Reports, and search results, and verify all amount labels use the same selected symbol. Switch back to NGN and verify it updates consistently. Also verify totals and values do not change numerically when only the display currency preference changes.
 
 Closure evidence: Passing frontend lint/build for the exact commit and browser screenshots for each supported currency across the named screens, including the dashboard chart tooltip and budget search result.
+
+
+## QA-FIND-067 — Phone number appears editable in Settings but was not persisted
+
+Classification: Profile data integrity / UI-to-API mismatch. Status: Correction proposed in PR #54; latest CI retest pending. Priority: Medium.
+
+**What happens:** The Settings page exposes an editable Phone Number field. Before this correction, the user model had no phone column, the `GET /api/auth/me` response did not include phone, and `PUT /api/auth/me` did not save it. The frontend profile update payload also omitted phone. The page could therefore report that settings were saved even though the entered phone number was lost after reload.
+
+**Why it matters:** Users reasonably expect a visible profile field to persist. Losing the value without an error makes the profile form unreliable and undermines trust in the save confirmation.
+
+**Correction proposed in PR #54:** Adds nullable `users.phone VARCHAR(30)` through migration 005, maps the field in the user model, returns it from both current-profile endpoints, validates type/length/control characters, sends it from the frontend, and synchronizes it when profile state reloads. Blank input clears the optional value. The CI migration job now checks that the column exists, and the CD order check requires migration 005 to complete before app restart.
+
+**Required retest:** Confirm migration 005 works on a fresh database and an existing populated AWS database. Save a phone number, reload the profile, and confirm the exact value persists. Verify blank input clears it, non-string/overlong/control-character values return HTTP 400, and rejected updates preserve the previous number.
+
+**Closure evidence:** Passing CI for the exact commit, migration logs/schema evidence for `users.phone`, API request/response and read-back evidence, and an AWS staging/browser result after deployment.
