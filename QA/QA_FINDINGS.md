@@ -2,7 +2,7 @@
 
 Findings are evidence-based. QA is not judged by defect count.
 
-CI run 38270547450 passed all eight jobs for correction-branch commit 8d5fddc6c163a3f48986d22b770bd76d4547a81c. Backend lint passed and the suite passed 59 tests twice, including the trusted-proxy regression test. CI verified migrations 001–005, budget-category RESTRICT, the users.phone column, and migration order; frontend lint/build, secret scanning, both Docker builds, and the aggregate check passed. npm audit reported zero vulnerabilities. Flask-Limiter still warns that its rate-limit counters use in-memory storage. This is CI evidence only; AWS live deployment, populated-volume migration, browser flows, reboot recovery, backup restore, and shared production rate-limit storage remain unverified.
+Last fully green correction checkpoint: CI run 38270547450 passed all eight jobs for commit 8d5fddc6c163a3f48986d22b770bd76d4547a81c. Backend lint passed and the suite passed 59 tests twice, including the trusted-proxy regression test. CI verified migrations 001–005, budget-category RESTRICT, the users.phone column, and migration order; frontend lint/build, secret scanning, both Docker builds, and the aggregate check passed. npm audit reported zero vulnerabilities. A later partial-profile-name correction exposed one Flake8 E501 line-length failure in run 38270979144; the line was wrapped in commit 2316a358ca37495ecc41eff8aaf48f888654e5b8, and the rerun is pending. The new profile regression test is not yet CI-verified. Flask-Limiter still warns that its rate-limit counters use in-memory storage. This is CI evidence only; AWS live deployment, populated-volume migration, browser flows, reboot recovery, backup restore, and shared production rate-limit storage remain unverified.
 
 ## QA-FIND-001 — Duplicate frontend source structures
 Classification: Observation. Status: Open.
@@ -1012,3 +1012,7 @@ Classification: Account lifecycle / recoverability. Status: Open; product/securi
 **Required retest:** Run CI for the latest correction commit. Verify partial first-name and last-name updates preserve the omitted part, a request with an explicitly empty first name is still rejected, and the stored profile returned by `GET /api/auth/me` matches the successful update.
 
 **Closure evidence:** Passing CI for the exact commit, API request/response evidence for both partial update cases, and a read-back confirming the stored full name is correct.
+
+
+## Latest correction retest note — 2026-10-12
+Run `38270979144` failed at Flake8 before pytest ran because `backend/routes/auth.py:258` exceeded the configured line length by one character. The offending line was wrapped in correction commit `2316a358ca37495ecc41eff8aaf48f888654e5b8`. A new CI result is required; do not count the new partial-name regression test as passed until that run completes.
