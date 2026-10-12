@@ -337,6 +337,17 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Evidence to close:** Passing CI for the latest commit, database constraint reports `RESTRICT`, before/after API/database evidence, fresh/existing-volume migration logs, and AWS staging version/health evidence.
 
+### 31. Backend: handle category create/update commit errors
+**What happens:** Category create/update check for duplicate names before saving, but the database commit previously had no error handler. Two requests can race after the pre-check, and the database unique constraint can reject one request.
+
+**Why it matters:** A duplicate-name race may return an unhandled 500 instead of HTTP 409. Unexpected database errors also need rollback before the session can recover.
+
+**Required correction:** PR #54 now catches SQLAlchemy integrity errors, rolls back, and returns HTTP 409 only for the named category-name unique constraint. Other integrity failures and unexpected errors return a generic HTTP 500. Tests simulate the unique-constraint race for create and update and test recovery after an unexpected create failure.
+
+**How QA will verify:** Confirm duplicate constraint failures return 409; an unexpected commit failure returns a sanitized 500; a failed update preserves the old category name; and a later valid request succeeds.
+
+**Evidence to close:** Passing CI for the latest commit, API results for both conflict/error paths, and proof the failed update did not change stored data.
+
 ## Release checklist
 
 Do not mark a check as passed until evidence is attached.
@@ -357,4 +368,4 @@ Do not mark a check as passed until evidence is attached.
 - [ ] Public HTTPS security headers are checked and the approved CSP is tested.
 - [ ] Screenshots, workflow run links, commit SHA, and test results are attached.
 
-**Current overall status:** Several issues are documented and some source corrections have been proposed. CI run `38212158351` passed all eight jobs for correction commit `927e35eaf3af827d8b52ef93f6f883c6bfcaa667`; the backend suite passed 35 tests and migrations 001–004 were verified in CI. AWS deployment, populated-volume migration, staging failure/recovery, public health checks, and browser verification remain pending. The frontend package still has no test script, so frontend functional tests can be skipped by the optional CI command. Do not describe the whole project as release-ready until the blocking items above are closed with evidence.
+**Current overall status:** Several issues are documented and some source corrections have been proposed. Prior CI run `38212158351` passed all eight jobs for commit `927e35eaf3af827d8b52ef93f6f883c6bfcaa667`; the backend suite passed 35 tests and migrations 001–004 were verified in CI. A later source update adds category create/update commit error handling and needs its own CI result. AWS deployment, populated-volume migration, staging failure/recovery, public health checks, and browser verification remain pending. AWS deployment, populated-volume migration, staging failure/recovery, public health checks, and browser verification remain pending. The frontend package still has no test script, so frontend functional tests can be skipped by the optional CI command. Do not describe the whole project as release-ready until the blocking items above are closed with evidence.
