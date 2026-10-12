@@ -318,7 +318,7 @@ def test_profile_phone_is_persisted_and_invalid_values_are_rejected(client):
     assert persisted_profile.status_code == 200
     assert persisted_profile.get_json()["data"]["phone"] == "+234 803 123 4567"
 
-    invalid_values = [12345, "9" * 31, "123\\n456"]
+    invalid_values = [12345, "9" * 31, "123\n456"]
     for invalid_phone in invalid_values:
         rejected = client.put(
             "/api/auth/me",
