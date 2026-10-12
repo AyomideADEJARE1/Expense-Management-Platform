@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify
 from flask_jwt_extended import JWTManager
 from flask_limiter.errors import RateLimitExceeded
+from werkzeug.middleware.proxy_fix import ProxyFix
 from sqlalchemy.engine import URL
 
 from extensions import db, limiter
@@ -16,6 +17,16 @@ from routes.summaries import summaries_bp
 
 
 load_dotenv()
+
+
+def configure_trusted_proxy(app):
+    """Trust forwarding headers from exactly one reverse-proxy hop."""
+    app.wsgi_app = ProxyFix(
+        app.wsgi_app,
+        x_for=1,
+        x_proto=1,
+    )
+    return app
 
 
 def _is_strong_secret(value):
@@ -56,7 +67,7 @@ def validate_secret_configuration(secret_key, jwt_secret, environment):
         )
 
 
-app = Flask(__name__)
+app = configure_trusted_proxy(Flask(__name__))
 
 app_environment = (
     os.getenv("APP_ENV")
