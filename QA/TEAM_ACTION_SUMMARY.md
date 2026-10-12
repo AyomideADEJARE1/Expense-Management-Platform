@@ -492,11 +492,11 @@ This document tells the team what is wrong, why it matters, and who needs to act
 **Evidence to close:** Written threshold rules, passing boundary/duplicate-prevention tests, and browser evidence or approved revised settings wording.
 
 ### 45. DevOps: make the AWS stack recover after a VM reboot
-**What happens:** The Compose services do not define restart policies, and the reviewed deployment workflow does not install a systemd unit to start the stack after EC2 or Docker restarts.
+**What happens:** The original Compose services had no restart policies. PR #54 now adds `restart: unless-stopped` to PostgreSQL, backend, frontend, and Nginx, and CI checks for all four. AWS reboot recovery still needs a staging test.
 
 **Why it matters:** A normal VM reboot or Docker daemon restart may leave the application offline until someone manually starts it.
 
-**Required correction:** Add and document a reliable boot-recovery method. Use appropriate restart policies for PostgreSQL, backend, frontend, and Nginx; add a systemd unit if startup ordering requires it. Preserve the rule that migrations must finish before the new app starts.
+**Required correction:** Review the new restart policies and verify the AWS host starts Docker on boot. If a staging reboot shows ordering failures, add a systemd unit to start Compose and wait for database/application health. Preserve the rule that migrations must finish before the new app starts.
 
 **How QA will verify:** In AWS staging, reboot the VM or restart Docker. Confirm the stack returns without manual SSH commands, the database data persists, both public health endpoints recover, and the running image still matches the intended commit.
 
