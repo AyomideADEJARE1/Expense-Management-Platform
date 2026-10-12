@@ -143,11 +143,11 @@ PR #54 adds an npm override for `source-map-js` and updates `frontend/package-lo
 
 
 ## QA-FIND-018 — API CSV export can emit spreadsheet formulas from user-controlled text
-Classification: Security defect. Status: Formula-neutralization helper tests PASS in CI run `38164448383`; actual file/browser retest pending. Priority: High.
+Classification: Security defect. Status: Backend/frontend formula-neutralization tests PASS in CI run `38275606391`; actual file/browser retest pending. Priority: High.
 
 The backend `GET /api/expenses/export` writes expense descriptions and category names directly into CSV cells. CSV quoting alone does not prevent spreadsheet formula execution when a cell begins with characters such as `=`, `+`, `-`, or `@`. The frontend export had the same weakness for formula characters preceded by whitespace.
 
-The correction proposed in PR #54 prefixes potentially executable text cells in both backend and frontend CSV exports and adds regression tests for common formula prefixes. Retest both export paths with descriptions containing formula prefixes and leading whitespace before closing this finding.
+The correction in PR #54 prefixes potentially executable text cells in both backend and frontend CSV exports. CI run `38275606391` passed the backend suite (62 tests, repeated twice) and all nine frontend Node tests, including CSV formula-prefix neutralization and CSV quoting. Retest both export paths with descriptions containing formula prefixes and leading whitespace before closing this finding.
 
 ## QA-FIND-019 — Non-finite or oversized monetary values can trigger server/database errors
 Classification: Input-validation defect. Status: Create-path regression tests PASS in CI run `38164448383`; update-path coverage pending. Priority: Medium.
@@ -1112,3 +1112,7 @@ Run `38272803374` passed all eight jobs for correction commit `f58bd3fbc4e75ae22
 CI run [38275606391](https://github.com/AyomideADEJARE1/Expense-Management-Platform/actions/runs/38275606391) passed all eight jobs for code commit `11d1756f083f51e6e18d51651f76bcb5d74a9af2`. Backend lint and 62 backend tests passed. Frontend lint/build and all nine Node tests passed, including tests for CSV formula neutralization, embedded-quote escaping, safe dates/numbers, and empty cells. The database migration job, secret scan, both Docker builds, and aggregate check passed.
 
 QA-FIND-082's code-level correction is therefore verified in CI. Browser downloads from both Transactions and Reports still need to be checked; this is not evidence of live AWS deployment. The known open items still include category-write authorization, shared production rate-limit storage, CSP/HSTS review, populated-volume migration, AWS deployment/version proof, browser journeys, reboot recovery, and backup restore.
+
+
+## Latest code CI checkpoint — 2026-10-12
+CI run `38275606391` passed all eight jobs for code commit `11d1756f083f51e6e18d51651f76bcb5d74a9af2`. Backend lint passed and 62 backend tests passed twice. Frontend lint/build passed and all nine Node tests passed: budget-spending tests, budget-search tests, and CSV formula/quoting tests. Database migrations 001–005, secret scan, both Docker builds, and aggregate CI passed. npm audit reported zero vulnerabilities. This is CI evidence only. AWS populated-volume migrations, live deployment/version, public health checks, browser flows, reboot recovery, backup restore, and shared rate-limit storage remain open.
