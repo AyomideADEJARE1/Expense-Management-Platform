@@ -610,3 +610,8 @@ CI run 38272033341 passed all eight jobs for correction commit ea775178ea545b48b
 **Current correction:** PR #54 adds the missing `cp backend/.env.example backend/.env` instruction and explains the separate secret settings. Clean-start execution has not been observed yet.
 
 **Pass evidence:** Current CI result, recorded setup commands, `docker compose ps` showing all four services healthy, and successful local health checks. The code/CI result alone does not close the clean-start gate.
+
+
+## Latest code CI checkpoint — 2026-10-12
+
+CI run 38272803374 passed all eight jobs for correction commit f58bd3fbc4e75ae224c3bb3981a704d3c3ba1c45. Backend lint passed and 62 tests passed twice; the frontend suite executed four Node tests and all four passed, including whole-month and category-specific budget spending. Migrations 001–005, budget-category RESTRICT, the phone column, and migration order passed CI; frontend lint/build, secret scan, both Docker builds, and aggregate CI passed. npm audit reported zero vulnerabilities. Flask-Limiter still warns that storage is in-memory. This does not close AWS populated-volume migration, live deployment, public health, browser, reboot recovery, backup restore, or shared rate-limit storage gates.
