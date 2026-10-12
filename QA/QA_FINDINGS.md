@@ -638,7 +638,7 @@ Important limitations: the frontend package still has no test script, so the opt
 
 ## QA-FIND-056 — Deleting a category can change a user's budget meaning
 
-Classification: Confirmed data-integrity defect in the reviewed schema and category-delete flow. Status: Correction proposed in PR #54; CI/runtime retest pending. Priority: High; financial data correctness.
+Classification: Confirmed data-integrity defect in the reviewed schema and category-delete flow. Status: Source correction and CI tests pass in run 38213583630; populated AWS-volume/runtime retest pending. Priority: High; financial data correctness.
 
 Evidence: `database/migrations/001_initial_schema.sql` defines `fk_budgets_category` with `ON DELETE SET NULL`, and `backend/models/budget.py` mirrors that behavior. A budget whose `category_id` is cleared is treated by the API as a whole-month budget. The category-delete route checks whether expenses use the category, but it does not check whether budgets use it. Migration 003 now enforces one whole-month budget per user/month, so a category deletion can either silently reclassify an existing category budget or fail if that user already has a whole-month budget for the same month.
 
@@ -660,7 +660,7 @@ This result supersedes the older CI checkpoint recorded earlier in this file for
 
 ## QA-FIND-057 — Category create/update do not handle database commit failures
 
-Classification: API error handling and data consistency. Status: Correction proposed in PR #54; current CI/runtime retest pending. Priority: Medium.
+Classification: API error handling and data consistency. Status: Source correction and regression tests pass in CI run 38213583630; AWS/runtime retest pending. Priority: Medium.
 
 Evidence: In the reviewed category API, create and update check whether the category name already exists, but the database commit was previously outside a guarded error handler. The database also enforces a unique category name. If two requests race after the pre-check, or the database rejects the commit for another reason, the route can raise an unhandled exception rather than return the documented conflict/server response. The failed SQLAlchemy transaction also requires rollback before the session can be used again.
 
@@ -682,7 +682,7 @@ This checkpoint supersedes the prior 35-test CI checkpoint for the correction br
 
 ## QA-FIND-058 — Email uniqueness races return a server error instead of a conflict
 
-Classification: API error handling and account consistency. Status: Correction proposed in PR #54; current CI/runtime retest pending. Priority: Medium.
+Classification: API error handling and account consistency. Status: Source correction and regression tests pass in CI run 38213583630; AWS/runtime retest pending. Priority: Medium.
 
 Evidence: Registration checks whether an email already exists before inserting a user, and profile update checks whether another user already owns the requested email. Both checks can race with another request. The database enforces unique email values, but the reviewed commit handlers previously mapped every commit exception to HTTP 500 instead of distinguishing a duplicate-email constraint violation.
 
