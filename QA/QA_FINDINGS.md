@@ -1035,3 +1035,7 @@ Run `38271222415` passed all eight CI jobs for commit `2316a358ca37495ecc41eff8a
 **Required retest:** Run CI for the latest correction commit. Verify both foreign-key names map to 409, unexpected database errors still map to 500, and the category remains present after a rejected delete. On AWS staging, if feasible, exercise deletion while another request creates a linked budget and confirm the database retains the relationship.
 
 **Closure evidence:** Passing CI for the exact commit, API response and read-back from the simulated budget-foreign-key conflict, regression results for unexpected failures, and AWS staging evidence if the race test can be safely performed.
+
+
+## Latest correction CI checkpoint — 2026-10-12
+CI run `38272033341` passed all eight jobs for correction commit `ea775178ea545b48bfea9cdaadd77b7b0965d4b8`. Backend lint passed and 61 backend tests passed, including the category-delete budget foreign-key race. Database migration checks, secret scan, frontend lint/build, both Docker builds, and aggregate CI passed. Flask-Limiter continues to warn about in-memory rate-limit storage. AWS deployment, populated-volume migration, browser journeys, reboot recovery, backup restore, and shared production rate-limit storage remain unverified.
