@@ -465,10 +465,10 @@ Run `38219803561` passed all eight jobs for commit `92eefc22555c7c98df2400147210
 
 **Check:** Deploy the reviewed commit to AWS staging and record the running container IDs/image tags. Reboot the EC2 VM or restart Docker. Do not SSH in to manually run Compose. Verify PostgreSQL, backend, frontend, and Nginx return to healthy status, both public health endpoints recover, and the expected commit-specific images remain in use. Confirm saved test users, expenses, and budgets still exist. Verify startup recovery does not bypass migration ordering.
 
-**Current source correction:** PR #54 adds `restart: unless-stopped` to all four Compose services. CI run `38221334646` passed all eight jobs and verified all four policies in the resolved Compose configuration. AWS reboot recovery has not been demonstrated; confirm Docker starts on boot and the stack becomes healthy without manual intervention.
+**Current source correction:** PR #54 adds `restart: unless-stopped` to all four Compose services. CI run `38221595123` passed all eight jobs and verified all four policies in the resolved Compose configuration. AWS reboot recovery has not been demonstrated; confirm Docker starts on boot and the stack becomes healthy without manual intervention.
 
 **Pass evidence:** Restart/recovery timestamps, container health and image versions before/after, successful public health checks, and data-persistence results.
 
 
 ## Latest code CI checkpoint — 2026-10-12
-Run `38221334646` passed all eight jobs for code commit `5912343a9b07b1976456bacdb8c5023d1cfdb8aa`; 58 backend tests passed twice. CI verified migrations 001–005, the users.phone column, the budget-category RESTRICT rule, and restart policies for all four Compose services. Actual AWS reboot recovery, populated-volume migration, live deployment/health, browser journeys, production rate-limit storage/proxy handling, CSP/HSTS, currency semantics, and notification delivery remain open.
+Run `38221595123` passed all eight jobs for source-branch head `72ff22992e8561b5c85422f664854a7bce964ff7`; 58 backend tests passed twice. CI verified migrations 001–005, the users.phone column, the budget-category RESTRICT rule, and restart policies for all four Compose services. Actual AWS reboot recovery, populated-volume migration, live deployment/health, browser journeys, production rate-limit storage/proxy handling, CSP/HSTS, currency semantics, and notification delivery remain open.
