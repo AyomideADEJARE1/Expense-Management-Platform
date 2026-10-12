@@ -331,7 +331,7 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Why it matters:** The saved budget can change meaning without the user editing it. Budget totals, alerts, and reports may then be misleading.
 
-**Required correction:** PR #54 now checks for budgets that reference a category, returns HTTP 409 when any exist, changes the SQLAlchemy model to `ON DELETE RESTRICT`, and adds migration 004 to enforce the same rule in PostgreSQL. CI checks the foreign-key rule and the migration order. The newest correction still needs its current CI result and fresh/existing-volume verification.
+**Required correction:** PR #54 now checks for budgets that reference a category, returns HTTP 409 when any exist, changes the SQLAlchemy model to `ON DELETE RESTRICT`, and adds migration 004 to enforce the same rule in PostgreSQL. CI checks the foreign-key rule and the migration order. CI run `38212158351` passed all eight jobs for commit `927e35eaf3af827d8b52ef93f6f883c6bfcaa667`, including the new API/constraint tests and migration order check. Fresh/existing AWS volume verification is still pending.
 
 **How QA will verify:** Create a category-linked budget, try to delete the category, and confirm HTTP 409. Verify the budget remains and its category ID and amount do not change. Repeat when a whole-month budget also exists. Test migration 004 on a clean database and a populated AWS volume.
 
@@ -357,4 +357,4 @@ Do not mark a check as passed until evidence is attached.
 - [ ] Public HTTPS security headers are checked and the approved CSP is tested.
 - [ ] Screenshots, workflow run links, commit SHA, and test results are attached.
 
-**Current overall status:** Several issues are documented and some source corrections have been proposed. The correction branch has a reported successful CI run, but AWS deployment and browser verification remain pending. Do not describe the whole project as release-ready until the blocking items above are closed with evidence.
+**Current overall status:** Several issues are documented and some source corrections have been proposed. CI run `38212158351` passed all eight jobs for correction commit `927e35eaf3af827d8b52ef93f6f883c6bfcaa667`; the backend suite passed 35 tests and migrations 001–004 were verified in CI. AWS deployment, populated-volume migration, staging failure/recovery, public health checks, and browser verification remain pending. The frontend package still has no test script, so frontend functional tests can be skipped by the optional CI command. Do not describe the whole project as release-ready until the blocking items above are closed with evidence.
