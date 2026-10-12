@@ -55,3 +55,5 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 | REQ-38 | Category deletion preserves budget meaning | TC-CAT-008–009, RV-25 | PR #54 adds a linked-budget pre-check and migration 004 with `ON DELETE RESTRICT`; run 38212158351 passed the migration, constraint, and API tests. Fresh/existing AWS volume verification is pending |
 
 | REQ-39 | Category create/update handle database commit failures safely | TC-CAT-010–011, RV-26 | PR #54 adds named-constraint conflict handling and rollback; CI run 38212554474 passed all 37 backend tests. AWS runtime retest remains pending |
+
+| REQ-40 | Account email uniqueness conflicts are handled safely | TC-AUTH-012–013, RV-27 | PR #54 adds named-constraint handling and rollback tests; latest CI result pending |
