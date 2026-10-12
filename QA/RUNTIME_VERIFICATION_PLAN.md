@@ -502,3 +502,19 @@ Run `38221595123` passed all eight jobs for source-branch head `72ff22992e8561b5
 **Pass evidence:** Configuration review; automated tests for trusted proxy handling, independent clients, and forged-header resistance; redacted shared-store configuration evidence; AWS request/response logs showing independent counters, restart behavior, and expected 429 results.
 
 **Fail conditions:** All clients share one proxy counter; forwarded headers can be spoofed; counters unexpectedly reset or diverge between instances; no shared store is configured for a multi-instance deployment; or 429 behavior does not match the documented policy. A green CI run alone does not close this gate.
+
+
+## RV-44 — Verify email change identity and verification flow
+
+**Finding:** QA-FIND-074. **Owner:** Backend + product/security. **Status:** Open.
+
+**Procedure:**
+1. Record the approved email-change policy and whether email delivery is in scope.
+2. Attempt to change the account email with a valid JWT but without the required re-authentication. Verify the expected rejection if re-authentication is required.
+3. Request an email change to a new address. Before verifying it, log out/in with the old and new addresses and confirm the old address remains active until the verification step succeeds.
+4. Test duplicate address, invalid/expired/reused verification token, request throttling, and a valid one-time verification.
+5. Confirm the old address is notified where required and that token/session behavior follows the approved policy.
+
+**Pass evidence:** Approved policy, automated test results, redacted email delivery/verification trace, and staging API/browser evidence for rejected and successful changes.
+
+**Fail conditions:** An unverified new email becomes the login identity, a verification token can be reused or never expires, duplicate-email races return the wrong result, or the implementation contradicts the written policy.
