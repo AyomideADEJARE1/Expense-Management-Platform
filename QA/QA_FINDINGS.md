@@ -811,3 +811,18 @@ Correction proposed in PR #54: The three API-response `console.log` statements h
 Required retest: Confirm current frontend lint/build CI passes and search the active frontend source for remaining response-level debug logs. Complete a browser smoke test to verify the dashboard still loads categories, expenses, and budgets without relying on the removed logs.
 
 Closure evidence: Passing current CI, source search results for remaining console calls, and browser evidence showing the dashboard renders expected data.
+
+
+## QA-FIND-065 — UTC date conversion can shift the displayed month or expense date
+
+Classification: Date correctness / timezone handling. Status: Correction proposed in PR #54; current CI retest pending. Priority: Medium.
+
+Evidence: The dashboard previously derived the current month with `new Date().toISOString().slice(0, 7)`, and the transaction form defaulted dates with `toISOString().split('T')[0]`. ISO serialization uses UTC, so around midnight in a local timezone ahead of UTC, the app can choose the previous local calendar day/month. The Reports page also parsed a date-only value with `new Date("YYYY-MM-DD")`, which JavaScript interprets as UTC; in timezones west of UTC, reading local year/month/day can shift an expense into the prior day or month.
+
+Impact: At timezone boundaries, the dashboard can request the wrong month, a new expense can default to yesterday, and monthly reports can group a transaction into the wrong month. This can make budget alerts, summaries, and reports disagree with the date the user sees or selected.
+
+Correction proposed in PR #54: The dashboard now derives `YYYY-MM` from local year/month fields; the transaction form uses a local-calendar date helper; Reports parses date-only values as local midnight.
+
+Required retest: Confirm frontend lint/build passes. Test at a timezone and clock time where local date differs from UTC, including the first day of a month: the dashboard must request the local month, a new transaction must default to the local date, and reports must group date-only expenses into the month encoded in the API value.
+
+Closure evidence: Passing CI for the exact commit, browser test results with timezone/local date recorded, and proof that the displayed/defaulted date and report month match the API's date-only value.
