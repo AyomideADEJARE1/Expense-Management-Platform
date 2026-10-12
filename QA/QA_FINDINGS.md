@@ -550,7 +550,7 @@ PR #54 now configures ProxyFix for exactly one trusted Nginx hop and adds a regr
 
 ## QA-FIND-052 — Category deletion maps every database failure to a conflict
 
-Classification: API error handling / operational diagnosis. Status: Correction proposed in PR #54; CI and retest pending. Priority: Medium.
+Classification: API error handling / operational diagnosis. Status: CI passed for correction commit ea775178ea545b48bfea9cdaadd77b7b0965d4b8; AWS runtime retest pending. Priority: Medium.
 
 Evidence: Upstream main's category delete handler catches every exception from the database commit and returns HTTP 409 with a message saying the category is used by an expense. That response is only accurate for the relevant expense foreign-key violation. A database outage or unexpected programming error would be mislabeled as a user conflict.
 
@@ -1032,7 +1032,7 @@ Run `38271222415` passed all eight CI jobs for commit `2316a358ca37495ecc41eff8a
 
 **Correction proposed in PR #54:** The category delete handler now classifies both `fk_expenses_category` and `fk_budgets_category` as expected reference conflicts and returns HTTP 409 with a message that covers expenses and budgets. A regression test simulates the budget foreign-key race and verifies the category remains stored.
 
-**Required retest:** Run CI for the latest correction commit. Verify both foreign-key names map to 409, unexpected database errors still map to 500, and the category remains present after a rejected delete. On AWS staging, if feasible, exercise deletion while another request creates a linked budget and confirm the database retains the relationship.
+**Required retest:** CI run 38272033341 passed the regression test for `fk_budgets_category`. Verify both foreign-key names map to 409, unexpected database errors still map to 500, and the category remains stored. On AWS staging, if feasible, exercise deletion while another request creates a linked budget and confirm the database retains the relationship.
 
 **Closure evidence:** Passing CI for the exact commit, API response and read-back from the simulated budget-foreign-key conflict, regression results for unexpected failures, and AWS staging evidence if the race test can be safely performed.
 
