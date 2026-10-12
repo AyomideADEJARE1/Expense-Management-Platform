@@ -355,3 +355,14 @@ Latest correction CI result: run `38213904072` passed all eight jobs for commit 
 **If category-only budgets are intended:** Record the decision in the requirements documentation and ensure the UI/API documentation consistently describes the scope.
 
 **Pass evidence:** Written requirement decision and either successful browser/API tests or updated scope documentation. Keep status as OBSERVATION until that decision is made.
+
+
+## RV-32 — Validate month filters and summary endpoints consistently
+
+**Related finding:** QA-FIND-062.
+
+**Check:** With a user who has known October 2026 expenses, confirm `/api/expenses?month=2026-10`, `/api/summaries/monthly?month=2026-10`, and `/api/summaries/category?month=2026-10` return expected data/totals. Send `month=2026-1` and `month=2026-010` to all three endpoints; each must return HTTP 400.
+
+**Current source correction:** The three endpoints now validate the exact `YYYY-MM` format before converting year/month components. Regression tests cover invalid formats and verify monthly/category totals against a known expense. CI is pending for the newest change.
+
+**Pass evidence:** Passing CI for the exact commit, recorded responses for valid and invalid values, and expected-vs-actual summary totals. If the live deployment does not match the tested commit, repeat the API checks against the deployed version before release.
