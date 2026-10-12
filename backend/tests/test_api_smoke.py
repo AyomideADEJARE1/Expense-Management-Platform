@@ -374,6 +374,33 @@ def test_expense_date_range_filters_and_validation(client):
     )
     assert malformed_date.status_code == 400
 
+    noncanonical_create = client.post(
+        "/api/expenses",
+        headers=headers,
+        json={
+            "category_id": category_id,
+            "amount": 10,
+            "description": "Noncanonical date test",
+            "expense_date": "20261011",
+        },
+    )
+    assert noncanonical_create.status_code == 400
+
+    expense_id = filtered.get_json()["data"][0]["id"]
+    noncanonical_update = client.put(
+        f"/api/expenses/{expense_id}",
+        headers=headers,
+        json={"expense_date": "20261012"},
+    )
+    assert noncanonical_update.status_code == 400
+
+    unchanged = client.get(
+        f"/api/expenses/{expense_id}",
+        headers=headers,
+    )
+    assert unchanged.status_code == 200
+    assert unchanged.get_json()["data"]["expense_date"] == "2026-10-10"
+
 
 def test_non_object_json_bodies_are_rejected(client):
     for endpoint in (
