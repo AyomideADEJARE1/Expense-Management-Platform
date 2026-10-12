@@ -10,6 +10,7 @@ import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import { ToastProvider, useToast } from './context/ToastContext';
 import { api } from './services/api';
+import { formatCurrency } from './utils/currency';
 
 function MainAppContent() {
   const { user, loading: authLoading } = useAuth();
@@ -133,7 +134,7 @@ function MainAppContent() {
         sourceType: 'Budget',
         tab: 'budgets',
         title: `Category #${b.category_id} Budget`,
-        subtitle: `Month: ${b.month} • Limit: ₦${b.amount?.toLocaleString()}`,
+        subtitle: `Month: ${b.month} • Limit: ${formatCurrency(b.amount, user?.currency || 'NGN (₦)')}`,
         amount: b.amount,
       });
     });
