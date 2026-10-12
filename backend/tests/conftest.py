@@ -15,7 +15,18 @@ def is_test_database(database_name):
     if not isinstance(database_name, str):
         return False
     normalized = database_name.lower()
-    return "test" in normalized or "testing" in normalized
+    if any(
+        marker in normalized
+        for marker in ("prod", "production", "staging", "live")
+    ):
+        return False
+
+    return (
+        normalized in {"test", "testing"}
+        or normalized.startswith("test_")
+        or normalized.endswith("_test")
+        or "_test_" in normalized
+    )
 
 
 @pytest.fixture(scope="session", autouse=True)
