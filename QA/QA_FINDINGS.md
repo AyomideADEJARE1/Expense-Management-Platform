@@ -1186,3 +1186,18 @@ QA-FIND-084 is verified at the source/CI level. The production container still u
 CI run [38277483412](https://github.com/AyomideADEJARE1/Expense-Management-Platform/actions/runs/38277483412) passed all eight jobs for code commit `2cc775b4ddc514e8dea5c6c1d80d633d47991ff1`. Backend lint and 69 backend tests passed. Frontend lint/build and all nine Node tests passed. Database migration checks, secret scan, both Docker builds, and aggregate CI passed.
 
 QA-FIND-082 through QA-FIND-085 now have source-level corrections covered by CI. Browser export/download and spreadsheet-encoding checks remain open. CI still reports the Flask-Limiter in-memory-storage warning. AWS deployment/version proof, populated-volume migration, public health, reboot recovery, backup restore, and shared production rate-limit storage remain unverified.
+
+
+## QA-FIND-086 — Backend connects to PostgreSQL with the bootstrap database user
+
+**Classification:** Database privilege / least-privilege security. **Priority:** High. **Status:** Open; requires a database-role design and migration before production closure.
+
+**Evidence:** In `docker-compose.yml`, the PostgreSQL service initializes with `POSTGRES_USER` and `POSTGRES_PASSWORD`. The backend service receives the same `POSTGRES_USER` and `POSTGRES_PASSWORD` values. The official PostgreSQL container uses `POSTGRES_USER` as its initial database superuser unless configured otherwise, so the application connects using the bootstrap superuser rather than a restricted runtime role.
+
+**Why it matters:** If an API vulnerability or application compromise allows SQL execution, the attacker inherits excessive database privileges. A superuser role can alter database-wide objects and roles, create/drop databases, and bypass controls that should protect data. The application needs normal read/write access to its own schema, not database-administration powers.
+
+**Required correction:** DevOps/backend/database owners should separate the bootstrap/migration role from the application runtime role. The runtime role should have only the schema/table/sequence privileges required by the application. Keep the admin credential out of the backend container and use it only for initialization and controlled migrations. Design a safe migration for existing AWS databases, including ownership/grant changes; do not rotate the shared credentials without a deployment plan.
+
+**Required retest:** On a fresh database and a copy of an existing database, confirm the application can register/login, read/write expenses, budgets, categories, and profile settings using the restricted role. Then verify the application role cannot create/drop databases or roles, cannot alter unrelated schemas, and cannot perform superuser-only actions. Confirm migrations still run with the separate administrative role and that rollback/recovery remains possible.
+
+**Closure evidence:** Reviewed role/privilege design, migration SQL or provisioning script, least-privilege permission test output, successful application CRUD tests using the runtime role, AWS staging migration logs, and proof that the backend container receives no bootstrap-admin password. This finding is not closed by a green application CI run alone.
