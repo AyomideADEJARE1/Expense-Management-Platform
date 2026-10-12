@@ -515,6 +515,17 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Evidence to close:** Backup schedule/configuration, retention/access policy, redacted successful restore log, data-integrity checks, and pre-migration backup recovery evidence.
 
+### 47. Backend/DevOps: make rate limits correct for real clients
+**What happens:** The backend uses Flask-Limiter's remote-address key, but requests pass through Nginx and the Flask app does not configure trusted-proxy handling. Users may share the proxy's rate-limit counter. The limiter also uses in-memory storage, which resets on restart and is not shared between backend instances.
+
+**Why it matters:** One user's login attempts can block other users, while restarts or multiple instances can weaken abuse protection.
+
+**Required correction:** Agree on the trusted proxy boundary, configure the backend to use the real client address only from the trusted Nginx hop, prevent direct/untrusted access from spoofing forwarded headers, and configure approved shared rate-limit storage for AWS through environment settings. Keep local development configuration separate.
+
+**How QA will verify:** Through AWS/Nginx, test two distinct clients, verify independent counters and the expected 429 limit, try spoofed forwarded headers, restart the backend, and verify the counter behavior. If more than one backend instance is used, verify counters are shared.
+
+**Evidence to close:** Reviewed configuration, CI tests for client identity and spoofed headers, shared-store configuration, and AWS staging logs showing independent limits, restart behavior, and expected 429 responses.
+
 ## Release checklist
 
 Do not mark a check as passed until evidence is attached.
@@ -532,7 +543,7 @@ Do not mark a check as passed until evidence is attached.
 - [ ] The running image matches the tested commit.
 - [ ] The AWS VM can pull the published images using the intended permissions.
 - [ ] Both health endpoints work through Nginx.
-- [ ] Production rate limits use the approved shared storage configuration and are verified per client through the Nginx proxy.
+- [ ] Production rate limits use the approved shared storage configuration, trust only the known Nginx proxy hop, and are verified independently per client through the public AWS endpoint.
 - [ ] Registration, current-user profile display, expense search navigation, expense ownership, filters, CSV export, budget creation/editing (including historical month preservation and read-only calculated spending), and dashboard totals pass browser testing.
 - [ ] Public HTTPS security headers are checked and the approved CSP is tested.
 - [ ] Screenshots, workflow run links, commit SHA, and test results are attached.
