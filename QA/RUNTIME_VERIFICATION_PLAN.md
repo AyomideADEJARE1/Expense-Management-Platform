@@ -328,7 +328,7 @@ Latest correction CI result: run `38213904072` passed all eight jobs for commit 
 
 **Check:** Through the API, create an expense with `2026-10-12` and confirm it succeeds. Attempt to create and update an expense with a compact or otherwise noncanonical date such as `20261012`; each must return HTTP 400. After a rejected update, fetch the expense and confirm the original date is unchanged.
 
-**Current source correction:** PR #54 compares `date.fromisoformat(value).isoformat()` to the submitted value in both create and update. A regression test has been added, but its current CI run is pending.
+**Current source correction:** PR #54 compares `date.fromisoformat(value).isoformat()` to the submitted value in both create and update. CI run `38215898127` passed all eight jobs for commit `9b00f76863b48686bb5fe232926e20ee1d383eb0`, including the new regression test.
 
 **Pass evidence:** Passing current CI and the exact commit SHA, successful canonical-date request, rejected noncanonical create/update responses, and the unchanged stored date after a rejected update. AWS runtime testing is optional for this input-contract gate unless the deployed API differs from the tested commit; live browser journeys remain a separate release gate.
 
@@ -339,7 +339,7 @@ Latest correction CI result: run `38213904072` passed all eight jobs for commit 
 
 **Check:** Create a budget using a canonical first-of-month value such as `2026-10-01` and confirm it succeeds. Try to create another budget using a compact month value such as `20261101`; it must return HTTP 400. Attempt to update the existing budget using the compact value and confirm HTTP 400, then fetch it and verify the original month is unchanged.
 
-**Current source correction:** PR #54 now requires `parsed_month.isoformat() == month` on both budget create and update, in addition to checking that the day is 1. Regression tests have been added; current CI is pending.
+**Current source correction:** PR #54 now requires `parsed_month.isoformat() == month` on both budget create and update, in addition to checking that the day is 1. CI run `38215898127` passed all eight jobs for commit `9b00f76863b48686bb5fe232926e20ee1d383eb0`, including the new regression assertions.
 
 **Pass evidence:** Passing CI for the exact commit, successful canonical request, rejected compact create/update requests, and a read-back confirming no change after the rejected update. This API contract gate can be verified in CI; it does not replace AWS deployment and browser end-to-end checks.
 
