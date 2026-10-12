@@ -366,3 +366,14 @@ Latest correction CI result: run `38213904072` passed all eight jobs for commit 
 **Current source correction:** The three endpoints now validate the exact `YYYY-MM` format before converting year/month components. Regression tests cover invalid formats and verify monthly/category totals against a known expense. CI run `38216409164` passed all eight jobs for commit `7c3eb3a08464ff9b97ce854f5a105383db8646cb`; Flake8 and all 48 backend tests passed, including the month-query/summary regression test.
 
 **Pass evidence:** Passing CI for the exact commit, recorded responses for valid and invalid values, and expected-vs-actual summary totals. If the live deployment does not match the tested commit, repeat the API checks against the deployed version before release.
+
+
+## RV-33 — Validate category-name length before database writes
+
+**Related finding:** QA-FIND-063.
+
+**Check:** Submit a valid category name of 100 characters and confirm it is accepted if unique. Submit a 101-character name for create and update; both must return HTTP 400. After the rejected update, fetch the category and confirm its original name remains unchanged.
+
+**Current source correction:** PR #54 now checks the 100-character limit on both create and update. Regression coverage has been added; the latest CI run is pending.
+
+**Pass evidence:** Passing CI for the exact commit, responses for 100- and 101-character values, and a read-back proving a rejected update did not modify the record.
