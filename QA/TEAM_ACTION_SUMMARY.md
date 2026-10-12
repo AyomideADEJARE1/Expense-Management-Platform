@@ -401,7 +401,7 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **How QA will verify:** With known expense records, verify the valid month filter and both summary endpoints return expected data. Confirm `2026-1` and `2026-010` return HTTP 400 on all three endpoints.
 
-**Evidence to close:** Passing current CI for the exact commit, responses for valid/invalid query values, and expected-vs-actual summary totals. The backend job in CI run `38216409164` passed Flake8 and all 48 backend tests, including the month-query/summary regression test; Docker builds and aggregate CI were still running at the last check.
+**Evidence to close:** Passing current CI for the exact commit, responses for valid/invalid query values, and expected-vs-actual summary totals. CI run `38216409164` passed all eight jobs for commit `7c3eb3a08464ff9b97ce854f5a105383db8646cb`; Flake8 and all 48 backend tests passed, including the month-query/summary regression test.
 
 ## Release checklist
 
