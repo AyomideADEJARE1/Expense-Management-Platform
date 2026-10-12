@@ -5,7 +5,7 @@ import pytest
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
-from app import app, validate_secret_configuration
+from app import app, debug_mode_enabled, validate_secret_configuration
 from extensions import db, limiter
 from routes.expenses import safe_csv_cell
 from routes.budgets import _is_budget_uniqueness_violation
@@ -1368,6 +1368,24 @@ def test_registration_unexpected_commit_failure_rolls_back_and_recovers(
         ),
     ],
 )
+@pytest.mark.parametrize(
+    ("environment", "expected"),
+    [
+        ("production", False),
+        ("prod", False),
+        ("development", True),
+        ("dev", True),
+        ("testing", True),
+        ("test", True),
+        ("", False),
+    ],
+)
+def test_debug_mode_is_enabled_only_for_explicit_nonproduction_modes(
+    environment, expected
+):
+    assert debug_mode_enabled(environment) is expected
+
+
 def test_production_secret_validation_rejects_unsafe_signing_keys(
     secret_key, jwt_secret
 ):
