@@ -619,3 +619,20 @@ CI run 38272803374 passed all eight jobs for correction commit f58bd3fbc4e75ae22
 
 ## Latest CI checkpoint — 2026-10-12
 Run `38272803374` passed all eight jobs for correction commit `f58bd3fbc4e75ae224c3bb3981a704d3c3ba1c45`. Backend tests passed 62 tests twice. Frontend CI executed the newly added budget-spending tests: 4 passed, 0 failed. Database migrations, secret scan, frontend lint/build, both Docker builds, and aggregate CI passed. This does not close AWS or browser-runtime gates.
+
+
+## RV-51 — Verify global search filters budget results correctly
+
+**Finding:** QA-FIND-081. **Owner:** Frontend + QA. **Status:** Open pending current-head CI and browser retest.
+
+**Procedure:**
+1. Create or load budgets for at least two categories and two months.
+2. Search by one category name; verify only the matching category budget is included.
+3. Search by month; verify only budgets whose month/limit text matches appear.
+4. Search for unrelated text; verify no budgets appear unless the text genuinely matches a title or subtitle.
+5. If a whole-month budget exists, verify it displays a clear “Overall Monthly Budget” title.
+6. Confirm matching expense and category search results still work.
+
+**Pass evidence:** Passing CI for the current code head, output showing the new Node tests ran, and browser evidence for category/month/non-matching searches.
+
+**Fail conditions:** Unrelated budgets are returned, matching budgets are omitted, or the change breaks expense/category search.
