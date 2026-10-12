@@ -796,3 +796,18 @@ Correction proposed in PR #54: Category create/update now reject names longer th
 Required retest: CI run `38217288387` passed all eight jobs for commit `52438ec387ed2c9bfaff56081930e6df317604dd`; both full pytest runs passed all 57 tests, including the category-name boundary test. Verify a 100-character name is accepted where otherwise valid, a 101-character name returns HTTP 400 on create/update, and a rejected update does not change the stored category.
 
 Closure evidence: Passing current CI and exact commit SHA, API responses for the boundary values, and a read-back confirming the category name remains unchanged.
+
+
+## QA-FIND-064 — Frontend debug logs expose API response data in the browser console
+
+Classification: Privacy / production hygiene. Status: Correction proposed in PR #54; current CI retest pending. Priority: Low–Medium.
+
+Evidence: The reviewed `frontend/src/App.jsx` logged the full categories, expenses, and budgets API response objects using `console.log`. Expense and budget response objects include financial details such as amounts, dates, descriptions, and budget limits.
+
+Impact: The console can retain or reveal financial records during screen-sharing, support sessions, browser inspection, or debugging. Debug logs also make production output noisy and can accidentally expose data if logging is later forwarded to a collection service.
+
+Correction proposed in PR #54: The three API-response `console.log` statements have been removed from `frontend/src/App.jsx`.
+
+Required retest: Confirm current frontend lint/build CI passes and search the active frontend source for remaining response-level debug logs. Complete a browser smoke test to verify the dashboard still loads categories, expenses, and budgets without relying on the removed logs.
+
+Closure evidence: Passing current CI, source search results for remaining console calls, and browser evidence showing the dashboard renders expected data.
