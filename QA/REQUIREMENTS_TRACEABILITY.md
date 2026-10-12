@@ -73,7 +73,7 @@ Budget create/update now require the submitted month to parse as a date, be the 
 
 ## QA-FIND-061 trace — whole-month budget UI scope
 
-The API/database support a whole-month budget with `category_id = NULL`, but the browser form requires a category. This remains an observation until the team confirms whether the capstone requires overall monthly budgets. If required, the UI needs an explicit overall-budget option and browser/API tests; if not, the scope and documentation should state that budgets are category-specific.
+The API/database support a whole-month budget with `category_id = NULL`, but the browser form requires a category. The dashboard's current spending calculation also matches by category ID, so it would count no ordinary expenses for a null-category budget. This remains an observation until the team confirms whether the capstone requires overall monthly budgets. If required, the UI needs an explicit overall-budget option, a calculation that counts all same-month expenses for it, and browser/API tests; if not, the scope and documentation should state that budgets are category-specific.
 
 
 ## QA-FIND-062 trace — month query format and summary correctness
