@@ -268,3 +268,13 @@ Related finding: QA-FIND-055. Priority: Medium–High.
 CI now requires the CD workflow to start PostgreSQL with `docker compose up -d --wait postgres`, apply migrations 002 and 003, and only then restart application services. Confirm the CI order check passes. In staging, restart PostgreSQL from a cold state and verify the migration commands begin only after the database health check is successful.
 
 Pass evidence: CI order check, staging deployment logs showing the health wait, successful migrations, and application/database health checks.
+
+
+## RV-25 — Preserve budget category links when deleting categories
+Related finding: QA-FIND-056. Priority: High.
+
+Source correction in PR #54 adds a route-level check for linked budgets, changes the database foreign key to `ON DELETE RESTRICT` through migration 004, updates the SQLAlchemy model, and adds API/database constraint tests. The latest correction CI result must pass before source-level checks are considered verified.
+
+Run the API test with a category-linked budget and confirm category deletion returns HTTP 409. Confirm the budget remains present with the same category ID and amount. Repeat where a whole-month budget already exists for the same user/month; the result must still be a clear 409, not an unhandled 500. Verify migration 004 on a clean database and a populated existing AWS staging volume.
+
+Pass evidence: passing CI for the exact correction commit; `fk_budgets_category` reports `RESTRICT`; before/after API or database evidence shows no budget field changed; fresh/existing-volume migration logs; and AWS staging commit/image identity plus public health checks.
