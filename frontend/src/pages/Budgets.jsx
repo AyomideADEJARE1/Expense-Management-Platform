@@ -140,6 +140,7 @@ export default function Budgets({
 
         const updated = {
           ...response?.data,
+          category: response?.data?.category ?? (response?.data?.category_id == null ? ALL_CATEGORIES_LABEL : 'Uncategorized'),
           limit: Number(response?.data?.amount || 0),
           spent: Number(editingBudget.spent || 0),
         };
@@ -259,7 +260,7 @@ export default function Budgets({
                         {renderCategoryIcon(b.category)}
                       </div>
                       <div>
-                        <h3 className={`font-bold ${primaryText} text-lg`}>{b.category}</h3>
+                        <h3 className={`font-bold ${primaryText} text-lg`}>{b.category || (b.category_id == null ? ALL_CATEGORIES_LABEL : 'Uncategorized')}</h3>
                         <p className="text-xs text-gray-400 font-medium">Monthly Limit</p>
                       </div>
                     </div>
@@ -362,15 +363,12 @@ export default function Budgets({
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   className={`w-full ${inputStyle} border rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 disabled:opacity-60`}
                 >
-                  {expenseCategories.length === 0 ? (
-                    <option value="">No expense categories available</option>
-                  ) : (
-                    expenseCategories.map((cat) => (
-                      <option key={cat.id || cat.name} value={cat.name}>
-                        {cat.name}
-                      </option>
-                    ))
-                  )}
+                  <option value="__all_categories__">All Categories (whole-month budget)</option>
+                  {expenseCategories.map((cat) => (
+                    <option key={cat.id || cat.name} value={cat.name}>
+                      {cat.name}
+                    </option>
+                  ))}
                 </select>
               </div>
 
