@@ -145,9 +145,9 @@ PR #54 adds an npm override for `source-map-js` and updates `frontend/package-lo
 ## QA-FIND-018 — API CSV export can emit spreadsheet formulas from user-controlled text
 Classification: Security defect. Status: Backend/frontend formula-neutralization tests PASS in CI run `38275606391`; actual file/browser retest pending. Priority: High.
 
-The backend `GET /api/expenses/export` writes expense descriptions and category names directly into CSV cells. CSV quoting alone does not prevent spreadsheet formula execution when a cell begins with characters such as `=`, `+`, `-`, or `@`. The frontend export had the same weakness for formula characters preceded by whitespace.
+The backend `GET /api/expenses/export` and the Transactions-screen CSV export are the scope of this finding. CSV quoting alone does not prevent spreadsheet formula execution when a cell begins with characters such as `=`, `+`, `-`, or `@`; the Transactions export also needs to neutralize formula characters preceded by whitespace. The separate Reports-screen export is tracked under QA-FIND-082.
 
-The correction in PR #54 prefixes potentially executable text cells in both backend and frontend CSV exports. CI run `38275606391` passed the backend suite (62 tests, repeated twice) and all nine frontend Node tests, including CSV formula-prefix neutralization and CSV quoting. Retest both export paths with descriptions containing formula prefixes and leading whitespace before closing this finding.
+The correction in PR #54 prefixes potentially executable text cells in the API and Transactions export paths. CI run `38275606391` passed the backend suite (62 tests, repeated twice) and all nine frontend Node tests, including CSV formula-prefix neutralization and CSV quoting. Retest the API and Transactions exports with descriptions containing formula prefixes and leading whitespace before closing this finding; test the Reports path separately under QA-FIND-082.
 
 ## QA-FIND-019 — Non-finite or oversized monetary values can trigger server/database errors
 Classification: Input-validation defect. Status: Create-path regression tests PASS in CI run `38164448383`; update-path coverage pending. Priority: Medium.
