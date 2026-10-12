@@ -156,3 +156,7 @@ No password-change or password-recovery endpoint or complete user flow was found
 ## Current code CI checkpoint — 2026-10-12
 
 Run 38270547450 passed all eight jobs for correction commit 8d5fddc6c163a3f48986d22b770bd76d4547a81c, including 59 backend tests on two runs and the new trusted-proxy test. The in-memory rate-limit storage warning remains; QA-FIND-073 stays open until shared storage and AWS per-client rate-limit behavior are verified. All AWS runtime and browser evidence remains pending unless separately attached.
+
+
+## QA-FIND-077 — Partial profile-name updates
+The profile endpoint previously defaulted an omitted name field to an empty string, which could erase part of a user's name. PR #54 now preserves the omitted field and adds a regression test for first-name-only and last-name-only updates. CI retest for the latest correction commit is pending; verify API read-back before closure.
