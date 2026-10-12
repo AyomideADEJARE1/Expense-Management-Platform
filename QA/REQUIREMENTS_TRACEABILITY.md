@@ -119,3 +119,8 @@ The profile API stores notification preference flags, but the reviewed source tr
 ## QA-FIND-069 trace — account currency semantics
 
 The profile has one preferred currency, while expenses and budgets store numeric amounts without per-record currency. The frontend applies the selected symbol but does not convert saved values. The team must decide whether currency is display-only or supports conversion/mixed currencies. Closure requires written semantics, tests, and browser evidence that changing the preference cannot silently misrepresent historical amounts.
+
+
+## QA-FIND-070 trace — budget alert threshold
+
+Settings stores the budget_threshold preference, but the reviewed budget/dashboard components do not use it to trigger a warning; current budget status is based on the 100% limit. The team must confirm whether threshold alerts are required. Closure needs written rules and boundary/duplicate-prevention tests, or approved UI wording that makes clear the setting is inactive.
