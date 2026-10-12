@@ -63,13 +63,14 @@ It also defines the persistent PostgreSQL volume:
 postgres_data
 ```
 
-From the repository root, create the Compose environment file and set a unique database password:
+From the repository root, create both environment files:
 
 ```bash
 cp .env.example .env
+cp backend/.env.example backend/.env
 ```
 
-The root `.env` provides Compose interpolation for the PostgreSQL container and backend connection variables. Do not commit it. The Compose configuration fails at startup if the required database variables are missing.
+Edit the root `.env` and replace the PostgreSQL password placeholder with a unique strong password. In `backend/.env`, replace both Flask/JWT placeholders with separate strong random values. Do not commit either file. The root `.env` provides Compose interpolation for PostgreSQL; `backend/.env` provides the application signing secrets. The Compose configuration fails at startup if the required database variables are missing.
 
 Then start the complete stack with:
 
@@ -199,7 +200,7 @@ Docker Compose loads the backend environment from:
 backend/.env
 ```
 
-This file must remain untracked.
+This file must remain untracked. Create it with `cp backend/.env.example backend/.env` before starting the stack, and replace the `SECRET_KEY` and `JWT_SECRET` placeholders with distinct strong random values.
 
 Compose also provides the PostgreSQL connection configuration:
 
