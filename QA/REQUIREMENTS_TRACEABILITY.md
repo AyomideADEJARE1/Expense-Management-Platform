@@ -198,3 +198,7 @@ Run 38272803374 passed all eight jobs for correction commit f58bd3fbc4e75ae224c3
 
 ## Current source CI evidence — QA-FIND-080
 CI run `38272803374` passed all eight jobs for correction commit `f58bd3fbc4e75ae224c3bb3981a704d3c3ba1c45`. The frontend job ran four Node tests covering whole-month spending, category-specific spending, month boundaries, and invalid amounts; all passed. Backend tests passed 62 tests twice. Browser verification and AWS runtime verification remain separate open checks.
+
+
+## QA-FIND-061 trace — Whole-month budget UI scope decision
+The UI still requires a category; the attempted UI expansion was reverted because the scope decision is not recorded. The separate spending calculation helper is corrected and its Node tests passed in CI. The team must confirm whether overall monthly budgets are required before the UI is changed. If required, implement and test the form option; if not, document category-only behavior and decide the disposition of the API/schema support.
