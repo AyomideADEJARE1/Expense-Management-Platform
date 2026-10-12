@@ -628,3 +628,18 @@ Latest CI run 38179822312 passed for code commit 81f1ac88449012b530c83a9d9c23175
 Both Docker builds passed the .dockerignore rule checks and sentinel inspections: the backend image did not contain /app/.env, and the frontend bundle did not contain VITE_SECRET_SENTINEL. This proves the test sentinel files were excluded, not that an actual secret was previously leaked.
 
 Important limitations: the frontend package still has no test script, so the optional frontend test step can pass without running frontend functional tests. CI does not prove live AWS deployment, a populated existing-volume migration, staging failure/recovery behavior, browser end-to-end behavior, the negative non-test-database guard case, category write authorization, proxy-aware production rate limiting, or public CSP/HSTS behavior. Those remain open and require their documented runtime evidence.
+
+
+## QA-FIND-056 — Deleting a category can change a user's budget meaning
+
+Classification: Confirmed data-integrity defect in the reviewed schema and category-delete flow. Status: Correction proposed in PR #54; CI/runtime retest pending. Priority: High; financial data correctness.
+
+Evidence: `database/migrations/001_initial_schema.sql` defines `fk_budgets_category` with `ON DELETE SET NULL`, and `backend/models/budget.py` mirrors that behavior. A budget whose `category_id` is cleared is treated by the API as a whole-month budget. The category-delete route checks whether expenses use the category, but it does not check whether budgets use it. Migration 003 now enforces one whole-month budget per user/month, so a category deletion can either silently reclassify an existing category budget or fail if that user already has a whole-month budget for the same month.
+
+Impact: Users can lose the intended category link for a budget. Reports and budget warnings may then compare expenses against the wrong budget scope. If a uniqueness conflict occurs, the category deletion may fail with a generic server error instead of explaining the actual conflict.
+
+Correction proposed in PR #54: The category-delete route checks for linked budgets and returns HTTP 409 with a clear message. Migration 004 changes the database foreign key to `ON DELETE RESTRICT`, protecting against concurrent deletes and preserving the relationship even if a request bypasses the pre-check. The SQLAlchemy model now uses `ondelete="RESTRICT"`. CI verifies the constraint rule and deployment order; API tests check that a category with a budget cannot be deleted and that the budget retains its category ID.
+
+Required retest: Run the new tests on the current correction commit. Test a category linked to a budget when no whole-month budget exists and when a whole-month budget already exists for the same user/month. In both cases, deletion must return 409 and the budget's category ID and amount must remain unchanged. Confirm migration 004 works on both a fresh database and a populated existing volume before deploying to AWS.
+
+Closure evidence: Passing CI for the latest correction commit, verified `fk_budgets_category` rule is RESTRICT, API response and post-request database/API evidence, successful fresh/existing-volume migration logs, and AWS staging evidence showing the deployed commit. Source changes alone do not close the finding.
