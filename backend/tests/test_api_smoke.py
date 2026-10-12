@@ -1349,6 +1349,24 @@ def test_registration_unexpected_commit_failure_rolls_back_and_recovers(
 
 
 @pytest.mark.parametrize(
+    ("environment", "expected"),
+    [
+        ("production", False),
+        ("prod", False),
+        ("development", True),
+        ("dev", True),
+        ("testing", True),
+        ("test", True),
+        ("", False),
+    ],
+)
+def test_debug_mode_is_enabled_only_for_explicit_nonproduction_modes(
+    environment, expected
+):
+    assert debug_mode_enabled(environment) is expected
+
+
+@pytest.mark.parametrize(
     ("secret_key", "jwt_secret"),
     [
         (None, "jwt-test-secret-that-is-long-enough-123456"),
@@ -1368,24 +1386,6 @@ def test_registration_unexpected_commit_failure_rolls_back_and_recovers(
         ),
     ],
 )
-@pytest.mark.parametrize(
-    ("environment", "expected"),
-    [
-        ("production", False),
-        ("prod", False),
-        ("development", True),
-        ("dev", True),
-        ("testing", True),
-        ("test", True),
-        ("", False),
-    ],
-)
-def test_debug_mode_is_enabled_only_for_explicit_nonproduction_modes(
-    environment, expected
-):
-    assert debug_mode_enabled(environment) is expected
-
-
 def test_production_secret_validation_rejects_unsafe_signing_keys(
     secret_key, jwt_secret
 ):
