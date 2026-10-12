@@ -401,6 +401,18 @@ def test_expense_date_range_filters_and_validation(client):
     )
     assert malformed_date.status_code == 400
 
+    noncanonical_month = client.get(
+        "/api/expenses?month=2026-1",
+        headers=headers,
+    )
+    assert noncanonical_month.status_code == 400
+
+    noncanonical_month_width = client.get(
+        "/api/expenses?month=2026-010",
+        headers=headers,
+    )
+    assert noncanonical_month_width.status_code == 400
+
     noncanonical_create = client.post(
         "/api/expenses",
         headers=headers,
@@ -427,6 +439,81 @@ def test_expense_date_range_filters_and_validation(client):
     )
     assert unchanged.status_code == 200
     assert unchanged.get_json()["data"]["expense_date"] == "2026-10-10"
+
+
+def test_monthly_and_category_summaries_validate_month_and_aggregate(
+    client,
+):
+    email = f"qa-summary-{uuid.uuid4().hex}@example.test"
+    password = "TestPassword123!"
+
+    registration = client.post(
+        "/api/auth/register",
+        json={
+            "full_name": "QA Summary Test",
+            "email": email,
+            "password": password,
+        },
+    )
+    assert registration.status_code == 201
+
+    login = client.post(
+        "/api/auth/login",
+        json={"email": email, "password": password},
+    )
+    assert login.status_code == 200
+    token = login.get_json()["data"]["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    category_response = client.post(
+        "/api/categories",
+        json={"name": f"QA summary {uuid.uuid4().hex}"},
+    )
+    assert category_response.status_code == 201
+    category_id = category_response.get_json()["data"]["id"]
+
+    expense_response = client.post(
+        "/api/expenses",
+        headers=headers,
+        json={
+            "category_id": category_id,
+            "amount": "12.50",
+            "description": "Summary total",
+            "expense_date": "2026-10-10",
+        },
+    )
+    assert expense_response.status_code == 201
+
+    monthly = client.get(
+        "/api/summaries/monthly?month=2026-10",
+        headers=headers,
+    )
+    assert monthly.status_code == 200
+    assert monthly.get_json()["data"]["total_amount"] == 12.5
+
+    by_category = client.get(
+        "/api/summaries/category?month=2026-10",
+        headers=headers,
+    )
+    assert by_category.status_code == 200
+    assert by_category.get_json()["data"] == [
+        {
+            "category_id": category_id,
+            "category": category_response.get_json()["data"]["name"],
+            "total_amount": 12.5,
+        }
+    ]
+
+    for endpoint in (
+        "/api/summaries/monthly",
+        "/api/summaries/category",
+    ):
+        for month in ("2026-1", "2026-010"):
+            invalid = client.get(
+                f"{endpoint}?month={month}",
+                headers=headers,
+            )
+            assert invalid.status_code == 400
 
 
 def test_non_object_json_bodies_are_rejected(client):
