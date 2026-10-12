@@ -51,3 +51,5 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 | REQ-36 | Database migrations complete before application restart | TC-CD-007 | PR #54 reorders deployment and adds a CI source-order check; CI run 38179822312 passed. Staging failure/recovery verification remains pending |
 
 | REQ-37 | Wait for healthy PostgreSQL before migrations | TC-CD-008 | PR #54 uses Compose --wait and CI checks deployment ordering; CI run 38179822312 passed. Staging cold-start verification remains pending |
+
+| REQ-38 | Category deletion preserves budget meaning | TC-CAT-008–009, RV-25 | PR #54 adds a linked-budget pre-check and migration 004 with `ON DELETE RESTRICT`; latest CI and fresh/existing AWS volume verification are pending |
