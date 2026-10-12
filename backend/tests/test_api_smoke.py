@@ -866,6 +866,13 @@ def test_category_name_length_is_validated_for_create_and_update(client):
     assert too_long_create.status_code == 400
     assert "100 characters" in too_long_create.get_json()["message"]
 
+    valid_boundary = client.post(
+        "/api/categories",
+        json={"name": "V" * 100},
+    )
+    assert valid_boundary.status_code == 201
+    assert len(valid_boundary.get_json()["data"]["name"]) == 100
+
     original_name = f"QA category length {uuid.uuid4().hex}"
     created = client.post(
         "/api/categories",
