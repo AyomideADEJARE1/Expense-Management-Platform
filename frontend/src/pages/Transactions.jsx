@@ -4,6 +4,11 @@ import { Search, Filter, ArrowUpRight, Trash2, Plus, Edit3, Download } from 'luc
 import ConfirmationModal from '../Components/ConfirmationModal';
 import { useToast } from '../context/ToastContext';
 
+const getLocalDateString = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+};
+
 export default function Transactions({ categories = [], onTransactionChange, isDarkMode = false }) {
 
   const modalBackground = isDarkMode
@@ -48,7 +53,7 @@ export default function Transactions({ categories = [], onTransactionChange, isD
     amount: '',
     type: 'Expense',
     category: categories[0]?.name || '',
-    date: new Date().toISOString().split('T')[0],
+    date: getLocalDateString(),
   });
 
   // 1. GET: Fetch expenses from Flask API
@@ -130,7 +135,7 @@ export default function Transactions({ categories = [], onTransactionChange, isD
         amount: tx.amount,
         type: 'Expense',
         category: tx.category || categories[0]?.name || '',
-        date: tx.date || new Date().toISOString().split('T')[0],
+        date: tx.date || getLocalDateString(),
       });
     } else {
       setEditingTx(null);
@@ -140,7 +145,7 @@ export default function Transactions({ categories = [], onTransactionChange, isD
         amount: '',
         type: 'Expense',
         category: categories[0]?.name || '',
-        date: new Date().toISOString().split('T')[0],
+        date: getLocalDateString(),
       });
     }
 
