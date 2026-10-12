@@ -2,7 +2,7 @@
 
 Findings are evidence-based. QA is not judged by defect count.
 
-Latest fully green correction checkpoint: CI run 38275606391 passed all eight jobs for code commit 11d1756f083f51e6e18d51651f76bcb5d74a9af2. Backend lint passed and the backend suite passed 62 tests, including trusted-proxy, partial-profile-name, and category-delete race tests. The frontend suite executed nine Node tests and all nine passed, including the new CSV formula-neutralization and quote-escaping tests. CI verified migrations 001–005, the budget-category RESTRICT rule, the users.phone column, and migration order; frontend lint/build, secret scanning, both Docker builds, and aggregate CI passed. Flask-Limiter still warns that rate-limit counters use in-memory storage. This is CI evidence only; AWS live deployment, populated-volume migration, browser workflows, reboot recovery, backup restore, and shared production rate-limit storage remain unverified.
+Latest fully green correction checkpoint: CI run 38276034129 passed all eight jobs for code commit 97e6515f00c15e240532da653235421a2c6fb055. Backend lint passed and the backend suite passed 62 tests, including trusted-proxy, partial-profile-name, and category-delete race tests. The frontend suite executed nine Node tests and all nine passed, including CSV formula-neutralization and quote-escaping tests. CI verified migrations 001–005, the budget-category RESTRICT rule, the users.phone column, and migration order; frontend lint/build, secret scanning, both Docker builds, and aggregate CI passed. Flask-Limiter still warns that rate-limit counters use in-memory storage. This is CI evidence only; AWS live deployment, populated-volume migration, browser workflows, reboot recovery, backup restore, and shared production rate-limit storage remain unverified.
 
 ## QA-FIND-001 — Duplicate frontend source structures
 Classification: Observation. Status: Open.
@@ -1131,3 +1131,10 @@ CI run `38275606391` passed all eight jobs for code commit `11d1756f083f51e6e18d
 **Required retest:** In supported browsers, export a small report and a larger report. Confirm both downloads complete and contain the expected rows. Check the browser console for errors and confirm repeated exports still work.
 
 **Closure evidence:** Passing current-head CI plus browser evidence that the report CSV downloads successfully on the supported browser(s). CI alone cannot prove browser download timing.
+
+
+## Latest correction CI checkpoint — 2026-10-12 (QA-FIND-083)
+
+CI run [38276034129](https://github.com/AyomideADEJARE1/Expense-Management-Platform/actions/runs/38276034129) passed all eight jobs for code commit `97e6515f00c15e240532da653235421a2c6fb055`. Backend lint and 62 backend tests passed. Frontend lint/build and all nine Node tests passed, including the shared CSV formula-neutralization helper. Database migration checks, secret scan, both Docker builds, and aggregate CI passed.
+
+QA-FIND-082 and QA-FIND-083 are verified at the source/CI level. The browser download checks for both export paths, AWS live deployment, populated-volume migrations, public health checks, reboot recovery, backup restore, and shared production rate-limit storage remain open.
