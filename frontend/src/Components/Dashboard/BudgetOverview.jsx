@@ -1,8 +1,10 @@
 
 import { PieChart } from 'lucide-react';
+import { formatCurrency } from '../../utils/currency';
 
 export default function BudgetOverview({
   budgets = [],
+  currency = 'NGN (₦)',
   isDarkMode = false,
 }) {
   const cardStyle = isDarkMode
@@ -43,7 +45,7 @@ export default function BudgetOverview({
                     {b.category}
                   </span>
                   <span className={`text-xs font-semibold ${textStyle}`}>
-                    ₦{spent.toLocaleString()} / ₦{limit.toLocaleString()}
+                    {formatCurrency(spent, currency)} / {formatCurrency(limit, currency)}
                   </span>
                 </div>
 
