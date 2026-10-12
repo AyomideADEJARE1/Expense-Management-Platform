@@ -2,7 +2,7 @@
 
 Findings are evidence-based. QA is not judged by defect count.
 
-Latest fully green correction checkpoint: CI run 38272803374 passed all eight jobs for correction-branch commit f58bd3fbc4e75ae224c3bb3981a704d3c3ba1c45. Backend lint passed and the suite passed 62 tests twice, including trusted-proxy, partial-profile-name, and category-delete race tests. The frontend suite executed four Node tests and all four passed, including whole-month and category-specific budget spending. CI verified migrations 001–005, the budget-category RESTRICT rule, the users.phone column, and migration order; frontend lint/build, secret scanning, both Docker builds, and aggregate CI passed. npm audit reported zero vulnerabilities. Flask-Limiter still warns that rate-limit counters use in-memory storage. This is CI evidence only; AWS live deployment, populated-volume migration, browser workflows, reboot recovery, backup restore, and shared production rate-limit storage remain unverified.
+Latest fully green correction checkpoint: CI run 38273922288 passed all eight jobs for correction-branch commit 77620d6547cad3ee3774657df9dd0b9256ed9ff6. Backend lint passed and the backend suite passed 62 tests twice, including trusted-proxy, partial-profile-name, and category-delete race tests. The frontend suite executed seven Node tests and all seven passed, covering whole-month spending, category-specific spending, and global budget search relevance. CI verified migrations 001–005, the budget-category RESTRICT rule, the users.phone column, and migration order; frontend lint/build, secret scanning, both Docker builds, and aggregate CI passed. npm audit reported zero vulnerabilities. Flask-Limiter still warns that rate-limit counters use in-memory storage. This is CI evidence only; AWS live deployment, populated-volume migration, browser workflows, reboot recovery, backup restore, and shared production rate-limit storage remain unverified.
 
 ## QA-FIND-001 — Duplicate frontend source structures
 Classification: Observation. Status: Open.
@@ -550,7 +550,7 @@ PR #54 now configures ProxyFix for exactly one trusted Nginx hop and adds a regr
 
 ## QA-FIND-052 — Category deletion maps every database failure to a conflict
 
-Classification: API error handling / operational diagnosis. Status: CI passed for correction commit ea775178ea545b48bfea9cdaadd77b7b0965d4b8; AWS runtime retest pending. Priority: Medium.
+Classification: API error handling / operational diagnosis. Status: CI passed for correction commit 77620d6547cad3ee3774657df9dd0b9256ed9ff6; AWS runtime retest pending. Priority: Medium.
 
 Evidence: Upstream main's category delete handler catches every exception from the database commit and returns HTTP 409 with a message saying the category is used by an expense. That response is only accurate for the relevant expense foreign-key violation. A database outage or unexpected programming error would be mislabeled as a user conflict.
 
@@ -1044,7 +1044,7 @@ CI run `38272033341` passed all eight jobs for correction commit `ea775178ea545b
 
 ## QA-FIND-079 — Whole-month budget spending is calculated as zero in the dashboard
 
-**Classification:** Functional correctness / financial reporting. **Priority:** High. **Status:** CI passed for correction commit f58bd3fbc4e75ae224c3bb3981a704d3c3ba1c45; browser verification pending.
+**Classification:** Functional correctness / financial reporting. **Priority:** High. **Status:** CI passed for correction commit 77620d6547cad3ee3774657df9dd0b9256ed9ff6; browser verification pending.
 
 **Source evidence:** In `frontend/src/App.jsx`, budget spending was calculated by comparing `Number(expenseCategoryId)` with `Number(budget.category_id)`. For a whole-month budget, `budget.category_id` is `null`, so `Number(null)` is `0`. Expense category IDs are positive IDs, so none of the user's expenses match. The displayed `spent`, percentage used, remaining amount, and on-track/exceeded state can therefore all be wrong for a whole-month budget.
 
@@ -1079,7 +1079,7 @@ Run `38272803374` passed all eight jobs for correction commit `f58bd3fbc4e75ae22
 
 ## QA-FIND-081 — Global search returns every budget for unrelated queries
 
-**Classification:** Frontend functional defect / search relevance. **Priority:** Medium. **Status:** Correction proposed in PR #54; current-head CI and browser retest pending.
+**Classification:** Frontend functional defect / search relevance. **Priority:** Medium. **Status:** CI passed for correction commit 77620d6547cad3ee3774657df9dd0b9256ed9ff6; browser retest pending.
 
 **Evidence:** In the earlier frontend/src/App.jsx search logic, expenses and categories were conditionally added when their text matched the search query, but the budgets loop added every budget unconditionally whenever the global search query was non-empty. A search for an unrelated word could therefore display all budgets as matches.
 
@@ -1087,6 +1087,6 @@ Run `38272803374` passed all eight jobs for correction commit `f58bd3fbc4e75ae22
 
 **Correction proposed in PR #54:** The budget search logic now creates a result title and subtitle, then includes it only when the query matches the category/overall-budget title or the month/limit subtitle. Whole-month budgets use a clear “Overall Monthly Budget” title. New Node tests cover category-name matching, month matching, unrelated queries, whole-month budget titles, and blank queries.
 
-**Required retest:** Confirm the current CI run executes and passes the new frontend search tests. In the browser, search for a category name, a budget month, and an unrelated word. Confirm only matching budgets appear, while matching expenses/categories still appear correctly. Confirm a whole-month budget uses a meaningful title.
+**Required retest:** CI run 38273922288 passed all seven frontend Node tests, including the new budget-search tests. Confirm the rendered results in a browser. In the browser, search for a category name, a budget month, and an unrelated word. Confirm only matching budgets appear, while matching expenses/categories still appear correctly. Confirm a whole-month budget uses a meaningful title.
 
 **Closure evidence:** Passing current-head CI, output from the budget-search tests, and browser search results for matching and non-matching queries. CI alone does not prove the rendered result list is correct.
