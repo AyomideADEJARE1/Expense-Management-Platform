@@ -12,7 +12,7 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 | REQ-06 | Monthly summaries | TC-REP-001, TC-REP-DATE-002 | Summary endpoints now validate canonical `YYYY-MM` values and new tests compare monthly/category totals to known expenses; current CI pending, browser/runtime verification remains open |
 | REQ-07 | Budget limits | TC-BUD-001–006, TC-DB-006, TC-BUD-DATE-007, TC-BUD-UI-008 | PR #54 adds database uniqueness for category and whole-month budgets, known-conflict handling, and canonical month-date validation. New compact-date tests are pending CI. Confirm whether whole-month budgets must be creatable through the browser; populated-volume and concurrency checks remain open |
 | REQ-08 | Dashboard with charts | TC-DASH-001–003 | FINDING OPEN |
-| REQ-09 | Date/category filtering | TC-FLT-001–005, TC-FLT-MONTH-006 | Expense month filters now validate exact `YYYY-MM`; malformed values and summary endpoints have regression tests. Current CI pending; browser/runtime retest remains open |
+| REQ-09 | Date/category filtering | TC-FLT-001–005, TC-FLT-MONTH-006, TC-FLT-TZ-007 | Expense month filters validate exact `YYYY-MM`; dashboard, transaction defaults, and Reports now use local-calendar handling for date-only values. Latest frontend CI/browser timezone retest pending |
 | REQ-10 | CSV export | TC-EXP-004–005 | UI correction proposed in PR #54; retest pending |
 | REQ-11 | React frontend | TC-UI-001, TC-UI-DEBUG-002 | PR #54 removes API-response debug logs for categories, expenses, and budgets. Frontend lint/build and browser smoke verification for the newest commit are pending |
 | REQ-12 | Flask REST API | TC-API-001–004, TC-EXP-DATE-006 | Expense create/update now enforce canonical `YYYY-MM-DD` values; new compact-date regression tests are in PR #54. CI for the latest commit is pending; API runtime evidence remains required |
@@ -94,3 +94,8 @@ PR #54 now tightens the database-name guard, rejects names containing production
 ## QA-FIND-064 trace — frontend response logging
 
 The three `console.log` statements that printed the categories, expenses, and budgets API response objects have been removed from `frontend/src/App.jsx`. Current CI is pending; closure requires a passing frontend lint/build for the exact commit, source search confirming the response logs are absent, and browser evidence that the dashboard still loads.
+
+
+## QA-FIND-065 trace — timezone-safe date handling
+
+The dashboard month now uses local year/month fields; transaction defaults use a local-calendar date helper; Reports parses date-only API values as local midnight. This corrects the source-level UTC/local conversion mismatch. Frontend automated tests are not configured, so closure requires a passing frontend build plus browser verification at timezone/month boundaries with the timezone and local date recorded.
