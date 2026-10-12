@@ -554,3 +554,19 @@ Code CI run 38270547450 passed all eight jobs for correction commit 8d5fddc6c163
 **Current correction:** PR #54 preserves omitted name parts and adds an API regression test. The latest source commit must pass CI before this is source/CI-verified.
 
 **Pass evidence:** CI run and exact commit SHA, status/body for both successful partial updates and the rejected empty-name update, and a profile read-back showing the final stored full name. AWS/browser verification remains separate.
+
+
+## RV-47 — Verify partial profile updates preserve omitted name fields
+
+**Finding:** QA-FIND-077. **Owner:** Backend + frontend + QA. **Status:** Open pending current-head CI and browser retest.
+
+**Procedure:**
+1. Register a test account with a two-part name.
+2. Send an authenticated profile update containing only first_name. Read /api/auth/me and confirm last_name remains unchanged.
+3. Send an authenticated profile update containing only last_name. Read /api/auth/me and confirm first_name remains unchanged.
+4. Test a one-part existing name, whitespace-only first name, non-string name values, and a full name over the supported length.
+5. In the browser, save a first-name-only and last-name-only change if the UI supports partial updates; reload and confirm the saved profile is consistent.
+
+**Pass evidence:** Current-head CI result, API request/response and read-back evidence, and browser save/reload proof.
+
+**Fail conditions:** An omitted name part becomes blank or changes unexpectedly, invalid input is accepted, or the browser state differs from the persisted profile.
