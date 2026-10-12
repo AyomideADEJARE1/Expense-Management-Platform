@@ -1,6 +1,6 @@
 # Runtime Verification and Closure Plan
 
-Date: 2026-10-11
+Date: 2026-10-12
 Applies to: Expense Management Platform capstone
 Reference branches: upstream main, upstream integration/deployable-main, QA fork PR #53 and correction PR #54.
 
@@ -539,3 +539,8 @@ Run `38221595123` passed all eight jobs for source-branch head `72ff22992e8561b5
 **Pass evidence:** Written scope decision; if in scope, passing security tests and redacted staging evidence of the complete flow; if out of scope, approved documentation/UI wording.
 
 **Fail conditions:** A password can be changed without the required authorization, a reset token can be reused or does not expire, recovery responses disclose account existence, or the team claims self-service recovery without a working tested path.
+
+
+## Latest CI checkpoint — 2026-10-12
+
+Code CI run 38270547450 passed all eight jobs for correction commit 8d5fddc6c163a3f48986d22b770bd76d4547a81c. Backend lint passed and the backend suite passed 59 tests twice, including the trusted-proxy regression test. Migrations 001–005, the budget-category RESTRICT rule, the phone column, and migration ordering were checked; frontend lint/build, secret scanning, both Docker builds, and aggregate CI passed. CI still warns that Flask-Limiter uses in-memory storage. The proxy code correction is source/CI-verified for one Nginx hop, but shared production storage and AWS topology/runtime checks remain open. This checkpoint does not close any gate requiring populated AWS database, public health, browser flows, reboot recovery, or backup restore.
