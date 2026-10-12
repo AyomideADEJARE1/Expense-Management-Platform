@@ -587,7 +587,7 @@ CI run 38272033341 passed all eight jobs for correction commit ea775178ea545b48b
 
 **Finding:** QA-FIND-080. **Owner:** Frontend + QA. **Status:** Open until current-head CI and browser verification pass.
 
-**Source-level correction:** PR #54 adds `calculateBudgetSpent` in `frontend/src/utils/budgetSpending.js`, tests in `frontend/tests/budgetSpending.test.js`, and a `npm test` script. This is not closed until the new source head passes CI.
+**Source-level correction:** PR #54 adds `calculateBudgetSpent` in `frontend/src/utils/budgetSpending.js`, tests in `frontend/tests/budgetSpending.test.js`, and a `npm test` script. CI run `38272803374` passed all eight jobs for commit `f58bd3fbc4e75ae224c3bb3981a704d3c3ba1c45`; the frontend test step executed all four tests successfully. Browser verification is still required before closure.
 
 **Procedure:**
 1. Run the frontend test command and confirm the CI job executes (not skips) `npm test`.
@@ -615,3 +615,7 @@ CI run 38272033341 passed all eight jobs for correction commit ea775178ea545b48b
 ## Latest code CI checkpoint — 2026-10-12
 
 CI run 38272803374 passed all eight jobs for correction commit f58bd3fbc4e75ae224c3bb3981a704d3c3ba1c45. Backend lint passed and 62 tests passed twice; the frontend suite executed four Node tests and all four passed, including whole-month and category-specific budget spending. Migrations 001–005, budget-category RESTRICT, the phone column, and migration order passed CI; frontend lint/build, secret scan, both Docker builds, and aggregate CI passed. npm audit reported zero vulnerabilities. Flask-Limiter still warns that storage is in-memory. This does not close AWS populated-volume migration, live deployment, public health, browser, reboot recovery, backup restore, or shared rate-limit storage gates.
+
+
+## Latest CI checkpoint — 2026-10-12
+Run `38272803374` passed all eight jobs for correction commit `f58bd3fbc4e75ae224c3bb3981a704d3c3ba1c45`. Backend tests passed 62 tests twice. Frontend CI executed the newly added budget-spending tests: 4 passed, 0 failed. Database migrations, secret scan, frontend lint/build, both Docker builds, and aggregate CI passed. This does not close AWS or browser-runtime gates.
