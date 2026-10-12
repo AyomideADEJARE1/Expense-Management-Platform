@@ -524,7 +524,7 @@ Do not mark a check as passed until evidence is attached.
 - [ ] Public HTTPS security headers are checked and the approved CSP is tested.
 - [ ] Screenshots, workflow run links, commit SHA, and test results are attached.
 
-**Current overall status:** CI run `38221334646` passed all eight jobs for code commit `5912343a9b07b1976456bacdb8c5023d1cfdb8aa`. The backend suite ran twice and both runs passed all 58 tests. The database job applied migrations 001–005, verified the budget-category restriction and `users.phone` column, and confirmed Compose restart policies for all four services; frontend lint/build, secret scan, both Docker builds, and the aggregate check passed. Later documentation-only commits are being checked in a separate run. This is CI evidence only. AWS populated-volume migration, live deployment/health, browser end-to-end flows, and notification delivery remain unverified. The frontend package still has no test script, so frontend functional tests can be skipped by the optional CI command.
+**Current overall status:** CI run `38221595123` passed all eight jobs for source-branch head `72ff22992e8561b5c85422f664854a7bce964ff7`. The backend suite ran twice and both runs passed all 58 tests. The database job applied migrations 001–005, verified the budget-category restriction and `users.phone` column, and confirmed Compose restart policies for all four services; frontend lint/build, secret scan, both Docker builds, and aggregate CI passed. This is CI evidence only. AWS populated-volume migration, live deployment/health, browser flows, and reboot recovery remain unverified. AWS populated-volume migration, live deployment/health, browser end-to-end flows, and notification delivery remain unverified. The frontend package still has no test script, so frontend functional tests can be skipped by the optional CI command.
 
 **Latest date-validation addition:** Action 40 expands verification for existing finding QA-FIND-059. CI run `38219803561` passed with the compact/week-date create checks and rejected-update preservation check included. Deployed AWS API/browser verification remains pending.
 
@@ -544,4 +544,4 @@ Do not mark a check as passed until evidence is attached.
 **Budget alert threshold:** QA-FIND-070 remains open. The setting is saved, but no budget component currently uses it to trigger alerts.
 
 
-**AWS reboot recovery:** CI run `38221334646` verified all four Compose restart policies. QA-FIND-071 remains open until a staging VM/Docker restart demonstrates automatic recovery and data persistence.
+**AWS reboot recovery:** CI run `38221595123` verified all four Compose restart policies. QA-FIND-071 remains open until a staging VM/Docker restart demonstrates automatic recovery and data persistence.
