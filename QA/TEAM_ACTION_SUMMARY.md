@@ -669,4 +669,6 @@ Run `38276034129` passed all eight jobs for code commit `97e6515f00c15e240532da6
 
 **How to verify:** Wait for current-head CI and confirm the debug-mode tests pass. Confirm the production Docker entry point still uses Gunicorn and debug remains disabled.
 
+**CI status:** Run `38277037377` passed all eight jobs for commit `8151bb56e730c6f6eb0205691b334a121abc934e`; backend lint and 69 backend tests passed, including the new mode-selection cases.
+
 **Evidence to close:** Passing CI, tested commit SHA, test output, and production entry-point confirmation.
