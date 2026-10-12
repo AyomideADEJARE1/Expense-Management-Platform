@@ -30,7 +30,8 @@ export default function SummaryCards({
     const currentYear = now.getFullYear();
 
     return transactions.reduce((sum, item) => {
-      const date = new Date(item.expense_date || item.date);
+      const dateValue = item.expense_date || item.date;
+      const date = new Date(`${dateValue}T00:00:00`);
 
       if (
         !Number.isNaN(date.getTime()) &&
