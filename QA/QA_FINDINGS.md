@@ -1090,3 +1090,18 @@ Run `38272803374` passed all eight jobs for correction commit `f58bd3fbc4e75ae22
 **Required retest:** CI run 38273922288 passed all seven frontend Node tests, including the new budget-search tests. Confirm the rendered results in a browser. In the browser, search for a category name, a budget month, and an unrelated word. Confirm only matching budgets appear, while matching expenses/categories still appear correctly. Confirm a whole-month budget uses a meaningful title.
 
 **Closure evidence:** Passing current-head CI, output from the budget-search tests, and browser search results for matching and non-matching queries. CI alone does not prove the rendered result list is correct.
+
+
+## QA-FIND-082 — Reports CSV export does not neutralize spreadsheet formulas
+
+**Classification:** Data export security. **Priority:** Medium. **Status:** Correction proposed in PR #54; current-head CI retest pending.
+
+**Evidence:** `frontend/src/pages/Transactions.jsx` neutralizes untrusted cell values beginning with spreadsheet formula characters before CSV quoting. The separate report export in `frontend/src/pages/Reports.jsx` previously only escaped double quotes and did not neutralize formula-leading descriptions or category names. A value such as `=HYPERLINK(...)`, `+...`, `-...`, or `@...` could therefore be interpreted as a formula when a user opens the exported report in spreadsheet software.
+
+**Why it matters:** An attacker or maliciously entered description/category label could place a formula in a file that another user opens. CSV quoting alone does not prevent spreadsheet formula execution.
+
+**Correction in PR #54:** Both export paths now use a shared `escapeCsvCell` utility. It neutralizes formula-leading values and preserves CSV quote escaping. New Node tests cover `=`, `+`, `-`, `@`, leading whitespace, ordinary dates/numbers, empty cells, and embedded quotes.
+
+**Required retest:** Wait for CI on the current code head. Confirm all CSV utility tests pass, frontend lint/build passes, and both Transactions and Reports call the shared helper for every cell. In a browser, export a report containing a test description beginning with `=1+1` and confirm the downloaded CSV stores it as text rather than a formula.
+
+**Closure evidence:** Passing current-head CI, exact tested commit SHA, the Node test results, and a sanitized sample of the exported report showing the formula prefix neutralized.
