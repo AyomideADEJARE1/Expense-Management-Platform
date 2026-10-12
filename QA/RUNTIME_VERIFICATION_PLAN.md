@@ -388,3 +388,14 @@ Latest correction CI result: run `38213904072` passed all eight jobs for commit 
 **Current source correction:** The three API response log statements were removed from `frontend/src/App.jsx`. The current correction CI is pending.
 
 **Pass evidence:** Passing CI for the exact commit, a source search showing those response logs are absent, and a browser smoke-test record showing the dashboard still loads.
+
+
+## RV-35 — Verify local-calendar dates across timezone boundaries
+
+**Related finding:** QA-FIND-065.
+
+**Check:** Record the browser timezone and local time. At a time when the local calendar date differs from UTC, verify the dashboard queries the local `YYYY-MM`, a new expense defaults to the local date, and Reports groups an API date such as `2026-10-01` under October 2026 rather than the previous month. Repeat in a timezone west of UTC to verify date-only parsing is stable.
+
+**Current source correction:** The dashboard now derives the current month from local year/month fields; Transactions uses a local-date helper; Reports parses date-only values as local midnight. Frontend automated tests are not configured, so browser verification remains necessary.
+
+**Pass evidence:** Passing frontend lint/build for the exact commit, recorded timezone/local date, dashboard request month, new-expense default date, and report grouping for a known date-only transaction.
