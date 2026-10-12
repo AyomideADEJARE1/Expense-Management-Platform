@@ -56,4 +56,4 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 
 | REQ-39 | Category create/update handle database commit failures safely | TC-CAT-010–011, RV-26 | PR #54 adds named-constraint conflict handling and rollback; CI run 38212554474 passed all 37 backend tests. AWS runtime retest remains pending |
 
-| REQ-40 | Account email uniqueness conflicts are handled safely | TC-AUTH-012–013, RV-27 | PR #54 adds named-constraint handling and rollback tests; latest CI result pending |
+| REQ-40 | Account email uniqueness conflicts are handled safely | TC-AUTH-012–013, RV-27 | PR #54 adds named-constraint handling and rollback tests; CI run 38212818430 passed all 39 backend tests. AWS runtime verification remains pending |
