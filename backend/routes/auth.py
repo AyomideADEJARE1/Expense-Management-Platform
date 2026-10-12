@@ -252,10 +252,15 @@ def update_current_user():
     if not user:
         return error_response("User not found", 404)
 
-    # Update the user's name when name fields are supplied.
+    # Preserve a name part when a caller updates only the other part.
     if "first_name" in data or "last_name" in data:
-        first_name_value = data.get("first_name", "")
-        last_name_value = data.get("last_name", "")
+        current_name_parts = user.full_name.split(maxsplit=1)
+        current_first_name = current_name_parts[0] if current_name_parts else ""
+        current_last_name = (
+            current_name_parts[1] if len(current_name_parts) > 1 else ""
+        )
+        first_name_value = data.get("first_name", current_first_name)
+        last_name_value = data.get("last_name", current_last_name)
 
         if (
             not isinstance(first_name_value, str)
