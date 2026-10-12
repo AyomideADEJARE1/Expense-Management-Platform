@@ -381,6 +381,17 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Evidence to close:** Passing current CI for the exact commit, API results for create/update, and read-back showing no change after the rejected update. Current CI is pending.
 
+### 35. Team lead + frontend/backend: decide whether overall monthly budgets are required
+**What happens:** The API/database support a whole-month budget with no category, but the browser form currently requires a category and cannot submit that type.
+
+**Why it matters:** If the capstone expects an overall monthly spending limit, a user cannot create it through the interface. If the app is intentionally category-only, the extra API/database capability may be unnecessary and should be documented.
+
+**Required decision:** Confirm whether overall monthly budgets are in scope. If yes, add an explicit “Overall monthly budget” option that sends `category_id: null`, and show it distinctly in the budget list/dashboard. If no, record the category-only decision and align documentation/API scope.
+
+**How QA will verify:** For overall-budget support, create both an overall and category budget for the same month, check persistence, duplicate rejection, editing, and dashboard totals. For category-only scope, verify the requirements and UI text clearly state the rule.
+
+**Evidence to close:** A recorded team requirement decision plus browser/API results or updated scope documentation. This remains an observation until the requirement is confirmed.
+
 ## Release checklist
 
 Do not mark a check as passed until evidence is attached.
@@ -403,4 +414,4 @@ Do not mark a check as passed until evidence is attached.
 - [ ] Public HTTPS security headers are checked and the approved CSP is tested.
 - [ ] Screenshots, workflow run links, commit SHA, and test results are attached.
 
-**Current overall status:** The correction branch has a previously passing CI checkpoint (run `38213904072`, commit `3bce1183a2916a62cca0018bccaeb8527adb8ebc`, 47 backend tests). Additional commits now add category create/update commit-failure handling and strict canonical date validation for expense and budget writes; the latest CI run must pass before those newest changes are called verified. The findings register contains 60 findings and this summary contains 34 team actions. AWS deployment, populated-volume migrations, staging failure/recovery, public health checks, and browser end-to-end verification remain pending. The frontend package still has no test script, so frontend functional tests can be skipped by the optional CI command. Do not describe the project as release-ready until the outstanding checks have evidence.
+**Current overall status:** The correction branch has a previously passing CI checkpoint (run `38213904072`, commit `3bce1183a2916a62cca0018bccaeb8527adb8ebc`, 47 backend tests). Additional commits now add category create/update commit-failure handling and strict canonical date validation for expense and budget writes; the latest CI run must pass before those newest changes are called verified. The findings register contains 61 findings and this summary contains 35 team actions. AWS deployment, populated-volume migrations, staging failure/recovery, public health checks, and browser end-to-end verification remain pending. The frontend package still has no test script, so frontend functional tests can be skipped by the optional CI command. Do not describe the project as release-ready until the outstanding checks have evidence.
