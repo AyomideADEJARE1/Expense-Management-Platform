@@ -15,7 +15,7 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 | REQ-09 | Date/category filtering | TC-FLT-001–005 | Date-range/category UI and API corrections proposed in PR #54; CI and browser retest pending |
 | REQ-10 | CSV export | TC-EXP-004–005 | UI correction proposed in PR #54; retest pending |
 | REQ-11 | React frontend | TC-UI-001 | PENDING |
-| REQ-12 | Flask REST API | TC-API-001–004 | PENDING |
+| REQ-12 | Flask REST API | TC-API-001–004, TC-EXP-DATE-006 | Expense create/update now enforce canonical `YYYY-MM-DD` values; new compact-date regression tests are in PR #54. CI for the latest commit is pending; API runtime evidence remains required |
 | REQ-13 | PostgreSQL | TC-DB-001–003 | PENDING |
 | REQ-14 | Docker Compose | TC-DEV-001–004 | PENDING |
 | REQ-15 | GitHub Actions CI/CD | TC-CI-001–006 | CI checks and initial backend smoke tests pass on PR #54; full functional coverage remains incomplete |
@@ -59,3 +59,8 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 | REQ-40 | Account email uniqueness conflicts are handled safely | TC-AUTH-012–013, RV-28 | PR #54 adds named-constraint handling and rollback tests; CI run 38213904072 passed all 39 backend tests. AWS runtime verification remains pending |
 
 | REQ-41 | Production Flask/JWT signing secrets fail closed | TC-SEC-011, RV-06, RV-10 | PR #54 adds startup validation and tests for missing, weak, placeholder, or shared keys; CI run 38213904072 passed all 47 backend tests. AWS configuration verification remains pending |
+
+
+## QA-FIND-059 trace — expense date format
+
+The expense create/update routes now reject noncanonical ISO date strings by requiring the parsed date to round-trip exactly to the submitted `YYYY-MM-DD` value. The regression test expects compact `YYYYMMDD` dates to return HTTP 400 for create and update, and confirms the existing expense date remains unchanged after a rejected update. Latest CI for the correction branch is pending at the time this note was added; do not mark the trace as passed until that run completes.
