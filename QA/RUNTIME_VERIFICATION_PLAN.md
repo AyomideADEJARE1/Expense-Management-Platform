@@ -417,7 +417,7 @@ Latest correction CI result: run `38213904072` passed all eight jobs for commit 
 
 **Check:** On a clean database, confirm migration 005 creates nullable `users.phone`. On an existing database with a test user, apply migration 005 and confirm the user's other profile and expense data remain unchanged. Through the profile API and browser Settings page, save `+234 803 123 4567`, reload the page, and confirm it persists. Verify blank input clears the field; non-string, over-30-character, and control-character values return HTTP 400 and do not overwrite the stored number.
 
-**Current source correction:** PR #54 adds migration 005, the model field, API validation/response data, frontend request payload, and a backend regression test. CI also checks that the column exists and that CD applies migration 005 after migration 004 but before restarting app services. Latest CI for this change is pending.
+**Current source correction:** PR #54 adds migration 005, the model field, API validation/response data, frontend request payload, and a backend regression test. CI also checks that the column exists and that CD applies migration 005 after migration 004 but before restarting app services. CI run `38219803561` passed all eight jobs for branch-head commit `92eefc22555c7c98df240014721084e2f41698f8`; 58 backend tests passed on two consecutive runs and the CI database verified migration 005. Existing-volume AWS and browser checks remain pending.
 
 **Pass evidence:** Passing CI for the exact commit, clean/existing-database migration evidence, API read-back, and AWS staging/browser verification after deployment.
 
@@ -431,3 +431,7 @@ Latest correction CI result: run `38213904072` passed all eight jobs for commit 
 **Current source evidence:** The reviewed profile API stores `notifications_enabled` and `email_alerts_enabled`, but the repository has no identified mail-sending dependency, notification worker/scheduler, or push-delivery implementation. The scope decision and runtime behavior remain unverified.
 
 **Pass evidence:** Written scope decision; if implemented, automated tests plus a staging delivery record; otherwise, approved UI wording and browser evidence that no active-delivery promise remains.
+
+
+## Latest branch-head CI checkpoint — 2026-10-12
+Run `38219803561` passed all eight jobs for commit `92eefc22555c7c98df240014721084e2f41698f8`. Both backend test passes completed with 58 passed tests. CI applied migrations 001–005, verified the budget-category `RESTRICT` rule and `users.phone`, and checked migration ordering before app restart. This does not close the existing AWS volume, live deployment, public health, browser, production rate-limit, CSP/HSTS, or notification-delivery gates.
