@@ -955,3 +955,18 @@ Classification: Data protection / disaster recovery. Status: Evidence required f
 **Required retest:** Restore a recent backup into an isolated database, run migrations only in the test environment, and compare expected user/expense/budget counts and representative totals. Record the recovery point and elapsed recovery time. Confirm credentials are not exposed in logs.
 
 **Closure evidence:** Backup schedule/configuration, retention and access policy, a redacted successful restore log, integrity checks against known test records, and evidence that a pre-migration backup can be recovered.
+
+
+## QA-FIND-073 — Rate limiting uses the reverse proxy address and in-memory counters
+
+Classification: Security / abuse prevention / multi-instance correctness. Status: Open; correction and AWS runtime verification required. Priority: High for production authentication endpoints.
+
+**What happens:** The backend configures Flask-Limiter with `get_remote_address` and does not configure trusted proxy handling in the Flask application. Nginx forwards the client's address in `X-Real-IP` and `X-Forwarded-For`, but Flask's default `request.remote_addr` remains the address of the direct TCP peer—normally the Nginx container. Therefore, requests arriving through the same proxy may share one rate-limit key instead of receiving per-client limits. The limiter also does not configure a persistent/shared `storage_uri`, so Flask-Limiter uses its in-memory default.
+
+**Why it matters:** One user's login/register attempts may consume the same limit used by other users, causing unrelated users to receive HTTP 429. Conversely, counters reset when the backend restarts and are not shared across backend replicas, weakening abuse protection. Simply trusting arbitrary forwarded headers would create a different security issue because a client could spoof its own rate-limit identity if the proxy trust boundary is not enforced.
+
+**Required correction:** Backend/DevOps must define the trusted proxy topology and configure forwarded-client handling only for the known Nginx hop (for example, a correctly configured ProxyFix or equivalent trusted-proxy middleware). Ensure the backend cannot be reached through an untrusted path that can forge those headers. Configure a production shared rate-limit store such as the team's approved Redis service through an environment variable; keep local development behavior explicit and separate. Document the chosen limit and failure behavior if the shared store becomes unavailable.
+
+**Required retest:** Through the public AWS/Nginx path, send login attempts from two distinct test clients and verify each client has an independent counter. Verify the same client is limited after the configured threshold, the correct client identity is used, spoofed forwarded headers cannot bypass the limit, counters behave as intended after backend restart, and counters are shared if more than one backend instance is used. Verify expected 429 responses and no internal storage details in errors.
+
+**Closure evidence:** Reviewed proxy-trust and rate-limit configuration, configuration/schema checks in CI, passing tests for independent client keys and spoofed-header resistance, proof of shared storage configuration, and timestamped AWS staging results for two clients, restart behavior, and 429 responses. Do not close this finding based only on a green Docker build or the presence of rate-limit decorators.
