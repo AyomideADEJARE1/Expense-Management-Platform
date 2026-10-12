@@ -370,6 +370,17 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Evidence to close:** Passing current CI for the exact commit, API results for both invalid requests, and a read-back confirming the original date remains unchanged. The new test's CI run is currently pending.
 
+### 34. Backend: enforce the documented budget month format
+**What happens:** Budget create/update previously accepted compact date strings such as `20261101`, although the API says the month must use `YYYY-MM-DD` and be the first day of the month.
+
+**Why it matters:** The API accepts undocumented input, which makes client-side validation and integration inconsistent.
+
+**Required correction:** PR #54 now checks both that the date is the first of the month and that converting it back to ISO format exactly matches the submitted value. Tests cover compact date rejection for create and update.
+
+**How QA will verify:** A canonical value such as `2026-10-01` succeeds; compact/noncanonical values return HTTP 400; after a rejected update, the saved budget month remains unchanged.
+
+**Evidence to close:** Passing current CI for the exact commit, API results for create/update, and read-back showing no change after the rejected update. Current CI is pending.
+
 ## Release checklist
 
 Do not mark a check as passed until evidence is attached.
@@ -392,4 +403,4 @@ Do not mark a check as passed until evidence is attached.
 - [ ] Public HTTPS security headers are checked and the approved CSP is tested.
 - [ ] Screenshots, workflow run links, commit SHA, and test results are attached.
 
-**Current overall status:** The correction branch has a previously passing CI checkpoint (run `38213904072`, commit `3bce1183a2916a62cca0018bccaeb8527adb8ebc`, 47 backend tests). Additional commits now add category create/update commit-failure handling and strict expense-date validation; the latest CI run must pass before those newest changes are called verified. The findings register contains 59 findings and this summary contains 33 team actions. AWS deployment, populated-volume migrations, staging failure/recovery, public health checks, and browser end-to-end verification remain pending. The frontend package still has no test script, so frontend functional tests can be skipped by the optional CI command. Do not describe the project as release-ready until the outstanding checks have evidence.
+**Current overall status:** The correction branch has a previously passing CI checkpoint (run `38213904072`, commit `3bce1183a2916a62cca0018bccaeb8527adb8ebc`, 47 backend tests). Additional commits now add category create/update commit-failure handling and strict canonical date validation for expense and budget writes; the latest CI run must pass before those newest changes are called verified. The findings register contains 60 findings and this summary contains 34 team actions. AWS deployment, populated-volume migrations, staging failure/recovery, public health checks, and browser end-to-end verification remain pending. The frontend package still has no test script, so frontend functional tests can be skipped by the optional CI command. Do not describe the project as release-ready until the outstanding checks have evidence.
