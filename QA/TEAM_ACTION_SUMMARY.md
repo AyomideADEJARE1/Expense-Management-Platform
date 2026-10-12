@@ -628,3 +628,15 @@ Run `38270979144` stopped at Flake8 because one line in the new partial-name pre
 
 ## Latest CI checkpoint — 2026-10-12
 Run `38273922288` passed all eight jobs for correction commit `77620d6547cad3ee3774657df9dd0b9256ed9ff6`. Backend lint passed and 62 backend tests passed twice. Frontend lint/build passed and all seven Node tests passed: four budget-spending tests and three budget-search tests. Database migrations 001–005, budget-category RESTRICT, the phone column, migration ordering, secret scan, both Docker builds, and aggregate CI passed. npm audit reported zero vulnerabilities. Flask-Limiter still uses in-memory storage, and AWS runtime, populated-volume migration, public health, browser journeys, reboot recovery, and backup restore evidence remain open.
+
+
+### 57. Frontend: protect the Reports CSV export from spreadsheet formulas
+**What happens:** The report download previously escaped quotation marks but did not neutralize formula-leading descriptions or category names. The Transactions download already had this protection, so the two export paths behaved differently.
+
+**Why it matters:** Spreadsheet software may execute formula-like text from a downloaded report instead of displaying it as plain text.
+
+**Required correction:** PR #54 now uses one shared `escapeCsvCell` helper for both Transactions and Reports and adds Node tests for formula prefixes and CSV quoting.
+
+**How to verify:** Wait for current-head CI. Confirm the CSV tests, frontend lint, and build pass. Then export a report containing a test value such as `=1+1` and confirm the downloaded cell is neutralized.
+
+**Evidence to close:** Passing CI, tested commit SHA, test output, and a sanitized report export sample.
