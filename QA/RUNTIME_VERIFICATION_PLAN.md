@@ -320,3 +320,14 @@ Latest code CI checkpoint: run `38213904072` passed all eight jobs for commit `3
 
 
 Latest correction CI result: run `38213904072` passed all eight jobs for commit `3bce1183a2916a62cca0018bccaeb8527adb8ebc`; 47 backend tests passed. AWS runtime evidence remains pending.
+
+
+## RV-29 — Enforce the documented date format on expense writes
+
+**Related finding:** QA-FIND-059.
+
+**Check:** Through the API, create an expense with `2026-10-12` and confirm it succeeds. Attempt to create and update an expense with a compact or otherwise noncanonical date such as `20261012`; each must return HTTP 400. After a rejected update, fetch the expense and confirm the original date is unchanged.
+
+**Current source correction:** PR #54 compares `date.fromisoformat(value).isoformat()` to the submitted value in both create and update. A regression test has been added, but its current CI run is pending.
+
+**Pass evidence:** Passing current CI and the exact commit SHA, successful canonical-date request, rejected noncanonical create/update responses, and the unchanged stored date after a rejected update. AWS runtime testing is optional for this input-contract gate unless the deployed API differs from the tested commit; live browser journeys remain a separate release gate.
