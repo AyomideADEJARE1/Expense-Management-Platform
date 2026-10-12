@@ -27,7 +27,8 @@
 - [ ] Health checks work.
 - [ ] CI executes required checks.
 - [ ] Required backend and frontend test suites actually collect and run.
-- [ ] Docker images build.\n- [ ] Backend/frontend Docker build contexts exclude local environment files; frontend context excludes host node_modules.
+- [ ] Docker images build.
+- [ ] Backend/frontend Docker build contexts exclude local environment files; frontend context excludes host node_modules.
 - [ ] Compose image names match published GHCR tags.
 - [ ] Public deployment health-check path matches Nginx routing.
 - [ ] AWS deployment configuration matches the actual environment.
@@ -36,12 +37,17 @@
 
 ## Security/documentation
 - [ ] No real secrets are committed.
-- [ ] Environment/secret configuration is verified, including required root Compose variables and separate Flask/JWT secrets.\n- [ ] Category write authorization matches the documented category policy.\n- [ ] Authentication rate limits are verified per client through Nginx and use shared production storage.\n- [ ] CSP is tested on the public HTTPS endpoint; HSTS is confirmed only if configured and observed.
+- [ ] Environment/secret configuration is verified, including required root Compose variables and separate Flask/JWT secrets.
+- [ ] Category write authorization matches the documented category policy.
+- [ ] Authentication rate limits are verified per client through Nginx and use shared production storage.
+- [ ] CSP is tested on the public HTTPS endpoint; HSTS is confirmed only if configured and observed.
 - [ ] Password handling is verified.
 - [ ] Logs and monitoring are available.
 - [ ] Architecture documentation matches implementation.
 - [ ] README matches current implementation and deployment.
-- [ ] Clean-checkout environment setup is reproducible without committing real secrets.\n- [ ] README and Docker guide use the same host port and startup commands.\n- [ ] Frontend automated tests execute in CI and report a non-zero test count.
+- [ ] Clean-checkout environment setup is reproducible without committing real secrets.
+- [ ] README and Docker guide use the same host port and startup commands.
+- [ ] Frontend automated tests execute in CI and report a non-zero test count.
 
 ## QA decision
 Decision: PENDING
