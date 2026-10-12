@@ -128,12 +128,11 @@ The follow-up correction branch removes those unused bindings/imports. The next 
 The same CI log reports one high-severity npm dependency vulnerability during `npm ci`. The log excerpt does not identify the affected package; run `npm audit` and record the package, advisory, affected version, and safe remediation before classifying the risk as resolved.
 
 
-## QA-FIND-016 — Production rate-limit storage is configured as in-memory
-Classification: Production-readiness/security observation. Status: Open. Priority: Medium.
+## QA-FIND-016 — In-memory rate-limit storage (consolidated)
 
-The current `backend/extensions.py` creates Flask-Limiter without a `storage_uri`, and the successful CI test run emitted Flask-Limiter's warning that in-memory storage is not recommended for production. In-memory counters are process-local and are not shared between workers or instances, so rate limits can reset or diverge when the app scales or restarts.
+Classification: Historical production-readiness observation. Status: Consolidated into QA-FIND-039 and QA-FIND-073; not a separate active finding.
 
-Required action: configure a supported shared store (for example, Redis) through deployment configuration for production, document the required setting, and verify rate limiting across the deployed process topology. The CI-only JWT key-length warning should also be removed by using a test signing key of at least 32 bytes; do not reuse CI keys in any real environment.
+The absence of an explicit shared rate-limit store remains a real issue. It is tracked in QA-FIND-039 and QA-FIND-073, which include the production storage requirement and the proxy-aware runtime tests. The old note about a JWT key-length warning is not treated as current evidence; the latest inspected CI log shows the Flask-Limiter in-memory-storage warning. Keep the active correction and closure evidence in the consolidated findings.
 
 ## QA-FIND-017 — Frontend dependency audit reported a high-severity source-map-js advisory
 Classification: Dependency-security finding. Status: Retest PASS for current PR #54 frontend lockfile; broader release review pending. Priority: High.
@@ -378,18 +377,11 @@ Correction status update — 2026-10-11: PR #54's correction branch now requires
 
 This entry describes the same category-write authorization root cause already tracked by QA-FIND-010. Do not count it as a separate defect. QA-FIND-010 is the canonical finding and includes the required policy decision, role enforcement, negative tests, and closure evidence.
 
-## QA-FIND-039 — Rate limiter has no configured shared production storage
-Classification: Abuse protection / production configuration. Priority: High for multi-worker deployment. Status: Open.
+## QA-FIND-039 — Shared rate-limit storage is not configured (consolidated)
 
-Evidence reviewed in `backend/extensions.py`: the `Limiter` is initialized with `key_func=get_remote_address` and `default_limits=[]`, with no explicit `storage_uri` or shared storage configuration. The application error handler can return 429, but that alone does not prove that meaningful limits are configured or shared between workers.
+Classification: Production configuration / abuse protection. Status: Consolidated into QA-FIND-073; the missing shared storage remains open there.
 
-Why it matters: with no default limits, protection depends entirely on route-specific decorators. If limits use process-local in-memory storage, separate workers/instances can each grant their own allowance and restarts reset counters. This can weaken protection against brute force or abusive traffic.
-
-Required correction: inventory route-level limit decorators and identify which sensitive endpoints need limits (especially login/registration). Configure explicit, documented limits and shared production storage such as Redis if the app runs across workers/instances. Keep local test behavior explicit and define what happens if the shared store is unavailable.
-
-Required tests: verify limits actually trigger on sensitive endpoints; verify counters are shared across multiple workers/instances; verify restart behavior; test/document shared-store outage behavior; ensure proxy configuration does not let callers spoof the address used for rate-limit keys.
-
-Closure evidence: reviewed route policy, production configuration, multi-worker test results, and operational documentation. Do not mark this fixed merely because the 429 handler exists.
+The current source still initializes Flask-Limiter without a shared storage URI. QA-FIND-073 is the active tracking item for both this gap and proxy-aware client identity. The team must configure approved shared storage for AWS production and verify restart/multi-worker behavior. Do not treat this consolidation as a fix.
 
 ## QA-FIND-040 — Deployment publishes and deploys mutable latest image tags
 Classification: Deployment reproducibility / release integrity. Priority: High. Status: Open.
@@ -550,20 +542,11 @@ Retest: Inspect response headers from the public HTTPS URL and run browser smoke
 Closure evidence: Header capture from the deployed HTTPS endpoint, reviewed CSP policy, and browser test evidence. Do not report HSTS as enabled unless observed on HTTPS responses.
 
 
-## QA-FIND-051 — Login/register rate limits may group all users behind Nginx
+## QA-FIND-051 — Proxy-aware login/register rate limiting (consolidated)
 
-Classification: Confirmed proxy-aware rate-limit configuration gap. Status: Open. Priority: Medium–High; availability and abuse prevention.
+Classification: Historical proxy-identity finding. Status: Partially corrected in PR #54 and consolidated into QA-FIND-073 for remaining AWS topology/shared-storage verification.
 
-Evidence: The authentication routes apply a limit of five requests per minute to registration and login. The limiter uses Flask-Limiter's `get_remote_address`. The reviewed backend does not configure trusted-proxy handling, while Nginx forwards requests to the backend and sets X-Forwarded-For. Without a deliberately configured trusted-proxy policy, Flask may see the Nginx container address as the remote address for all users. This can make legitimate users share the same small request limit and allow one client's repeated attempts to affect other users. The limiter also uses its default in-memory storage unless production storage is configured.
-
-Impact: Login and registration can be throttled for unrelated users, and the rate limit can reset on restart or differ between workers. Rate limiting may therefore be both too broad and inconsistent in production.
-
-Required correction: Backend/DevOps must configure proxy trust only for the known Nginx hop(s), using the correct trusted proxy count and ensuring the edge proxy overwrites/appends forwarding headers safely. Configure shared production rate-limit storage and document behavior if that store is unavailable. Do not blindly trust arbitrary client-supplied X-Forwarded-For values.
-
-Retest: Send login/register attempts through the public Nginx endpoint from two independent client addresses. Confirm each client's limit is tracked separately, excess requests receive 429, and the second client remains usable. Repeat across workers/restarts to verify shared storage behavior.
-
-Closure evidence: Reviewed proxy configuration, rate-limit storage configuration, automated or controlled test results from separate client addresses, response codes, and deployed commit/version.
-
+PR #54 now configures ProxyFix for exactly one trusted Nginx hop and adds a regression test that verifies the rightmost forwarded address. This source-level correction still requires confirmation against the actual AWS topology. Shared rate-limit storage is not configured, and the public endpoint has not yet been tested from independent clients. QA-FIND-073 is the active closure record; do not count this entry as a separate active defect.
 
 ## QA-FIND-052 — Category deletion maps every database failure to a conflict
 
