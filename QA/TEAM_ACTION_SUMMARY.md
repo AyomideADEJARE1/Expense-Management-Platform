@@ -640,3 +640,15 @@ Run `38273922288` passed all eight jobs for correction commit `77620d6547cad3ee3
 **How to verify:** CI run `38275606391` passed all eight jobs for commit `11d1756f083f51e6e18d51651f76bcb5d74a9af2`, including nine frontend Node tests and the frontend lint/build. Next, export a report containing a test value such as `=1+1` and confirm the downloaded cell is neutralized.
 
 **Evidence to close:** CI run `38275606391`, tested commit SHA, nine passing frontend tests, and a sanitized report export sample from both export paths. The browser portion remains open.
+
+
+### 58. Frontend: keep the report CSV download URL alive long enough
+**What happens:** The Reports export revoked its Blob URL immediately after starting the download, while the Transactions export waits one second before cleanup.
+
+**Why it matters:** Browser download handling can be asynchronous; early revocation may interrupt the report download.
+
+**Required correction:** PR #54 now delays URL cleanup by one second, matching the Transactions export.
+
+**How to verify:** Run current-head CI, then export small and larger reports in the supported browsers and confirm every file completes with the expected rows.
+
+**Evidence to close:** Passing CI, browser/version used, successful download confirmation, and a check of the downloaded row count.
