@@ -1059,7 +1059,7 @@ CI run `38272033341` passed all eight jobs for correction commit `ea775178ea545b
 
 ## QA-FIND-080 — Docker setup guide omits a required backend environment file
 
-**Classification:** Setup documentation defect. **Status:** Documentation correction proposed in PR #54; CI/runtime retest pending. **Priority:** Medium.
+**Classification:** Setup documentation defect. **Status:** Documentation correction is committed in PR #54; current-head CI passed, clean local startup verification pending. **Priority:** Medium.
 
 **Evidence:** `docker-compose.yml` declares `./backend/.env` as a required `env_file` for the backend service. The README's clean-start instructions tell the reader to create both the root `.env` and `backend/.env`, but the Docker guide previously instructed the reader to create only the root `.env` before running Compose. A reader following the Docker guide alone could reach startup with the required backend environment file missing.
 
@@ -1070,3 +1070,8 @@ CI run `38272033341` passed all eight jobs for correction commit `ea775178ea545b
 **Required retest:** Review the rendered Docker guide from a clean checkout. In a disposable environment, remove both local environment files, follow the documented commands exactly, replace placeholders, and verify Compose starts all four services healthy. Separately confirm missing required files/secrets produce the documented startup error.
 
 **Closure evidence:** Passing CI for the latest docs/code head, reviewed setup instructions, clean-start command log, and `docker compose ps` showing all four services healthy. Do not expose actual secret values in logs or screenshots.
+
+
+## Latest correction CI checkpoint — 2026-10-12 (current source head)
+
+Run `38272803374` passed all eight jobs for correction commit `f58bd3fbc4e75ae224c3bb3981a704d3c3ba1c45`. Backend lint passed and the suite passed 62 tests twice. Frontend lint/build passed, and the new `npm test` command executed all four budget-spending tests (4 passed, 0 failed). Database migrations 001–005 and the foreign-key checks, secret scan, both Docker builds, and aggregate CI passed. This is CI evidence only: AWS deployment, populated-volume migrations, browser end-to-end journeys, reboot recovery, backup restore, and shared rate-limit storage remain open. The frontend whole-month budget behavior still requires a browser-level check.
