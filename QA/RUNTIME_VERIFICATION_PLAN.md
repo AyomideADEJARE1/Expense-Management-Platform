@@ -420,3 +420,14 @@ Latest correction CI result: run `38213904072` passed all eight jobs for commit 
 **Current source correction:** PR #54 adds migration 005, the model field, API validation/response data, frontend request payload, and a backend regression test. CI also checks that the column exists and that CD applies migration 005 after migration 004 but before restarting app services. Latest CI for this change is pending.
 
 **Pass evidence:** Passing CI for the exact commit, clean/existing-database migration evidence, API read-back, and AWS staging/browser verification after deployment.
+
+
+## RV-38 — Confirm notification preferences cause the promised behavior
+
+**Related finding:** QA-FIND-068.
+
+**Check:** First confirm the agreed scope: real notifications or inactive preference controls. If real notifications are required, enable in-app and email alerts separately and trigger a deterministic test. Verify delivery to the correct user when enabled and no delivery when disabled. Test weekly scheduling, duplicate prevention, retries/failures, and user isolation. If delivery is out of scope, confirm the UI clearly says the settings are not active and does not imply messages will be sent.
+
+**Current source evidence:** The reviewed profile API stores `notifications_enabled` and `email_alerts_enabled`, but the repository has no identified mail-sending dependency, notification worker/scheduler, or push-delivery implementation. The scope decision and runtime behavior remain unverified.
+
+**Pass evidence:** Written scope decision; if implemented, automated tests plus a staging delivery record; otherwise, approved UI wording and browser evidence that no active-delivery promise remains.
