@@ -785,3 +785,89 @@ def test_category_create_unexpected_commit_failure_rolls_back_and_recovers(
         json={"name": f"QA category recovery {uuid.uuid4().hex}"},
     )
     assert recovered.status_code == 201
+
+
+def test_email_constraint_race_returns_conflict_for_register_and_profile(
+    client, monkeypatch
+):
+    def fail_email_unique_commit(self):
+        raise IntegrityError(
+            "user email insert/update",
+            {},
+            SimpleNamespace(
+                diag=SimpleNamespace(
+                    constraint_name="users_email_key"
+                )
+            ),
+        )
+
+    email = f"qa-email-race-{uuid.uuid4().hex}@example.test"
+    with monkeypatch.context() as patcher:
+        patcher.setattr(Session, "commit", fail_email_unique_commit)
+        registration = client.post(
+            "/api/auth/register",
+            json={
+                "full_name": "QA Email Race",
+                "email": email,
+                "password": "TestPassword123!",
+            },
+        )
+
+    assert registration.status_code == 409
+
+    registration = client.post(
+        "/api/auth/register",
+        json={
+            "full_name": "QA Email Race",
+            "email": email,
+            "password": "TestPassword123!",
+        },
+    )
+    assert registration.status_code == 201
+
+    login = client.post(
+        "/api/auth/login",
+        json={"email": email, "password": "TestPassword123!"},
+    )
+    assert login.status_code == 200
+    token = login.get_json()["data"]["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    with monkeypatch.context() as patcher:
+        patcher.setattr(Session, "commit", fail_email_unique_commit)
+        profile_update = client.put(
+            "/api/auth/me",
+            headers=headers,
+            json={"email": f"qa-email-new-{uuid.uuid4().hex}@example.test"},
+        )
+
+    assert profile_update.status_code == 409
+    current_profile = client.get("/api/auth/me", headers=headers)
+    assert current_profile.status_code == 200
+    assert current_profile.get_json()["data"]["email"] == email
+
+
+def test_registration_unexpected_commit_failure_rolls_back_and_recovers(
+    client, monkeypatch
+):
+    def fail_commit(self):
+        raise RuntimeError("simulated registration database failure")
+
+    email = f"qa-register-recovery-{uuid.uuid4().hex}@example.test"
+    payload = {
+        "full_name": "QA Registration Recovery",
+        "email": email,
+        "password": "TestPassword123!",
+    }
+
+    with monkeypatch.context() as patcher:
+        patcher.setattr(Session, "commit", fail_commit)
+        failed = client.post("/api/auth/register", json=payload)
+
+    assert failed.status_code == 500
+    assert "simulated registration database failure" not in failed.get_data(
+        as_text=True
+    )
+
+    recovered = client.post("/api/auth/register", json=payload)
+    assert recovered.status_code == 201
