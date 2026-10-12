@@ -297,3 +297,6 @@ Related finding: QA-FIND-057. Priority: Medium.
 PR #54 now catches database commit errors in category create/update, rolls back, and returns HTTP 409 only for the named category-name unique constraint. Other integrity errors and unexpected exceptions return a generic HTTP 500. Automated tests simulate the known constraint conflict for both create and update, plus an unexpected create failure followed by a successful request.
 
 Pass evidence: latest CI passes the category error tests; duplicate conflict returns 409; unexpected failure returns sanitized 500; a failed update leaves the original category name unchanged; and a later valid request succeeds. Do not close this gate from source review alone.
+
+
+Latest source CI checkpoint: run `38212554474` passed all eight jobs for commit `57c13c60386419d84594ce64d7db015351d105f5`; 37 backend tests passed. This does not close any gate that requires AWS staging, populated-volume migration, public health, or browser evidence.
