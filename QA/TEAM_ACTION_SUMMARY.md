@@ -491,6 +491,17 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Evidence to close:** Written threshold rules, passing boundary/duplicate-prevention tests, and browser evidence or approved revised settings wording.
 
+### 45. DevOps: make the AWS stack recover after a VM reboot
+**What happens:** The Compose services do not define restart policies, and the reviewed deployment workflow does not install a systemd unit to start the stack after EC2 or Docker restarts.
+
+**Why it matters:** A normal VM reboot or Docker daemon restart may leave the application offline until someone manually starts it.
+
+**Required correction:** Add and document a reliable boot-recovery method. Use appropriate restart policies for PostgreSQL, backend, frontend, and Nginx; add a systemd unit if startup ordering requires it. Preserve the rule that migrations must finish before the new app starts.
+
+**How QA will verify:** In AWS staging, reboot the VM or restart Docker. Confirm the stack returns without manual SSH commands, the database data persists, both public health endpoints recover, and the running image still matches the intended commit.
+
+**Evidence to close:** Compose/systemd configuration, reboot and recovery logs, container/image version evidence, health checks, and a test-record persistence check.
+
 ## Release checklist
 
 Do not mark a check as passed until evidence is attached.
@@ -531,3 +542,6 @@ Do not mark a check as passed until evidence is attached.
 
 
 **Budget alert threshold:** QA-FIND-070 remains open. The setting is saved, but no budget component currently uses it to trigger alerts.
+
+
+**AWS reboot recovery:** QA-FIND-071 remains open until a staging VM/Docker restart demonstrates automatic recovery and data persistence.
