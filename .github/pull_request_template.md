@@ -27,7 +27,7 @@ Briefly describe:
 - [ ] Nginx
 - [ ] Docker
 - [ ] CI/CD
-- [ ] Azure / Cloud
+- [ ] AWS / Cloud
 - [ ] Security
 - [ ] Documentation
 - [ ] QA / Testing
