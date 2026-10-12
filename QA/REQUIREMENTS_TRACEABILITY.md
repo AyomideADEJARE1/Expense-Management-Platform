@@ -189,3 +189,8 @@ The reviewed frontend code converted a null category ID to numeric zero and comp
 
 ## QA-FIND-080 — Clean Docker setup requires both environment files
 The Docker guide now instructs readers to create both the root `.env` and `backend/.env` and explains their different settings. Verify from a clean checkout that the documented commands start all four Compose services and the health endpoints respond. The runtime check is pending.
+
+
+## Latest correction CI checkpoint — 2026-10-12
+
+Run 38272803374 passed all eight jobs for correction commit f58bd3fbc4e75ae224c3bb3981a704d3c3ba1c45. The backend suite passed 62 tests twice and the new frontend Node suite passed all four tests, including whole-month budget spending. This confirms CI for the current code head; browser and AWS runtime evidence remains pending. The in-memory rate-limit storage warning remains open under QA-FIND-073.
