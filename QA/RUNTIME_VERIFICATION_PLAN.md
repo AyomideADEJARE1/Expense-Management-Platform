@@ -489,7 +489,7 @@ Run `38221595123` passed all eight jobs for source-branch head `72ff22992e8561b5
 
 **Finding:** QA-FIND-073. **Owner:** Backend + DevOps. **Status:** Open.
 
-**Source-level concern:** Flask-Limiter uses `get_remote_address`, the Flask app has no trusted-proxy middleware, and the limiter has no explicit shared storage URI. Behind Nginx, multiple clients may therefore share the proxy's `remote_addr`; in-memory counters reset on restart and are not shared across replicas.
+**Source-level concern:** PR #54 now configures `ProxyFix(x_for=1, x_proto=1)` and adds a unit test that verifies the rightmost forwarded address is selected for the documented single Nginx hop. Confirm that assumption against the actual AWS topology. The limiter still has no explicit shared storage URI, so in-memory counters reset on restart and are not shared across replicas.
 
 **Procedure:**
 1. Record the approved production rate-limit policy, Nginx proxy topology, and shared-store service/configuration. Do not put credentials in evidence.
