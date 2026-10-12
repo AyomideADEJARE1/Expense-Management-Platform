@@ -674,4 +674,6 @@ CI run 38273922288 passed all eight jobs for correction commit 77620d6547cad3ee3
 
 **Pass criteria:** Debug is enabled only for the explicit development/test values; production, prod, and empty/unknown values return false. The production container entry point remains Gunicorn.
 
+**CI status:** Run `38277037377` passed all eight jobs for commit `8151bb56e730c6f6eb0205691b334a121abc934e`; the backend suite passed 69 tests, including the parameterized debug-mode cases.
+
 **Evidence:** CI run ID, commit SHA, parameterized test result, and reviewed Docker entry point. Do not claim a live AWS debugger check unless the deployed environment was actually inspected.
