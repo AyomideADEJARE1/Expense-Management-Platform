@@ -1090,3 +1090,18 @@ Run `38272803374` passed all eight jobs for correction commit `f58bd3fbc4e75ae22
 **Required retest:** CI run 38273922288 passed all seven frontend Node tests, including the new budget-search tests. Confirm the rendered results in a browser. In the browser, search for a category name, a budget month, and an unrelated word. Confirm only matching budgets appear, while matching expenses/categories still appear correctly. Confirm a whole-month budget uses a meaningful title.
 
 **Closure evidence:** Passing current-head CI, output from the budget-search tests, and browser search results for matching and non-matching queries. CI alone does not prove the rendered result list is correct.
+
+
+## QA-FIND-082 — User profile updates do not refresh `users.updated_at`
+
+**Classification:** Data integrity / audit metadata. **Priority:** Low. **Status:** Correction proposed in PR #54; current-head CI retest pending.
+
+**Evidence:** The `users.updated_at` column has a database default for initial creation, but the SQLAlchemy model previously had no `onupdate` behavior or database trigger. The profile route updates user fields and commits changes without explicitly updating this timestamp. As a result, a profile can change while `updated_at` still records the original account-creation time.
+
+**Why it matters:** Any support, audit, or future synchronization process that relies on `updated_at` will receive misleading information about when the profile last changed.
+
+**Correction in PR #54:** The model now declares `onupdate=db.func.current_timestamp()`, and a regression test moves the stored timestamp to a known old value, updates the profile through the API, and verifies that the timestamp advances.
+
+**Required retest:** Run the test on the current correction head and verify it passes against the CI PostgreSQL database. Confirm an API profile update changes `updated_at` while a read-only request does not. AWS runtime evidence is not required to prove the ORM-level behavior, but CI must be green.
+
+**Closure evidence:** Passing current-head CI, tested commit SHA, and the regression-test result. If the team intends `updated_at` to mean only database-triggered changes, replace the ORM behavior with a database trigger and test that contract consistently.
