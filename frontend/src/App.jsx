@@ -202,13 +202,15 @@ function MainAppContent() {
           )}
           {activeTab === 'transactions' && (
             <Transactions
+              currency={user?.currency || 'NGN (₦)'}
               categories={categories}
               onTransactionChange={loadAppData}
               isDarkMode={isDarkMode}
             />
           )}
           {activeTab === 'budgets' && (
-            <Budgets 
+            <Budgets
+              currency={user?.currency || 'NGN (₦)'}
               categories={categories} 
               budgets={budgets} 
               setBudgets={setBudgets} 
@@ -225,7 +227,8 @@ function MainAppContent() {
             />
           )}
           {activeTab === 'reports' && (
-            <Reports 
+            <Reports
+              currency={user?.currency || 'NGN (₦)'}
               monthlySummary={monthlySummary}
               categorySummary={categorySummary}
               isDarkMode={isDarkMode} 
