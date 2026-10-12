@@ -11,6 +11,7 @@ import Settings from './pages/Settings';
 import { ToastProvider, useToast } from './context/ToastContext';
 import { api } from './services/api';
 import { formatCurrency } from './utils/currency';
+import { calculateBudgetSpent } from './utils/budgetSpending';
 
 function MainAppContent() {
   const { user, loading: authLoading } = useAuth();
@@ -66,25 +67,7 @@ function MainAppContent() {
 
       setBudgets(
         budgetData.map((budget) => {
-          const budgetMonth = String(budget.month || '').slice(0, 7);
-
-          const spent = expenseData
-            .filter((expense) => {
-              const expenseCategoryId =
-                expense.category_id ?? expense.category?.id;
-
-              const expenseDate =
-                expense.expense_date ?? expense.date;
-
-              return (
-                Number(expenseCategoryId) === Number(budget.category_id) &&
-                String(expenseDate || '').slice(0, 7) === budgetMonth
-              );
-            })
-            .reduce(
-              (total, expense) => total + Number(expense.amount || 0),
-              0
-            );
+          const spent = calculateBudgetSpent(budget, expenseData);
 
           return {
             ...budget,
