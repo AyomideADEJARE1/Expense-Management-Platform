@@ -359,6 +359,17 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Evidence to close:** Passing CI for the latest commit, API results for conflict and recovery tests, and the exact tested commit SHA.
 
+### 33. Backend: enforce one date format for expense create/update
+**What happens:** Expense create/update previously accepted some ISO date formats other than the documented `YYYY-MM-DD`, while the date-range filters enforce the exact format.
+
+**Why it matters:** The same API treats a date differently depending on whether it is used to save an expense or filter expenses. That makes integration and error handling inconsistent.
+
+**Required correction:** PR #54 now checks that parsing the date and converting it back produces exactly the submitted string. The regression test checks that compact dates are rejected on create and update and that a failed update leaves the saved date unchanged.
+
+**How QA will verify:** Confirm canonical `YYYY-MM-DD` dates succeed; compact/noncanonical formats return HTTP 400 for both create and update; and a rejected update does not alter the saved date.
+
+**Evidence to close:** Passing current CI for the exact commit, API results for both invalid requests, and a read-back confirming the original date remains unchanged. The new test's CI run is currently pending.
+
 ## Release checklist
 
 Do not mark a check as passed until evidence is attached.
@@ -381,4 +392,4 @@ Do not mark a check as passed until evidence is attached.
 - [ ] Public HTTPS security headers are checked and the approved CSP is tested.
 - [ ] Screenshots, workflow run links, commit SHA, and test results are attached.
 
-**Current overall status:** Several issues are documented and some source corrections have been proposed. Prior CI run `38212158351` passed all eight jobs for commit `927e35eaf3af827d8b52ef93f6f883c6bfcaa667`; the backend suite passed 35 tests and migrations 001–004 were verified in CI. The category create/update error-handling update is covered by passing CI run `38212554474` (37 backend tests). The email unique-constraint handling for registration/profile updates is covered by passing CI run `38212818430` (39 backend tests), and the current source including README clarification passed all eight jobs in run `38213095648`. AWS deployment, populated-volume migration, staging recovery, public health checks, and browser verification remain pending. AWS deployment, populated-volume migration, staging recovery, public health checks, and browser verification remain pending. AWS deployment, populated-volume migration, staging failure/recovery, public health checks, and browser verification remain pending. AWS deployment, populated-volume migration, staging failure/recovery, public health checks, and browser verification remain pending. The frontend package still has no test script, so frontend functional tests can be skipped by the optional CI command. Do not describe the whole project as release-ready until the blocking items above are closed with evidence.
+**Current overall status:** The correction branch has a previously passing CI checkpoint (run `38213904072`, commit `3bce1183a2916a62cca0018bccaeb8527adb8ebc`, 47 backend tests). Additional commits now add category create/update commit-failure handling and strict expense-date validation; the latest CI run must pass before those newest changes are called verified. The findings register contains 59 findings and this summary contains 33 team actions. AWS deployment, populated-volume migrations, staging failure/recovery, public health checks, and browser end-to-end verification remain pending. The frontend package still has no test script, so frontend functional tests can be skipped by the optional CI command. Do not describe the project as release-ready until the outstanding checks have evidence.
