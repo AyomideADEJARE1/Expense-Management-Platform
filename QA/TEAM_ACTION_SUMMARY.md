@@ -545,3 +545,15 @@ PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit tes
 **How to verify:** Test wrong/current password, successful rotation, old-password rejection, reset-token expiry and reuse, account-enumeration resistance, and rate limits.
 
 **Evidence required:** Written scope decision, passing security tests, and redacted browser/API evidence of the agreed flow.
+
+
+### 51. Backend: preserve the omitted name field during partial profile updates
+**What happens:** If a profile request changes only one name field, the previous API logic could erase the other part of the user's name or reject the update.
+
+**Why it matters:** A valid profile edit could unintentionally remove stored user information.
+
+**Required correction:** PR #54 now keeps the existing first or last name when that field is not included in the request. A regression test covers changing first name alone and last name alone.
+
+**How to verify:** Update only the first name and check the last name remains. Then update only the last name and check the first name remains. Confirm an explicitly empty first name is rejected and the profile still contains the last saved values.
+
+**Evidence required:** Passing CI for the exact commit, API results for both partial-update cases, and a read-back of the final profile. Do not close this based on source changes alone.
