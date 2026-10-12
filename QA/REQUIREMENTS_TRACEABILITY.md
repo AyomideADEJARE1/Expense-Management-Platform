@@ -78,4 +78,4 @@ The API/database support a whole-month budget with `category_id = NULL`, but the
 
 ## QA-FIND-062 trace — month query format and summary correctness
 
-The expense list, monthly summary, and category summary now validate exact `YYYY-MM` input before parsing. Regression tests cover malformed values (`2026-1`, `2026-010`) and check summary totals against known expense data. The latest CI run is pending; do not mark this trace as passed until the run succeeds.
+The expense list, monthly summary, and category summary now validate exact `YYYY-MM` input before parsing. Regression tests cover malformed values (`2026-1`, `2026-010`) and check summary totals against known expense data. The backend job in CI run `38216409164` passed Flake8 and all 48 backend tests, including the new regression test; Docker builds and aggregate CI were still running at the last check. Do not mark the full CI trace as passed until all jobs finish.
