@@ -184,7 +184,7 @@ Run 38272033341 passed all eight jobs for correction commit ea775178ea545b48bfea
 
 
 ## QA-FIND-079 trace — Whole-month budget spending total
-The reviewed frontend code converted a null category ID to numeric zero and compared it to expense category IDs, which could make a whole-month budget report zero spending. PR #54 now has a shared spending helper and Node regression tests; `npm test` is configured so CI should execute them. Current-head CI and browser evidence are required before closure.
+The reviewed frontend code converted a null category ID to numeric zero and compared it to expense category IDs, which could make a whole-month budget report zero spending. PR #54 now has a shared spending helper and Node regression tests. CI run `38273922288` passed all seven frontend tests; browser evidence remains required before closure. Whole-month UI creation is a separate unresolved scope decision under QA-FIND-061.
 
 
 ## QA-FIND-080 — Clean Docker setup requires both environment files
