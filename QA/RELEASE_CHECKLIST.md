@@ -49,3 +49,6 @@ Reviewed branch/commit:
 Reviewer:
 Date:
 Evidence:
+
+- [ ] Category deletion is blocked with HTTP 409 when any budget references that category; no budget category link or amount changes.
+- [ ] Migration 004 enforces `ON DELETE RESTRICT` on fresh and existing databases.
