@@ -2,7 +2,7 @@
 
 Findings are evidence-based. QA is not judged by defect count.
 
-Latest fully green correction checkpoint: CI run 38272033341 passed all eight jobs for commit ea775178ea545b48bfea9cdaadd77b7b0965d4b8. Backend lint passed and the suite passed 61 tests twice, including trusted-proxy, partial-profile-name, and budget foreign-key race regression tests. CI verified migrations 001–005, the budget-category RESTRICT rule, the users.phone column, and migration order; frontend lint/build, secret scanning, both Docker builds, and aggregate CI passed. The frontend npm audit reported zero vulnerabilities. Flask-Limiter still warns that rate-limit counters use in-memory storage. This is CI evidence only; AWS live deployment, populated-volume migration, browser workflows, reboot recovery, backup restore, and shared production rate-limit storage remain unverified.
+Latest fully green correction checkpoint: CI run 38272803374 passed all eight jobs for correction-branch commit f58bd3fbc4e75ae224c3bb3981a704d3c3ba1c45. Backend lint passed and the suite passed 62 tests twice, including trusted-proxy, partial-profile-name, and category-delete race tests. The frontend suite executed four Node tests and all four passed, including whole-month and category-specific budget spending. CI verified migrations 001–005, the budget-category RESTRICT rule, the users.phone column, and migration order; frontend lint/build, secret scanning, both Docker builds, and aggregate CI passed. npm audit reported zero vulnerabilities. Flask-Limiter still warns that rate-limit counters use in-memory storage. This is CI evidence only; AWS live deployment, populated-volume migration, browser workflows, reboot recovery, backup restore, and shared production rate-limit storage remain unverified.
 
 ## QA-FIND-001 — Duplicate frontend source structures
 Classification: Observation. Status: Open.
@@ -1044,7 +1044,7 @@ CI run `38272033341` passed all eight jobs for correction commit `ea775178ea545b
 
 ## QA-FIND-079 — Whole-month budget spending is calculated as zero in the dashboard
 
-**Classification:** Functional correctness / financial reporting. **Priority:** High. **Status:** Correction committed to PR #54; current-head CI and UI verification pending.
+**Classification:** Functional correctness / financial reporting. **Priority:** High. **Status:** CI passed for correction commit f58bd3fbc4e75ae224c3bb3981a704d3c3ba1c45; browser verification pending.
 
 **Source evidence:** In `frontend/src/App.jsx`, budget spending was calculated by comparing `Number(expenseCategoryId)` with `Number(budget.category_id)`. For a whole-month budget, `budget.category_id` is `null`, so `Number(null)` is `0`. Expense category IDs are positive IDs, so none of the user's expenses match. The displayed `spent`, percentage used, remaining amount, and on-track/exceeded state can therefore all be wrong for a whole-month budget.
 
@@ -1052,7 +1052,7 @@ CI run `38272033341` passed all eight jobs for correction commit `ea775178ea545b
 
 **Correction committed to PR #54:** Spending calculation is moved into `frontend/src/utils/budgetSpending.js`. It sums all of the authenticated user's expense rows for the budget month when `category_id` is null, and only the matching category for a category budget. The helper ignores non-finite amounts instead of allowing `NaN` to poison the total. Native Node tests cover whole-month totals, category-specific totals, month boundaries, alternate expense field shapes, and invalid amounts. A `npm test` script has been added so the existing CI test step will execute these tests rather than silently skipping frontend tests.
 
-**Required retest:** Confirm current-head CI runs the frontend tests and they pass. In a browser, create a whole-month budget, add expenses in two categories for that month and one expense in another month, then confirm the total spent includes only the two same-month expenses. Confirm a category budget counts only its own category. Check percentage, remaining amount, and exceeded/on-track state.
+**Required retest:** CI run 38272803374 passed all four frontend Node tests, including whole-month and category-specific totals. In a browser, create a whole-month budget, add expenses in two categories for that month and one expense in another month, then confirm the total spent includes only the two same-month expenses. In a browser, create a whole-month budget, add expenses in two categories for that month and one expense in another month, then confirm the total spent includes only the two same-month expenses. Confirm a category budget counts only its own category. Check percentage, remaining amount, and exceeded/on-track state.
 
 **Closure evidence:** Passing CI for the exact commit, visible frontend test results, redacted browser screenshots or a recorded test run showing the expected amounts, and confirmation that category-specific budgets still calculate correctly. AWS deployment evidence is separate and must not be inferred from CI.
 
