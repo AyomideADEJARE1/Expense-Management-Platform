@@ -518,3 +518,24 @@ Run `38221595123` passed all eight jobs for source-branch head `72ff22992e8561b5
 **Pass evidence:** Approved policy, automated test results, redacted email delivery/verification trace, and staging API/browser evidence for rejected and successful changes.
 
 **Fail conditions:** An unverified new email becomes the login identity, a verification token can be reused or never expires, duplicate-email races return the wrong result, or the implementation contradicts the written policy.
+
+
+## RV-45 — Verify the approved password policy is enforced
+
+**Finding:** QA-FIND-075. **Owner:** Backend + product/security. **Status:** Open.
+
+**Procedure:** Record the approved minimum and maximum password lengths. Submit registration requests with values below, at, and above those limits, plus empty, whitespace-only, non-string, and oversized values. Confirm invalid requests return the documented client error and do not create a user. Confirm an accepted password can authenticate and that the UI gives the same guidance as the API. Do not test or store real user passwords.
+
+**Pass evidence:** Approved policy, passing automated boundary tests, exact commit SHA, browser validation evidence, and proof that rejected registration leaves no account record.
+
+**Fail conditions:** A password outside the agreed policy is accepted, invalid input produces a server error, the UI and API disagree, or a rejected registration leaves a user record.
+
+## RV-46 — Verify password change/recovery scope and security
+
+**Finding:** QA-FIND-076. **Owner:** Team lead + backend/security. **Status:** Open pending scope decision.
+
+**Procedure:** First record whether self-service password change and reset are required. If implemented, verify current-password checks, successful rotation, rejection of an incorrect current password, old-password rejection after rotation, single-use/expiring reset tokens, rate limiting, and non-disclosure of account existence. Use a controlled test mailbox; never place credentials or reset tokens in audit evidence. If explicitly out of scope, verify the limitation is documented and the UI does not imply a recovery feature exists.
+
+**Pass evidence:** Written scope decision; if in scope, passing security tests and redacted staging evidence of the complete flow; if out of scope, approved documentation/UI wording.
+
+**Fail conditions:** A password can be changed without the required authorization, a reset token can be reused or does not expire, recovery responses disclose account existence, or the team claims self-service recovery without a working tested path.
