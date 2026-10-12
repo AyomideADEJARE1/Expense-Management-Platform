@@ -871,3 +871,10 @@ Classification: Feature completeness / misleading preference controls. Status: R
 **Required retest:** For an implemented service, enable each setting and trigger a deterministic test notification; verify delivery when enabled and no delivery when disabled. Verify scheduling, duplicate prevention, retry/failure handling, and that one user's preferences do not affect another user. For a UI-only scope, confirm the wording clearly says these settings are not yet active.
 
 **Closure evidence:** Written scope decision, implementation/configuration evidence if required, automated tests, and a staging delivery record or approved revised UI copy.
+
+
+## Latest correction CI checkpoint — 2026-10-12
+
+CI run [38219570139](https://github.com/AyomideADEJARE1/Expense-Management-Platform/actions/runs/38219570139) passed all eight jobs for correction commit `8c8c05b8a25cba190746aa3c5b33a7933ec76013`. The backend suite ran twice; both runs passed all 58 tests, including the phone persistence/validation test. The database job applied migrations 001–005 and verified both the budget-category `RESTRICT` rule and the new `users.phone` column. Frontend lint/build, secret scanning, both Docker builds, and the aggregate CI check passed.
+
+The current correction branch has subsequent documentation-only commits; CI for the newer branch head was running at the last check. The green run verifies the code commit above, not the newest docs head. It also does not prove migration 005 against a populated AWS volume, live AWS deployment, public health endpoints, browser settings save/reload, or actual notification delivery. CI still emits a Flask-Limiter warning because its test/default configuration uses in-memory rate-limit storage; production must use approved shared storage and verify client identity through Nginx.
