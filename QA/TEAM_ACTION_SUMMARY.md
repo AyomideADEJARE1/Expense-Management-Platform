@@ -557,15 +557,3 @@ PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit tes
 **How to verify:** Update only the first name and check the last name remains. Then update only the last name and check the first name remains. Confirm an explicitly empty first name is rejected and the profile still contains the last saved values.
 
 **Evidence required:** Passing CI for the exact commit, API results for both partial-update cases, and a read-back of the final profile. Do not close this based on source changes alone.
-
-
-### 51. Backend/frontend/QA: preserve omitted name fields during profile updates
-**What happens:** The earlier API route could treat an omitted first or last name as an empty string when only the other field was updated. PR #54 now preserves the omitted part from the saved profile and adds a regression test.
-
-**Why it matters:** Partial updates from the UI or another client can erase part of a user's name or fail unexpectedly.
-
-**Required correction:** Keep the corrected fallback behavior and maintain tests for updating each name part independently. Do not treat a green build as proof of browser save/reload.
-
-**How QA will verify:** Change only the first name and read the profile back; then change only the last name and read it back. Confirm the omitted part stays unchanged. Repeat with a one-part existing name and invalid inputs.
-
-**Evidence to close:** Passing CI for the current code head, API read-back results for both partial updates, and browser save/reload evidence.
