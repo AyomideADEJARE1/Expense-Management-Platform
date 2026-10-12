@@ -643,7 +643,6 @@ def test_unexpected_category_delete_failure_returns_500_and_recovers(
     assert recovered.status_code == 200
 
 
-
 def test_category_with_budget_cannot_be_deleted_or_reclassified(client):
     email = f"qa-category-budget-{uuid.uuid4().hex}@example.test"
     password = "TestPassword123!"
