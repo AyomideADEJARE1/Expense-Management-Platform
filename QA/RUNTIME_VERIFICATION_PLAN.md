@@ -585,9 +585,9 @@ CI run 38272033341 passed all eight jobs for correction commit ea775178ea545b48b
 
 ## RV-49 — Verify whole-month budget totals and frontend regression tests
 
-**Finding:** QA-FIND-080. **Owner:** Frontend + QA. **Status:** Open until current-head CI and browser verification pass.
+**Finding:** QA-FIND-079. **Owner:** Frontend + QA. **Status:** CI passed for code head `77620d6547cad3ee3774657df9dd0b9256ed9ff6`; browser verification remains open.
 
-**Source-level correction:** PR #54 adds `calculateBudgetSpent` in `frontend/src/utils/budgetSpending.js`, tests in `frontend/tests/budgetSpending.test.js`, and a `npm test` script. CI run `38272803374` passed all eight jobs for commit `f58bd3fbc4e75ae224c3bb3981a704d3c3ba1c45`; the frontend test step executed all four tests successfully. Browser verification is still required before closure.
+**Source-level correction:** PR #54 adds `calculateBudgetSpent` in `frontend/src/utils/budgetSpending.js`, tests in `frontend/tests/budgetSpending.test.js`, and a `npm test` script. CI run `38273922288` passed all eight jobs for commit `77620d6547cad3ee3774657df9dd0b9256ed9ff6`; the frontend step executed all seven Node tests successfully, including budget calculation and search tests. Browser verification is still required before closure.
 
 **Procedure:**
 1. Run the frontend test command and confirm the CI job executes (not skips) `npm test`.
