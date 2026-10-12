@@ -689,3 +689,13 @@ CI run 38273922288 passed all eight jobs for correction commit 77620d6547cad3ee3
 **Pass criteria:** The exported report contains the expected Unicode text and opens without encoding corruption in the supported spreadsheet workflow.
 
 **Evidence:** Browser/application versions, test value, downloaded file inspection, and successful display/import result. Do not include real user financial data in evidence.
+
+
+## RV-56 — Verify least-privilege PostgreSQL runtime permissions
+**Owner:** Database/DevOps/backend. **Environment:** CI plus disposable AWS staging database.
+
+**Steps:** Inspect the database role used by the backend and compare it with the bootstrap/migration role. Run the application CRUD suite using the restricted runtime role. Attempt prohibited operations such as creating a role/database, dropping unrelated objects, and changing schema ownership. Separately verify the migration job uses the administrative role and can complete migrations 002–005 on both a fresh database and a disposable populated copy.
+
+**Pass criteria:** Backend runtime credentials are distinct from administrative credentials; normal application CRUD works; privileged database operations fail for the runtime role; migrations succeed using the administrative role; failure/rollback procedures are documented.
+
+**Evidence:** Sanitized role/grant listing, test results, migration logs, and AWS staging commit/schema evidence. Never include passwords or secret values in evidence. Do not close based on source inspection alone.
