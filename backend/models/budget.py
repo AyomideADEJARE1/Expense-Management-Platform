@@ -18,7 +18,7 @@ class Budget(db.Model):
 
     category_id = db.Column(
         db.BigInteger,
-        db.ForeignKey("expense_categories.id", ondelete="SET NULL"),
+        db.ForeignKey("expense_categories.id", ondelete="RESTRICT"),
         nullable=True
     )
 
