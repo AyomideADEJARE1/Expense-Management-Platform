@@ -171,9 +171,11 @@ Classification: Documentation/configuration follow-up. Status: AWS decision reco
 
 The upstream README and architecture documentation describe AWS EC2 as the current production environment. The QA owner reports that the tutor approved AWS as an alternative target. Earlier notes treating the AWS target as unresolved are superseded by this decision.
 
-Required action: Ensure deployment workflow configuration, secret names, CI/CD documentation, architecture documentation, and the submitted deployment evidence consistently identify AWS EC2. The workflow must target the actual AWS VM and must not rely on stale cloud-specific settings.
+Source-review update — 2026-10-12: the correction branch now uses AWS EC2 deployment secrets (`AWS_EC2_HOST`, `AWS_EC2_USER`, `AWS_EC2_SSH_KEY`) and the README/Docker/CI-CD documentation identifies AWS EC2. Source-level target consistency is improved; the live deployment and actual running commit remain unverified.
 
-Closure evidence: Reviewed documentation and workflow diff, successful AWS deployment, and proof the running service matches the tested commit.
+Required action: Confirm the protected AWS secrets and variables are configured on the target repository, deploy the tested commit, and record the running image digest and public health/browser results.
+
+Closure evidence: Reviewed documentation/workflow diff, successful AWS deployment, and proof the running service matches the tested commit.
 
 ## QA-FIND-022 — Docker Compose contains hard-coded database credentials
 Classification: Security/configuration defect. Status: Open. Priority: High before production deployment.
