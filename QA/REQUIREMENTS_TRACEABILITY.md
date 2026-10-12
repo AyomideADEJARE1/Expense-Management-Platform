@@ -236,3 +236,7 @@ CI run `38276034129` passed all eight jobs for code commit `97e6515f00c15e240532
 
 ## QA-FIND-084 trace — Debug mode for direct app execution
 The direct-execution block previously used `app.run(debug=True)` regardless of configured environment. PR #54 now uses a helper that enables debug only for explicit development/test modes and adds parameterized tests. Current-head CI retest is pending; production-container behavior should remain Gunicorn-based.
+
+
+## Latest source CI evidence — QA-FIND-084
+Run `38277037377` passed all eight jobs for code commit `8151bb56e730c6f6eb0205691b334a121abc934e`. Backend lint and 69 tests passed, frontend lint/build and nine Node tests passed, and database migrations, secret scan, both Docker builds, and aggregate CI passed. This closes the CI portion of QA-FIND-084. It does not prove the AWS environment is running this commit.
