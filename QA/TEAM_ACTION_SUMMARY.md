@@ -639,7 +639,7 @@ Run `38273922288` passed all eight jobs for correction commit `77620d6547cad3ee3
 
 **How to verify:** CI run `38275606391` passed all eight jobs for commit `11d1756f083f51e6e18d51651f76bcb5d74a9af2`, including nine frontend Node tests and the frontend lint/build. Next, export a report containing a test value such as `=1+1` and confirm the downloaded cell is neutralized.
 
-**Evidence to close:** CI run `38275606391`, tested commit SHA, nine passing frontend tests, and a sanitized report export sample from both export paths. The browser portion remains open.
+**Evidence to close:** CI run `38276034129` on commit `97e6515f00c15e240532da653235421a2c6fb055`, nine passing frontend tests, and a sanitized report export sample from both export paths. The browser portion remains open.
 
 
 ### 58. Frontend: keep the report CSV download URL alive long enough
@@ -650,5 +650,7 @@ Run `38273922288` passed all eight jobs for correction commit `77620d6547cad3ee3
 **Required correction:** PR #54 now delays URL cleanup by one second, matching the Transactions export.
 
 **How to verify:** Run current-head CI, then export small and larger reports in the supported browsers and confirm every file completes with the expected rows.
+
+**CI status:** Run `38276034129` passed all eight jobs for commit `97e6515f00c15e240532da653235421a2c6fb055`, including frontend lint/build and nine Node tests.
 
 **Evidence to close:** Passing CI, browser/version used, successful download confirmation, and a check of the downloaded row count.
