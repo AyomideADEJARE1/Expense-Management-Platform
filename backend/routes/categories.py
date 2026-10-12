@@ -84,6 +84,12 @@ def create_category():
             400
         )
 
+    if len(name) > 100:
+        return error_response(
+            "Category name cannot exceed 100 characters",
+            400
+        )
+
     existing_category = ExpenseCategory.query.filter_by(
         name=name
     ).first()
@@ -192,6 +198,12 @@ def update_category(category_id):
         if not name:
             return error_response(
                 "Category name cannot be empty",
+                400
+            )
+
+        if len(name) > 100:
+            return error_response(
+                "Category name cannot exceed 100 characters",
                 400
             )
 
