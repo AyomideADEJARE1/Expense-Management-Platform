@@ -56,7 +56,6 @@ function MainAppContent() {
       setCategories(catsRes?.data || []);
       setExpenses(expsRes?.data || []);
 
-      console.log('Categories API:', catsRes);
       
       const expenseData = expsRes?.data || [];
       const budgetData = bdgtsRes?.data || [];
