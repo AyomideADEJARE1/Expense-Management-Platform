@@ -1055,3 +1055,18 @@ CI run `38272033341` passed all eight jobs for correction commit `ea775178ea545b
 **Required retest:** Confirm current-head CI runs the frontend tests and they pass. In a browser, create a whole-month budget, add expenses in two categories for that month and one expense in another month, then confirm the total spent includes only the two same-month expenses. Confirm a category budget counts only its own category. Check percentage, remaining amount, and exceeded/on-track state.
 
 **Closure evidence:** Passing CI for the exact commit, visible frontend test results, redacted browser screenshots or a recorded test run showing the expected amounts, and confirmation that category-specific budgets still calculate correctly. AWS deployment evidence is separate and must not be inferred from CI.
+
+
+## QA-FIND-079 — Docker setup guide omits a required backend environment file
+
+**Classification:** Setup documentation defect. **Status:** Documentation correction proposed in PR #54; CI/runtime retest pending. **Priority:** Medium.
+
+**Evidence:** `docker-compose.yml` declares `./backend/.env` as a required `env_file` for the backend service. The README's clean-start instructions tell the reader to create both the root `.env` and `backend/.env`, but the Docker guide previously instructed the reader to create only the root `.env` before running Compose. A reader following the Docker guide alone could reach startup with the required backend environment file missing.
+
+**Impact:** A clean local setup can fail before the application starts. The reader may wrongly conclude that Docker Compose or the backend image is broken, and setup evidence may be inconsistent across team members.
+
+**Correction proposed in PR #54:** `docs/docker.md` now instructs the reader to copy both `.env.example` and `backend/.env.example`, explains which values belong in each file, and requires separate strong Flask and JWT secrets.
+
+**Required retest:** Review the rendered Docker guide from a clean checkout. In a disposable environment, remove both local environment files, follow the documented commands exactly, replace placeholders, and verify Compose starts all four services healthy. Separately confirm missing required files/secrets produce the documented startup error.
+
+**Closure evidence:** Passing CI for the latest docs/code head, reviewed setup instructions, clean-start command log, and `docker compose ps` showing all four services healthy. Do not expose actual secret values in logs or screenshots.
