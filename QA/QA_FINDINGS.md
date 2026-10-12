@@ -985,3 +985,32 @@ Classification: Account security / identity lifecycle. Status: Open; product/sec
 **Required retest:** Attempt to change email without re-authentication, submit a new address that is not verified, try an expired/reused verification token, try an address already owned by another account, and complete a valid change. Confirm the old email remains the login identifier until the approved verification step, the new email becomes active only once, and expected notifications/limits work.
 
 **Closure evidence:** Written policy decision, tests for authorization/re-authentication, verification token expiry/reuse, duplicate email and rate limiting, plus a staging browser/API trace proving that the email is not changed before verification.
+
+
+## QA-FIND-075 — Registration accepts passwords without a documented minimum length
+
+Classification: Authentication security / input policy. Status: Open; backend/product-security decision and correction required. Priority: Medium–High.
+
+**What happens:** The registration route verifies that the password is a non-empty string, then passes it directly to `generate_password_hash`. The reviewed route does not enforce a minimum password length or a documented password policy. A one-character password therefore passes the visible route-level checks. Password hashing protects the stored value, but it does not make a guessable password strong.
+
+**Why it matters:** Users can create accounts with very easy-to-guess passwords. The login rate-limit concern in QA-FIND-073 makes a robust password policy one layer of defense, not a replacement for rate limiting.
+
+**Required correction:** Backend and product/security should agree a clear minimum length and maximum accepted input length, document it in the UI/API, and validate it on the server. Prefer a length-based policy and block known compromised/common passwords if the team has an approved method; do not rely on arbitrary character-class rules alone. Ensure login and registration reject malformed/non-string inputs consistently and that errors do not reveal secrets.
+
+**Required retest:** Test passwords below, at, and above the chosen minimum; empty/whitespace-only values; non-string values; and values above the chosen maximum. Verify rejected registration creates no user, accepted registration can log in, and the frontend message matches backend behavior. Confirm existing accounts are not unexpectedly locked out by a registration-only policy change.
+
+**Closure evidence:** Written password policy, passing API tests on the exact commit, browser validation evidence, and database/API evidence that rejected registrations do not create accounts.
+
+## QA-FIND-076 — No password change or password recovery flow was found
+
+Classification: Account lifecycle / recoverability. Status: Open; product/security scope decision required. Priority: Medium–High.
+
+**What happens:** The reviewed authentication routes provide registration, login, current-profile read/update, but no password-change endpoint, password-reset request, reset-token verification, or recovery flow was found. The profile update route does not accept a password field.
+
+**Why it matters:** A user who forgets a password or believes it has been exposed has no in-app route to recover account access or rotate the credential. A support-only manual database change is not an evidenced, user-safe recovery process.
+
+**Required correction:** The team lead/product-security owner should confirm whether password change and reset are required for the capstone release. If in scope, implement an authenticated password-change route requiring the current password and a reset flow using single-use, expiring, securely generated tokens delivered through an approved channel. Rate-limit recovery requests, avoid account-existence disclosure, invalidate or rotate active tokens according to policy, and never log reset tokens or passwords. If deliberately out of scope, document the limitation and avoid presenting the application as having self-service account recovery.
+
+**Required retest:** Verify a valid current-password change succeeds; an incorrect current password fails without changing the stored hash; old password stops working after a successful change; reset tokens expire and cannot be reused; requests do not reveal whether an email exists; and reset requests are rate-limited. Test delivery only in a controlled environment.
+
+**Closure evidence:** Written scope decision, endpoint and token design review, automated security tests, redacted delivery logs if email recovery is implemented, and a browser/API trace showing the approved flow end to end.
