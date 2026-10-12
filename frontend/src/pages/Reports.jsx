@@ -54,7 +54,7 @@ export default function Reports({ isDarkMode = false }) {
     transactions.forEach((tx) => {
       if (!tx.expense_date) return;
 
-      const dateObj = new Date(tx.expense_date);
+      const dateObj = new Date(`${tx.expense_date}T00:00:00`);
 
       if (Number.isNaN(dateObj.getTime())) return;
 
