@@ -10,6 +10,9 @@ import {
   Gift, HelpCircle, AlertTriangle, CheckCircle2 
 } from 'lucide-react';
 
+const ALL_CATEGORIES_VALUE = '__all_categories__';
+const ALL_CATEGORIES_LABEL = 'All Categories';
+
 const ICON_MAP = {
   Utensils, Car, ShoppingBag, Wifi, Film, Briefcase, HeartPulse, BookOpen, DollarSign, Gift
 };
@@ -66,14 +69,14 @@ export default function Budgets({
     if (budget) {
       setEditingBudget(budget);
       setFormData({
-        category: budget.category,
+        category: budget.category_id == null ? ALL_CATEGORIES_VALUE : budget.category,
         limit: budget.limit,
         spent: budget.spent,
       });
     } else {
       setEditingBudget(null);
       setFormData({
-        category: expenseCategories.length > 0 ? expenseCategories[0].name : '',
+        category: expenseCategories.length > 0 ? expenseCategories[0].name : ALL_CATEGORIES_VALUE,
         limit: '',
         spent: '0',
       });
