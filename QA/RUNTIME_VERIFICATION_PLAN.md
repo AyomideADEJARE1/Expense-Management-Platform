@@ -483,3 +483,22 @@ Run `38221595123` passed all eight jobs for source-branch head `72ff22992e8561b5
 **Current source evidence:** PostgreSQL uses a named Compose volume on the VM. The reviewed repository does not define a scheduled off-host backup or a tested restore workflow; an external AWS backup may exist but requires evidence.
 
 **Pass evidence:** Backup schedule/retention and access policy, redacted successful restore logs, data-integrity results, and documented recovery point/recovery time. Do not close based only on a claim that snapshots are enabled.
+
+
+## RV-43 — Verify per-client rate limits through Nginx and shared storage
+
+**Finding:** QA-FIND-073. **Owner:** Backend + DevOps. **Status:** Open.
+
+**Source-level concern:** Flask-Limiter uses `get_remote_address`, the Flask app has no trusted-proxy middleware, and the limiter has no explicit shared storage URI. Behind Nginx, multiple clients may therefore share the proxy's `remote_addr`; in-memory counters reset on restart and are not shared across replicas.
+
+**Procedure:**
+1. Record the approved production rate-limit policy, Nginx proxy topology, and shared-store service/configuration. Do not put credentials in evidence.
+2. From two distinct test clients through the public AWS endpoint, make login attempts below and above the configured limit. Record status codes and timestamps.
+3. Confirm one client's requests do not consume the other client's quota.
+4. Send a forged `X-Forwarded-For` header from an untrusted client and confirm it cannot choose an arbitrary rate-limit identity.
+5. Restart the backend and verify counter behavior matches the approved policy. If the deployment runs more than one backend instance, confirm both use the same counter store.
+6. Verify expected HTTP 429 responses and that the API does not disclose store credentials or internal connection details.
+
+**Pass evidence:** Configuration review; automated tests for trusted proxy handling, independent clients, and forged-header resistance; redacted shared-store configuration evidence; AWS request/response logs showing independent counters, restart behavior, and expected 429 results.
+
+**Fail conditions:** All clients share one proxy counter; forwarded headers can be spoofed; counters unexpectedly reset or diverge between instances; no shared store is configured for a multi-instance deployment; or 429 behavior does not match the documented policy. A green CI run alone does not close this gate.
