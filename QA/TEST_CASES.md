@@ -174,3 +174,6 @@ Record date, commit/branch, environment, steps, expected result, actual result, 
 
 | TC-CAT-010 | Category name uniqueness race on create/update | Known `uq_expense_category_name` conflicts return HTTP 409 after rollback; stored category data remains correct |
 | TC-CAT-011 | Unexpected category commit failure | Generic HTTP 500 with no internal details; transaction rolls back and a later valid create succeeds |
+
+| TC-AUTH-012 | Email unique constraint race during registration/profile update | Known `users_email_key` conflict returns HTTP 409; failed profile update preserves original email |
+| TC-AUTH-013 | Unexpected registration commit failure | Generic HTTP 500 without internal details; rollback allows a subsequent valid registration |
