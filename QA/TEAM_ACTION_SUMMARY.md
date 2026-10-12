@@ -628,3 +628,15 @@ Run `38270979144` stopped at Flake8 because one line in the new partial-name pre
 
 ## Latest CI checkpoint — 2026-10-12
 Run `38273922288` passed all eight jobs for correction commit `77620d6547cad3ee3774657df9dd0b9256ed9ff6`. Backend lint passed and 62 backend tests passed twice. Frontend lint/build passed and all seven Node tests passed: four budget-spending tests and three budget-search tests. Database migrations 001–005, budget-category RESTRICT, the phone column, migration ordering, secret scan, both Docker builds, and aggregate CI passed. npm audit reported zero vulnerabilities. Flask-Limiter still uses in-memory storage, and AWS runtime, populated-volume migration, public health, browser journeys, reboot recovery, and backup restore evidence remain open.
+
+
+### 56. Backend/database: keep the profile update timestamp accurate
+**What happens:** The user record's `updated_at` field previously received a value when the account was created but was not refreshed when profile settings changed.
+
+**Why it matters:** The timestamp can mislead future support, audit, and synchronization work.
+
+**Required correction:** PR #54 adds SQLAlchemy `onupdate` behavior and a regression test that verifies a profile update advances an intentionally old timestamp.
+
+**How to verify:** Wait for CI on the current code head. Confirm the regression test passes and check that a read-only profile request does not change the timestamp.
+
+**Evidence to close:** Passing current-head CI, tested commit SHA, and the test result.
