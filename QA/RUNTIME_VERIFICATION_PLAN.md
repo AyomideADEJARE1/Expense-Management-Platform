@@ -457,3 +457,14 @@ Run `38219803561` passed all eight jobs for commit `92eefc22555c7c98df2400147210
 **Current source evidence:** The API persists the budget_threshold field, but the reviewed budget/dashboard components do not read it. Budget status currently uses the 100% limit boundary. App also passes an empty notification list to the notification UI. A product decision is needed before expected behavior can be finalized.
 
 **Pass evidence:** Written threshold rules, automated boundary and duplicate-prevention tests if implemented, and browser evidence showing the agreed alert behavior or revised UI wording.
+
+
+## RV-41 — Verify automatic recovery after AWS VM/Docker restart
+
+**Related finding:** QA-FIND-071.
+
+**Check:** Deploy the reviewed commit to AWS staging and record the running container IDs/image tags. Reboot the EC2 VM or restart Docker. Do not SSH in to manually run Compose. Verify PostgreSQL, backend, frontend, and Nginx return to healthy status, both public health endpoints recover, and the expected commit-specific images remain in use. Confirm saved test users, expenses, and budgets still exist. Verify startup recovery does not bypass migration ordering.
+
+**Current source evidence:** The reviewed Compose file has no explicit service restart policies, and the reviewed CD workflow does not install a systemd startup unit. AWS reboot recovery has not been demonstrated.
+
+**Pass evidence:** Restart/recovery timestamps, container health and image versions before/after, successful public health checks, and data-persistence results.
