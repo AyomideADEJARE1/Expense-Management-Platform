@@ -10,6 +10,7 @@ from extensions import db, limiter
 from routes.expenses import safe_csv_cell
 from routes.budgets import _is_budget_uniqueness_violation
 from conftest import is_test_database
+from models.user import User
 
 
 @pytest.fixture()
@@ -282,6 +283,55 @@ def test_profile_partial_name_updates_preserve_the_other_name_part(client):
     assert last_update.get_json()["data"]["full_name"] == (
         "Stephen Chukwunonso"
     )
+
+
+
+
+
+def test_profile_update_refreshes_updated_at_timestamp(client):
+    email = f"qa-profile-updated-at-{uuid.uuid4().hex}@example.test"
+    password = "TestPassword123!"
+
+    registration = client.post(
+        "/api/auth/register",
+        json={
+            "full_name": "QA Timestamp",
+            "email": email,
+            "password": password,
+        },
+    )
+    assert registration.status_code == 201
+
+    login = client.post(
+        "/api/auth/login",
+        json={"email": email, "password": password},
+    )
+    assert login.status_code == 200
+    headers = {
+        "Authorization": f"Bearer {login.get_json()['data']['access_token']}"
+    }
+
+    # Use a deterministic old timestamp so the test does not depend on sleep.
+    with app.app_context():
+        db.session.execute(
+            db.text(
+                "UPDATE users SET updated_at = TIMESTAMP '2000-01-01 00:00:00' "
+                "WHERE email = :email"
+            ),
+            {"email": email},
+        )
+        db.session.commit()
+
+    response = client.put(
+        "/api/auth/me",
+        headers=headers,
+        json={"first_name": "Updated"},
+    )
+    assert response.status_code == 200
+
+    with app.app_context():
+        user = User.query.filter_by(email=email).one()
+        assert user.updated_at.year > 2000
 
 
 def test_profile_update_rejects_non_string_name_and_currency(client):
