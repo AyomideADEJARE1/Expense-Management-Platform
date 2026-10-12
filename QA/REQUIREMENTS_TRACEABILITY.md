@@ -10,7 +10,7 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 | REQ-04 | Delete expenses | TC-EXP-003 | PENDING |
 | REQ-05 | Expense categories | TC-CAT-001–003 | OBSERVATION |
 | REQ-06 | Monthly summaries | TC-REP-001 | PENDING |
-| REQ-07 | Budget limits | TC-BUD-001–006, TC-DB-006, TC-BUD-DATE-007 | PR #54 adds partial unique indexes for category and whole-month budgets, maps only known budget uniqueness violations to HTTP 409, and now validates canonical `YYYY-MM-DD` month values on create/update. New compact-date tests are pending CI; populated existing-volume and concurrent-request verification remain open |
+| REQ-07 | Budget limits | TC-BUD-001–006, TC-DB-006, TC-BUD-DATE-007, TC-BUD-UI-008 | PR #54 adds database uniqueness for category and whole-month budgets, known-conflict handling, and canonical month-date validation. New compact-date tests are pending CI. Confirm whether whole-month budgets must be creatable through the browser; populated-volume and concurrency checks remain open |
 | REQ-08 | Dashboard with charts | TC-DASH-001–003 | FINDING OPEN |
 | REQ-09 | Date/category filtering | TC-FLT-001–005 | Date-range/category UI and API corrections proposed in PR #54; CI and browser retest pending |
 | REQ-10 | CSV export | TC-EXP-004–005 | UI correction proposed in PR #54; retest pending |
@@ -69,3 +69,8 @@ The expense create/update routes now reject noncanonical ISO date strings by req
 ## QA-FIND-060 trace — budget month format
 
 Budget create/update now require the submitted month to parse as a date, be the first day of a month, and round-trip to the exact submitted `YYYY-MM-DD` value. Regression tests check that compact `YYYYMMDD` values return HTTP 400 for both create and update and that a rejected update preserves the stored month. Current CI for the newest correction is pending; do not mark this trace passed until that run completes.
+
+
+## QA-FIND-061 trace — whole-month budget UI scope
+
+The API/database support a whole-month budget with `category_id = NULL`, but the browser form requires a category. This remains an observation until the team confirms whether the capstone requires overall monthly budgets. If required, the UI needs an explicit overall-budget option and browser/API tests; if not, the scope and documentation should state that budgets are category-specific.
