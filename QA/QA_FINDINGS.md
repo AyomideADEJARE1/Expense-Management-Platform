@@ -1042,7 +1042,7 @@ CI run `38272033341` passed all eight jobs for correction commit `ea775178ea545b
 
 
 
-## QA-FIND-080 — Whole-month budget spending is calculated as zero in the dashboard
+## QA-FIND-079 — Whole-month budget spending is calculated as zero in the dashboard
 
 **Classification:** Functional correctness / financial reporting. **Priority:** High. **Status:** Correction committed to PR #54; current-head CI and UI verification pending.
 
@@ -1057,7 +1057,7 @@ CI run `38272033341` passed all eight jobs for correction commit `ea775178ea545b
 **Closure evidence:** Passing CI for the exact commit, visible frontend test results, redacted browser screenshots or a recorded test run showing the expected amounts, and confirmation that category-specific budgets still calculate correctly. AWS deployment evidence is separate and must not be inferred from CI.
 
 
-## QA-FIND-079 — Docker setup guide omits a required backend environment file
+## QA-FIND-080 — Docker setup guide omits a required backend environment file
 
 **Classification:** Setup documentation defect. **Status:** Documentation correction proposed in PR #54; CI/runtime retest pending. **Priority:** Medium.
 
