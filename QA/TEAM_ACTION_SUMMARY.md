@@ -537,6 +537,28 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Evidence to close:** Written policy, automated API tests, verification/expiry/duplicate tests, and a staging browser/API trace of a successful and rejected change.
 
+### 49. Backend + product/security: define and enforce password requirements
+**What happens:** Registration only checks that the password is a non-empty string. No minimum or maximum password length is enforced in the route.
+
+**Why it matters:** Very short passwords can be registered, leaving accounts easier to guess.
+
+**Required correction:** Agree a documented length-based policy, enforce it on the backend, show matching frontend guidance, and add boundary tests. Avoid relying only on arbitrary character-class rules.
+
+**How to verify:** Test below/at/above the agreed minimum, empty and non-string values, and values above the maximum. Confirm rejected requests do not create users and valid users can log in.
+
+**Evidence required:** Approved policy, passing tests for the exact commit, browser validation, and proof rejected registrations create no account.
+
+### 50. Team lead + backend/security: decide on password change and recovery
+**What happens:** No password-change or password-reset route/flow was found in the reviewed authentication API.
+
+**Why it matters:** Users cannot self-serve if they forget a password or suspect it was exposed.
+
+**Required correction:** Decide whether this is in scope. If required, implement current-password verification for authenticated changes and a single-use, expiring reset-token flow delivered through an approved channel. Rate-limit requests, avoid account-existence disclosure, and define active-token invalidation. If out of scope, document that limitation clearly.
+
+**How to verify:** Test wrong/current password, successful rotation, old-password rejection, reset-token expiry and reuse, account-enumeration resistance, and rate limits.
+
+**Evidence required:** Written scope decision, passing security tests, and redacted browser/API evidence of the agreed flow.
+
 ## Release checklist
 
 Do not mark a check as passed until evidence is attached.
