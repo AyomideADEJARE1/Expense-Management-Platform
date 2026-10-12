@@ -600,3 +600,13 @@ CI run 38272033341 passed all eight jobs for correction commit ea775178ea545b48b
 **Pass evidence:** Current-head CI success, test output showing the test count, and redacted browser evidence with expected and displayed totals.
 
 **Fail conditions:** Whole-month budget shows zero despite expenses, includes another month's expense, a category budget includes other categories, or CI skips the frontend tests.
+
+
+## RV-49 — Verify a clean Docker setup using both environment files
+**Purpose:** Confirm a new team member can follow the Docker guide and start the application without an undocumented prerequisite.
+
+**Procedure:** In a disposable clean checkout, ensure the root `.env` and `backend/.env` are absent. Follow `docs/docker.md` exactly: copy both example files, replace the root database-password placeholder, set distinct strong Flask/JWT secrets in the backend file, then run the documented Compose startup command. Check all four services and both public health routes. Never include actual secrets in captured output.
+
+**Current correction:** PR #54 adds the missing `cp backend/.env.example backend/.env` instruction and explains the separate secret settings. Clean-start execution has not been observed yet.
+
+**Pass evidence:** Current CI result, recorded setup commands, `docker compose ps` showing all four services healthy, and successful local health checks. The code/CI result alone does not close the clean-start gate.
