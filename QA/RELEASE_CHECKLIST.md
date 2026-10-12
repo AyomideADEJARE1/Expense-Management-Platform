@@ -42,6 +42,8 @@
 - [ ] Authentication rate limits are verified per client through Nginx and use shared production storage.
 - [ ] CSP is tested on the public HTTPS endpoint; HSTS is confirmed only if configured and observed.
 - [ ] Password handling is verified.
+- [ ] QA-FIND-075: the approved minimum/maximum password policy is enforced by the backend, with passing API boundary tests and matching browser guidance.
+- [ ] QA-FIND-076: password change/recovery is implemented and security-tested, or the team has approved and documented that it is out of scope.
 - [ ] Logs and monitoring are available.
 - [ ] Architecture documentation matches implementation.
 - [ ] README matches current implementation and deployment.
