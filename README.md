@@ -13,7 +13,7 @@ Nginx is the public entry point. The frontend calls the Flask API through the `/
 ## Implemented application areas
 
 - User registration and login using JWT authentication and hashed passwords.
-- Expense creation, listing, editing, deletion, month/category API filtering, and an authenticated CSV export endpoint.
+- Expense creation, listing, editing, deletion, month/date-range/category API filtering, and an authenticated CSV export endpoint.
 - Category management, budgets, monthly summaries, and category summaries.
 - Dashboard totals, monthly/category charts, recent transactions, and reports.
 - Docker Compose services for frontend, backend, PostgreSQL, and Nginx, including container health checks.
@@ -25,7 +25,7 @@ Implementation presence is not proof that every flow has passed runtime QA. See 
 
 - `frontend/` — Vite/React application served by its container.
 - `backend/` — Flask API, routes, SQLAlchemy models, and dependencies.
-- `database/migrations/` — PostgreSQL initialization SQL.
+- `database/migrations/` — ordered PostgreSQL SQL files (initial schema and follow-up migrations 002–004).
 - `nginx/` — reverse proxy configuration.
 - `docker-compose.yml` — local multi-container stack.
 - `.github/workflows/` — CI and prepared CD workflows.
@@ -60,7 +60,7 @@ Stop the services without deleting stored development data:
 docker compose down
 ```
 
-The PostgreSQL data is held in a named Docker volume. **Do not run `docker compose down -v` unless you intend to delete the local database volume and its data.**
+The PostgreSQL data is held in a named Docker volume. **Do not run `docker compose down -v` unless you intend to delete the local database volume and its data.** PostgreSQL runs files in `/docker-entrypoint-initdb.d` only when initializing a new data volume. The CD workflow explicitly applies migrations 002–004 to an existing volume before restarting the application; if a migration fails, deployment must stop and the data/schema state must be reviewed before retrying.
 
 ## Health checks and useful diagnostics
 
@@ -70,7 +70,7 @@ The public Nginx health route is:
 GET /api/health
 ```
 
-The backend also defines `/health/db`; the routed database health path should be verified against the current Nginx configuration before relying on it externally.
+Nginx also routes `GET /api/health/db` to the backend's `/health/db` endpoint. This route is configured in source; verify it through the deployed public endpoint before treating it as a successful runtime check.
 
 Useful commands:
 
