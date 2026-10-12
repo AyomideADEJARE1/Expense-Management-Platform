@@ -34,7 +34,7 @@ def _is_strong_secret(value):
 
 
 def validate_secret_configuration(secret_key, jwt_secret, environment):
-    """Reject missing, placeholder, weak, or shared signing keys in production."""
+    """Reject unsafe signing keys when running in production."""
     if environment not in {"production", "prod"}:
         return
 
