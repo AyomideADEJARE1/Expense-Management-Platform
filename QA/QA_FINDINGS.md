@@ -2,7 +2,7 @@
 
 Findings are evidence-based. QA is not judged by defect count.
 
-Latest fully green correction checkpoint: CI run 38271222415 passed all eight jobs for commit 2316a358ca37495ecc41eff8aaf48f888654e5b8. Backend lint passed and the backend suite passed 60 tests twice, including the trusted-proxy regression and partial profile-name update tests. CI verified migrations 001–005, the budget-category RESTRICT rule, the users.phone column, and migration order; frontend lint/build, secret scanning, both Docker builds, and aggregate CI passed. npm audit reported zero vulnerabilities. Flask-Limiter still warns that rate-limit counters use in-memory storage. This is CI evidence only; AWS live deployment, populated-volume migration, browser workflows, reboot recovery, backup restore, and shared production rate-limit storage remain unverified.
+Latest fully green correction checkpoint: CI run 38272033341 passed all eight jobs for commit ea775178ea545b48bfea9cdaadd77b7b0965d4b8. Backend lint passed and the suite passed 61 tests twice, including trusted-proxy, partial-profile-name, and budget foreign-key race regression tests. CI verified migrations 001–005, the budget-category RESTRICT rule, the users.phone column, and migration order; frontend lint/build, secret scanning, both Docker builds, and aggregate CI passed. The frontend npm audit reported zero vulnerabilities. Flask-Limiter still warns that rate-limit counters use in-memory storage. This is CI evidence only; AWS live deployment, populated-volume migration, browser workflows, reboot recovery, backup restore, and shared production rate-limit storage remain unverified.
 
 ## QA-FIND-001 — Duplicate frontend source structures
 Classification: Observation. Status: Open.
@@ -556,13 +556,13 @@ Evidence: Upstream main's category delete handler catches every exception from t
 
 Impact: Clients and monitoring cannot distinguish a category that is genuinely in use from a server/database failure. Users may be told to change their data when the actual problem is an unavailable database.
 
-Correction: PR #54 now catches SQLAlchemy IntegrityError, checks for the specific foreign-key constraint name fk_expenses_category, and returns HTTP 409 only for that known case. Other integrity errors and unexpected exceptions return a generic HTTP 500. The handler rolls back before returning.
+Correction: PR #54 now catches SQLAlchemy IntegrityError and returns HTTP 409 for the known category-reference constraints fk_expenses_category and fk_budgets_category. Other integrity errors and unexpected exceptions return a generic HTTP 500. The handler rolls back before returning. QA-FIND-078 tracks the concurrent budget-reference race and its regression test.
 
 Retest: Attempt to delete a category referenced by an expense and verify HTTP 409 with the category-in-use message. Then simulate a database commit failure and verify HTTP 500, no internal error details in the response, the category remains available, and a subsequent valid delete succeeds.
 
 Closure evidence: Passing CI for the fixing commit, API test results for both paths, session recovery result, and tested commit SHA.
 
-Retest update — 2026-10-11: the first category-delete regression test exposed that SQLAlchemy tried to null a non-null expense category reference, producing HTTP 500 instead of 409. PR #54 now checks for referencing expenses before deletion and sets passive_deletes=True so the database RESTRICT constraint can handle a concurrent reference safely. CI run 38179293397 passed for code commit 2f13cac6da1a02a776f3cea206f98522e25eb940. The backend suite passed both category deletion tests, and all eight CI jobs passed. The remaining open part is runtime verification against the deployed database and user-facing flows.
+Retest update: the category-delete handler checks for referencing expenses and budgets, uses passive deletes with database RESTRICT, and classifies both expected reference foreign keys as HTTP 409. Unexpected database failures remain HTTP 500. The latest CI run 38272033341 passed the new budget-FK race regression test; AWS runtime verification remains pending.
 
 
 ## QA-FIND-053 — Docker build contexts lacked ignore rules for local environment files
@@ -1024,7 +1024,7 @@ Run `38271222415` passed all eight CI jobs for commit `2316a358ca37495ecc41eff8a
 
 ## QA-FIND-078 — Concurrent category deletion can misreport a budget-reference conflict
 
-**Classification:** API error handling and concurrent data integrity. **Status:** Correction proposed in PR #54; CI retest pending. **Priority:** Medium.
+**Classification:** API error handling and concurrent data integrity. **Status:** CI passed for correction commit ea775178ea545b48bfea9cdaadd77b7b0965d4b8; AWS runtime retest pending. **Priority:** Medium.
 
 **Evidence:** The category deletion route first checks whether expenses or budgets reference the category, then attempts the database delete. These separate checks are subject to a race: a budget can be inserted after the pre-check but before the delete commit. The database correctly rejects that delete through the `fk_budgets_category` foreign key, but the previous exception handler recognized only `fk_expenses_category`. The budget foreign-key conflict would therefore be returned as HTTP 500 instead of the expected HTTP 409.
 
