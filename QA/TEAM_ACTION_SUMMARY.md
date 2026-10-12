@@ -403,6 +403,17 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Evidence to close:** Passing current CI for the exact commit, responses for valid/invalid query values, and expected-vs-actual summary totals. CI run `38216409164` passed all eight jobs for commit `7c3eb3a08464ff9b97ce854f5a105383db8646cb`; Flake8 and all 48 backend tests passed, including the month-query/summary regression test.
 
+### 37. Backend: reject category names that exceed 100 characters
+**What happens:** The database limits category names to 100 characters, but the API previously did not enforce that limit before saving.
+
+**Why it matters:** A client input error can reach the database and return HTTP 500 instead of a clear HTTP 400. A failed update must leave the current category name intact.
+
+**Required correction:** PR #54 now validates the 100-character limit in category create/update and adds a regression test for oversized names.
+
+**How QA will verify:** A valid name up to 100 characters is accepted if unique; 101-character names return HTTP 400 for create/update; a rejected update leaves the original name unchanged.
+
+**Evidence to close:** Passing current CI for the exact commit, boundary-value API responses, and a read-back confirming the name did not change. Current CI is pending.
+
 ## Release checklist
 
 Do not mark a check as passed until evidence is attached.
@@ -425,4 +436,4 @@ Do not mark a check as passed until evidence is attached.
 - [ ] Public HTTPS security headers are checked and the approved CSP is tested.
 - [ ] Screenshots, workflow run links, commit SHA, and test results are attached.
 
-**Current overall status:** The correction branch has a previously passing CI checkpoint (run `38213904072`, commit `3bce1183a2916a62cca0018bccaeb8527adb8ebc`, 47 backend tests). Additional commits now add category create/update commit-failure handling and strict canonical date validation for expense and budget writes; the latest CI run must pass before those newest changes are called verified. The findings register contains 62 findings and this summary contains 36 team actions. AWS deployment, populated-volume migrations, staging failure/recovery, public health checks, and browser end-to-end verification remain pending. The frontend package still has no test script, so frontend functional tests can be skipped by the optional CI command. Do not describe the project as release-ready until the outstanding checks have evidence.
+**Current overall status:** The correction branch has a previously passing CI checkpoint (run `38213904072`, commit `3bce1183a2916a62cca0018bccaeb8527adb8ebc`, 47 backend tests). Additional commits now add category create/update commit-failure handling and strict canonical date validation for expense and budget writes; the latest CI run must pass before those newest changes are called verified. The findings register contains 63 findings and this summary contains 37 team actions. AWS deployment, populated-volume migrations, staging failure/recovery, public health checks, and browser end-to-end verification remain pending. The frontend package still has no test script, so frontend functional tests can be skipped by the optional CI command. Do not describe the project as release-ready until the outstanding checks have evidence.
