@@ -714,3 +714,10 @@ The latest application-code regression coverage includes category-budget deletio
 CI run [38213583630](https://github.com/AyomideADEJARE1/Expense-Management-Platform/actions/runs/38213583630) passed all eight jobs for correction commit `fc96ad9bf7e075907eb31e4d9acee719263d3ccb`. The backend suite passed 47 tests. The new tests verify that production secret validation rejects missing, short, placeholder, and shared Flask/JWT keys, accepts distinct strong keys, and allows the explicit non-production test configuration. Database migrations, frontend lint/build, secret scan, both Docker builds, and the aggregate check passed.
 
 This verifies the source behavior in CI, not the actual AWS environment. Before release, confirm AWS has distinct strong `SECRET_KEY` and `JWT_SECRET`/ `JWT_SECRET_KEY` values and that the running service starts with the intended production mode. Live deployment, existing-volume migration, public health, browser journeys, production rate-limit storage/proxy behavior, category write authorization, and CSP/HSTS remain open.
+
+
+## Latest code CI checkpoint — 2026-10-12 (current correction head)
+
+CI run [38213904072](https://github.com/AyomideADEJARE1/Expense-Management-Platform/actions/runs/38213904072) passed all eight jobs for correction commit `3bce1183a2916a62cca0018bccaeb8527adb8ebc`. The backend suite passed 47 tests. The run includes production signing-secret validation and the README explanation of production-mode behavior. Database migrations, frontend lint/build, secret scan, both Docker builds, and the aggregate check passed.
+
+The latest green CI result does not prove that AWS is running this commit, that populated-volume migrations or deployment failure/recovery work in staging, or that public health and browser flows pass. The frontend package still has no test script; category write authorization, production rate-limit storage/proxy handling, CSP/HSTS, and live AWS evidence remain open.
