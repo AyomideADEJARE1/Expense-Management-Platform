@@ -215,7 +215,7 @@ Run 38273922288 passed all eight jobs for correction commit 77620d6547cad3ee3774
 
 
 ## QA-FIND-082 trace — Formula protection in Reports CSV export
-The report export previously escaped CSV quotes but did not neutralize formula-leading text, unlike the Transactions export. PR #54 now introduces a shared CSV cell helper used by both paths and adds Node regression tests. Current-head CI and browser download verification are pending. Closure requires passing tests and evidence from both export paths.
+The report export previously escaped CSV quotes but did not neutralize formula-leading text, unlike the Transactions export. PR #54 now introduces a shared CSV cell helper used by both paths and adds Node regression tests. CI run `38276034129` passed all eight jobs, including all nine frontend tests; browser download verification remains pending. Closure requires passing tests and evidence from both export paths.
 
 
 ## Current source CI evidence — QA-FIND-082
@@ -228,3 +228,7 @@ The Reports export previously revoked its Blob URL immediately after clicking th
 
 ## Latest source CI evidence — QA-FIND-082 and QA-FIND-083
 Run `38276034129` passed all eight jobs for code commit `97e6515f00c15e240532da653235421a2c6fb055`. Backend lint and 62 backend tests passed; frontend lint/build and nine Node tests passed; migrations, secret scan, both Docker builds, and aggregate CI passed. This verifies the code corrections, not actual browser download behavior. Both export paths still require browser verification.
+
+
+## Latest CI evidence — QA-FIND-083
+CI run `38276034129` passed all eight jobs for code commit `97e6515f00c15e240532da653235421a2c6fb055`. The Reports export now delays Blob URL revocation by one second. Browser download completion and row-count evidence remain required.
