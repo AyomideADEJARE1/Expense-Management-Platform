@@ -653,3 +653,13 @@ CI run 38273922288 passed all eight jobs for correction commit 77620d6547cad3ee3
 **Pass criteria:** Formula-leading values are prefixed so spreadsheet software treats them as text; embedded quotes remain valid CSV; ordinary date and amount cells remain correctly quoted; both export paths behave consistently. Browser-download verification is still open.
 
 **Evidence:** CI run ID, exact commit SHA, test output, and sanitized sample rows from both downloads. Do not open a deliberately unsafe test export in a spreadsheet application; inspect the CSV as text.
+
+
+## RV-53 — Verify report CSV download completes before Blob URL cleanup
+**Owner:** Frontend/QA. **Environment:** Browser test on the deployed/staging app or local integrated stack.
+
+**Steps:** Export a report with a few rows and another with many rows. Repeat exports. Confirm the file downloads, opens as text, contains all expected rows, and does not trigger console errors. Confirm the cleanup code delays `URL.revokeObjectURL` rather than revoking synchronously after `click()`.
+
+**Pass criteria:** All exports complete consistently with correct row counts and contents in each supported browser tested.
+
+**Evidence:** Browser/version, sanitized test data, expected versus actual row count, and download confirmation. CI passing alone does not close this gate.
