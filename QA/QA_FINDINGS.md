@@ -970,3 +970,18 @@ Classification: Security / abuse prevention / multi-instance correctness. Status
 **Required retest:** Through the public AWS/Nginx path, send login attempts from two distinct test clients and verify each client has an independent counter. Verify the same client is limited after the configured threshold, the correct client identity is used, spoofed forwarded headers cannot bypass the limit, counters behave as intended after backend restart, and counters are shared if more than one backend instance is used. Verify expected 429 responses and no internal storage details in errors.
 
 **Closure evidence:** Reviewed proxy-trust and rate-limit configuration, configuration/schema checks in CI, passing tests for independent client keys and spoofed-header resistance, proof of shared storage configuration, and timestamped AWS staging results for two clients, restart behavior, and 429 responses. Do not close this finding based only on a green Docker build or the presence of rate-limit decorators.
+
+
+## QA-FIND-074 — Account email changes take effect without re-authentication or verification
+
+Classification: Account security / identity lifecycle. Status: Open; product/security decision required. Priority: Medium–High.
+
+**What happens:** The authenticated `PUT /api/auth/me` route accepts a new email address, checks basic syntax and uniqueness, and saves it immediately. The reviewed code does not require the current password or a recent re-authentication, does not send a verification link to the new address, and does not keep the old address active until verification. The repository also does not show an email-verification delivery flow.
+
+**Why it matters:** A user who makes a typo may lose access to the intended email identity. If an attacker obtains a valid access token, they may change the account's login email without proving control of the new address. This can make account recovery and ownership harder.
+
+**Required correction:** The product/security owner should decide the required identity-change policy. Recommended approach: require the current password or recent re-authentication; send a one-time, expiring verification link to the new address; keep the current login email until verification succeeds; rate-limit requests; notify the old address of the attempted change; and define how existing tokens/sessions are handled after a successful change. If email delivery is outside capstone scope, document that limitation and avoid treating email change as a verified identity change.
+
+**Required retest:** Attempt to change email without re-authentication, submit a new address that is not verified, try an expired/reused verification token, try an address already owned by another account, and complete a valid change. Confirm the old email remains the login identifier until the approved verification step, the new email becomes active only once, and expected notifications/limits work.
+
+**Closure evidence:** Written policy decision, tests for authorization/re-authentication, verification token expiry/reuse, duplicate email and rate limiting, plus a staging browser/API trace proving that the email is not changed before verification.
