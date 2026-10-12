@@ -217,7 +217,7 @@ PR #54 now requires a positive integer category ID when a category is supplied, 
 
 
 ## QA-FIND-027 — Application does not fail closed when a weak signing secret is configured
-Classification: Security/configuration risk. Status: Open. Priority: High before production release.
+Classification: Security/configuration risk. Status: Correction proposed in PR #54; CI passed in run 38213583630; AWS startup/configuration retest pending. Priority: High before production release.
 
 The Flask app assigns `SECRET_KEY` and `JWT_SECRET_KEY` directly from the `SECRET_KEY` environment variable without validating that it is present, sufficiently strong, or different from the placeholder value used in the example environment files. The example placeholder is acceptable only as a value that must be replaced for local setup; it must never be used in production.
 
@@ -341,7 +341,7 @@ Evidence: upstream `main` `docker-compose.yml` embeds fixed PostgreSQL user/pass
 - CI passing on PR #54 does not prove these remaining findings are fixed; the latest PR #54 run validates the current correction head, not the unchanged upstream `main` or live deployment.
 
 ## QA-FIND-036 — JWT-specific secret configuration is ignored
-Classification: Security configuration defect. Status: Correction proposed in PR #54; retest and production fail-closed validation pending. Priority: High.
+Classification: Security configuration defect. Status: Correction proposed in PR #54; CI passed in run 38213583630; AWS configuration retest pending. Priority: High.
 
 Evidence: in backend/app.py, app.config["JWT_SECRET_KEY"] is assigned from os.getenv("SECRET_KEY"), while the CI workflow provides a separate JWT_SECRET environment variable. As written, the intended JWT-specific environment variable is ignored and both Flask SECRET_KEY and JWT signing use the SECRET_KEY value. This makes the configuration misleading and prevents operators from rotating/configuring the JWT key independently.
 
