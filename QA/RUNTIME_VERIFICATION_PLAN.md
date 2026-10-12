@@ -562,7 +562,7 @@ Code CI run 38270547450 passed all eight jobs for correction commit 8d5fddc6c163
 **Fail conditions:** An omitted name part becomes blank or changes unexpectedly, invalid input is accepted, or the browser state differs from the persisted profile.
 
 
-## RV-38 — Partial profile-name update integrity
+## RV-48 — Partial profile-name update integrity
 **Current source correction:** PR #54 now preserves the stored name part omitted from a partial profile update and adds a regression test for first-name-only and last-name-only requests. The first CI attempt, run `38270979144`, failed Flake8 on one overlong line before tests ran. Commit `2316a358ca37495ecc41eff8aaf48f888654e5b8` wraps that line; rerun CI before marking this gate source/CI-verified.
 
 **Pass evidence:** Passing CI for the exact correction commit, successful API responses for both partial updates, and a read-back showing that the omitted name part remains unchanged. AWS/browser verification remains separate.
