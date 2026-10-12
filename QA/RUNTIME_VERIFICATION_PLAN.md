@@ -342,3 +342,16 @@ Latest correction CI result: run `38213904072` passed all eight jobs for commit 
 **Current source correction:** PR #54 now requires `parsed_month.isoformat() == month` on both budget create and update, in addition to checking that the day is 1. Regression tests have been added; current CI is pending.
 
 **Pass evidence:** Passing CI for the exact commit, successful canonical request, rejected compact create/update requests, and a read-back confirming no change after the rejected update. This API contract gate can be verified in CI; it does not replace AWS deployment and browser end-to-end checks.
+
+
+## RV-31 — Confirm whether the UI must support whole-month budgets
+
+**Related finding:** QA-FIND-061.
+
+**Decision required:** The backend/database support budgets with `category_id = NULL`, but the browser form requires a category. Confirm the capstone's intended behavior before treating this as a defect.
+
+**If overall monthly budgets are required:** Add an explicit overall-budget choice in the form and test that it sends `category_id: null`. Create an overall and a category-specific budget for the same month, verify both persist, test duplicate rejection and edits, and confirm dashboard totals/counts are correct.
+
+**If category-only budgets are intended:** Record the decision in the requirements documentation and ensure the UI/API documentation consistently describes the scope.
+
+**Pass evidence:** Written requirement decision and either successful browser/API tests or updated scope documentation. Keep status as OBSERVATION until that decision is made.
