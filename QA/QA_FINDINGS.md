@@ -1014,18 +1014,3 @@ Classification: Account lifecycle / recoverability. Status: Open; product/securi
 **Required retest:** Verify a valid current-password change succeeds; an incorrect current password fails without changing the stored hash; old password stops working after a successful change; reset tokens expire and cannot be reused; requests do not reveal whether an email exists; and reset requests are rate-limited. Test delivery only in a controlled environment.
 
 **Closure evidence:** Written scope decision, endpoint and token design review, automated security tests, redacted delivery logs if email recovery is implemented, and a browser/API trace showing the approved flow end to end.
-
-
-## QA-FIND-075 — Registration accepts passwords with no minimum length
-
-Classification: Authentication security / input policy. Status: Open; password policy decision and backend enforcement required. Priority: Medium–High.
-
-**What happens:** The registration route verifies that the password is a non-empty string and hashes it, but it does not enforce a minimum length or a documented password policy. A direct API request can therefore create an account with a very short password even if the browser form later adds stronger validation.
-
-**Why it matters:** Short passwords are easier to guess. Frontend-only validation is not sufficient because clients can call the API directly. Rate limiting reduces some automated abuse but does not replace a defined password policy.
-
-**Required correction:** Product/security must approve a password policy appropriate for an account containing financial records. Enforce it in the backend registration endpoint and apply consistent policy to any future password-change/reset route. Provide a clear message and keep passwords out of logs. Avoid arbitrary composition rules unless the team has a documented reason; choose and document a minimum length and maximum accepted length.
-
-**Required retest:** Test passwords below, at, and above the approved minimum; empty and non-string values; very long inputs; and valid passwords. Call the API directly as well as using the browser form. Confirm rejected registrations create no user record and the error does not disclose internal details.
-
-**Closure evidence:** Approved password-policy decision, backend validation, automated boundary tests, and browser/API evidence proving the server enforces the same policy.
