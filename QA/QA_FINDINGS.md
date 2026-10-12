@@ -443,7 +443,7 @@ Why it matters: test cases can leave records behind, collide on category names, 
 
 Required correction: prove CI always points to a dedicated disposable test database. Prefer fixtures that create/drop schema or use per-test transactions and rollback; generate unique names where records are expected to persist for the test; clean up state reliably. Add a startup guard that refuses to run destructive test setup if the configured database is not explicitly identified as a test database.
 
-Correction status update — 2026-10-12: PR #54 now tightens the test database-name guard to accept explicit test-style names while rejecting names containing production/staging/live markers. The API test fixture truncates the test tables and resets identities after each test. New guard tests cover accepted/rejected database names, and CI now runs the backend suite twice consecutively to test repeatability. The first CI attempt after the cleanup change, run `38217113207`, failed the backend lint step on two overlong test lines. Those lines were corrected in commit `52438ec387ed2c9bfaff56081930e6df317604dd`; CI run `38217288387` has passed the backend lint step and ran the suite twice; both runs collected and passed all 57 tests. Docker builds and the aggregate CI check were still in progress at the last check. Keep the finding open until the full CI run succeeds. Live/protected database safety remains a configuration responsibility.
+Correction status update — 2026-10-12: PR #54 now tightens the test database-name guard to accept explicit test-style names while rejecting names containing production/staging/live markers. The API test fixture truncates the test tables and resets identities after each test. New guard tests cover accepted/rejected database names, and CI now runs the backend suite twice consecutively to test repeatability. The first CI attempt after the cleanup change, run `38217113207`, failed the backend lint step on two overlong test lines. Those lines were corrected in commit `52438ec387ed2c9bfaff56081930e6df317604dd`. CI run `38217288387` then passed all eight jobs; both consecutive pytest runs collected and passed all 57 tests, and both Docker builds passed. This verifies cleanup/repeatability in CI. Live/protected database safety remains a configuration responsibility.
 
 Required tests: run the suite twice consecutively; run relevant tests in a different order or with parallelization where supported; confirm no leftover users/categories after teardown; intentionally point the test configuration at a non-test database and confirm the guard refuses to run.
 
@@ -785,7 +785,7 @@ Closure evidence: Passing CI run and commit SHA, API responses for valid/invalid
 
 ## QA-FIND-063 — Category names over the database limit can become server errors
 
-Classification: API input validation and error handling. Status: Correction proposed in PR #54; current CI retest pending. Priority: Medium.
+Classification: API input validation and error handling. Status: Correction proposed in PR #54; CI verified, live API retest pending. Priority: Medium.
 
 Evidence: The category model and initial schema limit `expense_categories.name` to 100 characters, but the create/update routes previously checked only that the name was a non-empty string. A name longer than 100 characters can reach PostgreSQL and fail during commit; the API then reports a generic HTTP 500 rather than rejecting invalid input as HTTP 400.
 
@@ -793,6 +793,6 @@ Impact: A client validation error is reported as a server failure, creating conf
 
 Correction proposed in PR #54: Category create/update now reject names longer than 100 characters before querying or committing. A regression test covers oversized create and update values and verifies the existing name is unchanged after a rejected update.
 
-Required retest: Confirm the current CI run passes. Verify a 100-character name is accepted where otherwise valid, a 101-character name returns HTTP 400 on create/update, and a rejected update does not change the stored category.
+Required retest: CI run `38217288387` passed all eight jobs for commit `52438ec387ed2c9bfaff56081930e6df317604dd`; both full pytest runs passed all 57 tests, including the category-name boundary test. Verify a 100-character name is accepted where otherwise valid, a 101-character name returns HTTP 400 on create/update, and a rejected update does not change the stored category.
 
 Closure evidence: Passing current CI and exact commit SHA, API responses for the boundary values, and a read-back confirming the category name remains unchanged.
