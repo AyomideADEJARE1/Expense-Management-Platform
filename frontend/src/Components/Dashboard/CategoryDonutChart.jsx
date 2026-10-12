@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { PieChart as PieChartIcon } from 'lucide-react';
+import { formatCurrency } from '../../utils/currency';
 import {
   PieChart,
   Pie,
@@ -7,8 +8,9 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 
-export default function CategoryDonutChart({ 
+export default function CategoryDonutChart({
   budgets = [],
+  currency = 'NGN (₦)',
   isDarkMode = false,
 }) {
 
@@ -121,11 +123,11 @@ export default function CategoryDonutChart({
                     : textStyle
               }`}
             >
-              ₦{budgetSummary.totalSpent.toLocaleString()} spent
+              {formatCurrency(budgetSummary.totalSpent, currency)} spent
             </p>
 
             <p className={`text-xs ${textStyle} mt-1`}>
-              of ₦{budgetSummary.totalLimit.toLocaleString()} budget
+              of {formatCurrency(budgetSummary.totalLimit, currency)} budget
             </p>
           </div>
 
