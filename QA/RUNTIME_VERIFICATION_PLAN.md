@@ -658,6 +658,8 @@ CI run 38273922288 passed all eight jobs for correction commit 77620d6547cad3ee3
 ## RV-53 — Verify report CSV download completes before Blob URL cleanup
 **Owner:** Frontend/QA. **Environment:** Browser test on the deployed/staging app or local integrated stack.
 
+**CI status:** Run `38276034129` passed all eight jobs for commit `97e6515f00c15e240532da653235421a2c6fb055`; frontend lint/build and all nine Node tests passed.
+
 **Steps:** Export a report with a few rows and another with many rows. Repeat exports. Confirm the file downloads, opens as text, contains all expected rows, and does not trigger console errors. Confirm the cleanup code delays `URL.revokeObjectURL` rather than revoking synchronously after `click()`.
 
 **Pass criteria:** All exports complete consistently with correct row counts and contents in each supported browser tested.
