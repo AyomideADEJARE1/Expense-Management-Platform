@@ -142,3 +142,7 @@ Flask-Limiter currently keys requests by `get_remote_address`, while Flask is be
 
 ## QA-FIND-074 trace — Account email change verification
 The current `PUT /api/auth/me` flow saves a new email after syntax/uniqueness checks, without current-password/recent re-authentication or a verification step for the new address. Product/security must define whether email delivery and verification are required. Closure requires policy-aligned API tests and staging evidence that an unverified address cannot become the active login identity if verification is required.
+
+
+## QA-FIND-075 trace — Registration password policy
+The registration API checks that the password is a non-empty string and hashes it, but no minimum-length policy is enforced in the reviewed route. Product/security must approve the length policy; backend tests and direct API boundary checks must prove it is enforced server-side.
