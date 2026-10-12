@@ -435,3 +435,14 @@ Latest correction CI result: run `38213904072` passed all eight jobs for commit 
 
 ## Latest branch-head CI checkpoint — 2026-10-12
 Run `38219803561` passed all eight jobs for commit `92eefc22555c7c98df240014721084e2f41698f8`. Both backend test passes completed with 58 passed tests. CI applied migrations 001–005, verified the budget-category `RESTRICT` rule and `users.phone`, and checked migration ordering before app restart. This does not close the existing AWS volume, live deployment, public health, browser, production rate-limit, CSP/HSTS, or notification-delivery gates.
+
+
+## RV-39 — Verify currency changes do not misrepresent historical amounts
+
+**Related finding:** QA-FIND-069.
+
+**Check:** Create an expense and a budget while the account currency is NGN. Change the preferred currency to USD and revisit Transactions, Budgets, Dashboard, and Reports. Record whether numeric values change or only symbols change. Compare the behavior with the approved product decision. If the application converts values, verify the chosen rate, rate timestamp, rounding, and historical-record policy; if it is display-only, verify the UI warns users that values are not converted.
+
+**Current source evidence:** The user model stores a single currency preference; expense and budget records do not store currency. The frontend formats existing numeric values with the selected currency symbol. A written product decision is required before QA can call this behavior correct.
+
+**Pass evidence:** Written currency semantics, passing tests for the approved behavior, and browser evidence across all financial screens. Do not infer conversion from a changed currency symbol.
