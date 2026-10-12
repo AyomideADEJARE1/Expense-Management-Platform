@@ -382,9 +382,9 @@ This document tells the team what is wrong, why it matters, and who needs to act
 **Evidence to close:** Passing current CI for the exact commit, API results for create/update, and read-back showing no change after the rejected update. CI run `38215898127` passed all eight jobs for commit `9b00f76863b48686bb5fe232926e20ee1d383eb0`, including the budget month regression assertions.
 
 ### 35. Team lead + frontend/backend: decide whether overall monthly budgets are required
-**What happens:** The API/database support a whole-month budget with no category, but the browser form currently requires a category and cannot submit that type.
+**What happens:** The API/database support a whole-month budget with no category, but the browser form requires a category and cannot submit it. The dashboard also matches expenses only when an expense category ID equals the budget category ID; when the budget category is null, normal expenses are not counted.
 
-**Why it matters:** If the capstone expects an overall monthly spending limit, a user cannot create it through the interface. If the app is intentionally category-only, the extra API/database capability may be unnecessary and should be documented.
+**Why it matters:** If the capstone expects an overall monthly spending limit, a user cannot create it through the interface, and an API-created overall budget would show zero spending. If the app is intentionally category-only, the extra API/database capability may be unnecessary and should be documented.
 
 **Required decision:** Confirm whether overall monthly budgets are in scope. If yes, add an explicit “Overall monthly budget” option that sends `category_id: null`, count all same-month expenses for its spent amount, and show it distinctly in the budget list/dashboard. If no, record the category-only decision and align documentation/API scope.
 
