@@ -565,3 +565,13 @@ Code CI run 38270547450 passed all eight jobs for correction commit 8d5fddc6c163
 ## Latest code CI checkpoint — 2026-10-12
 
 CI run 38271222415 passed all eight jobs for correction commit 2316a358ca37495ecc41eff8aaf48f888654e5b8. Backend lint passed and the backend suite passed 60 tests twice, including trusted-proxy and partial-profile-name regression tests. Migrations 001–005, the budget-category RESTRICT rule, the phone column, and migration order passed CI; frontend lint/build, secret scan, both Docker builds, and aggregate CI passed. Flask-Limiter still warns that it uses in-memory storage. This does not close AWS populated-volume migration, live deployment, public health, browser, reboot recovery, backup restore, or shared rate-limit storage gates.
+
+
+## RV-48 — Category deletion handles concurrent budget references
+**Purpose:** Confirm a budget foreign-key conflict during category deletion is reported as a normal conflict, not a server error.
+
+**Procedure:** CI simulates the race by allowing the pre-check to pass and then raising a PostgreSQL-style `fk_budgets_category` integrity error at commit. Verify HTTP 409, a clear reference-conflict message, and that the category still exists. Also verify unexpected database errors still return HTTP 500. On AWS staging, attempt a safe concurrent create/delete test only if a disposable category and budget can be used.
+
+**Current correction:** PR #54 now recognizes both `fk_expenses_category` and `fk_budgets_category` as expected reference conflicts. The regression test was added in commit `ea775178ea545b48bfea9cdaadd77b7b0965d4b8`; current CI is pending.
+
+**Pass evidence:** Passing CI for the exact commit, regression output, HTTP status/body, and category read-back. Do not mark AWS concurrency verification complete without staging evidence.
