@@ -90,6 +90,12 @@ def get_category_summary():
         )
 
     try:
+        if not isinstance(month, str) or re.fullmatch(
+            r"\d{4}-(0[1-9]|1[0-2])",
+            month
+        ) is None:
+            raise ValueError
+
         year, month_number = month.split("-")
 
         year = int(year)
