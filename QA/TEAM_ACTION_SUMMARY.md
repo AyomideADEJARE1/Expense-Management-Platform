@@ -71,7 +71,7 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Why it matters:** A new database may work while an existing deployment fails during an update. A failed migration can leave the application and database out of step.
 
-**DevOps/backend owner:** Confirm the migration can be safely applied to a populated database. Prefer a versioned migration process, back up before production changes, and stop deployment if migration fails.
+**DevOps/backend owner:** Confirm the migration can be safely applied to a populated database. Prefer a versioned migration process, back up before production changes, and stop deployment if migration fails. The current correction also adds migration 004 to change the budget-category foreign key to `ON DELETE RESTRICT`, so category deletion cannot silently turn a category budget into a whole-month budget.
 
 **QA check:** Test a fresh database, an existing database, and a simulated migration failure. Record the results and recovery steps.
 
@@ -308,7 +308,7 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Why it matters:** If a migration fails, the new app version may already be running against the old schema, leaving the release partly deployed.
 
-**Required correction:** Start the database, apply migrations 002 and 003, and only restart backend/frontend/Nginx after both migrations succeed. The correction branch now uses this order and adds a CI check for the command sequence.
+**Required correction:** Start the database, apply migrations 002 and 003, and only restart backend/frontend/Nginx after both migrations succeed. The correction branch now uses this order, applies migrations 002–004, and adds a CI check for the command sequence.
 
 **How QA will verify:** Confirm the CI order check passes. In staging, deliberately make migration 003 fail and verify the existing app version remains running; then resolve the test data, redeploy, and confirm the intended commit and health checks.
 
@@ -320,11 +320,22 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Why it matters:** A valid deployment can fail during a slow database restart simply because the migration command ran too early.
 
-**Required correction:** Start PostgreSQL with a health wait, apply migrations 002 and 003, and only then restart backend/frontend/Nginx. The correction branch now uses Compose's wait option and CI checks the order.
+**Required correction:** Start PostgreSQL with a health wait, apply migrations 002–004, and only then restart backend/frontend/Nginx. The correction branch now uses Compose's wait option and CI checks the order.
 
 **How QA will verify:** Confirm CI passes the deployment-order check and, in staging, restart PostgreSQL from a cold state and verify migrations begin only after the database is healthy.
 
 **Evidence to close:** CI result, staging logs showing database readiness before migrations, and successful application/database health checks.
+
+### 30. Backend/database: prevent category deletion from changing budget meaning
+**What happens:** The original budget-category foreign key uses `ON DELETE SET NULL`. If a category is deleted while a budget references it, that budget may become a whole-month budget; if a whole-month budget already exists for the same user/month, the uniqueness index may instead make deletion fail.
+
+**Why it matters:** The saved budget can change meaning without the user editing it. Budget totals, alerts, and reports may then be misleading.
+
+**Required correction:** PR #54 now checks for budgets that reference a category, returns HTTP 409 when any exist, changes the SQLAlchemy model to `ON DELETE RESTRICT`, and adds migration 004 to enforce the same rule in PostgreSQL. CI checks the foreign-key rule and the migration order. The newest correction still needs its current CI result and fresh/existing-volume verification.
+
+**How QA will verify:** Create a category-linked budget, try to delete the category, and confirm HTTP 409. Verify the budget remains and its category ID and amount do not change. Repeat when a whole-month budget also exists. Test migration 004 on a clean database and a populated AWS volume.
+
+**Evidence to close:** Passing CI for the latest commit, database constraint reports `RESTRICT`, before/after API/database evidence, fresh/existing-volume migration logs, and AWS staging version/health evidence.
 
 ## Release checklist
 
@@ -336,7 +347,7 @@ Do not mark a check as passed until evidence is attached.
 - [ ] Production database and JWT secrets are required and are not sample values.
 - [ ] Tests use an isolated database and pass repeatedly.
 - [ ] CI is green for the exact release commit, backend tests are collected, and frontend tests execute rather than being silently skipped.
-- [ ] Migration succeeds on fresh and existing databases.\n- [ ] Deployment applies migrations before restarting backend/frontend/Nginx.
+- [ ] Migrations 002–004 succeed on fresh and existing databases; migration 004 enforces `ON DELETE RESTRICT` for category-linked budgets.\n- [ ] Deployment applies migrations before restarting backend/frontend/Nginx.
 - [ ] AWS is the documented and approved deployment target, and the deployed AWS VM is evidenced.
 - [ ] The running image matches the tested commit.
 - [ ] The AWS VM can pull the published images using the intended permissions.
