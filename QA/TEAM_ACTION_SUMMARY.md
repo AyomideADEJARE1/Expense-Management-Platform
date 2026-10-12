@@ -414,6 +414,17 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Evidence to close:** Passing current CI for the exact commit, boundary-value API responses, and a read-back confirming the name did not change. Current CI is pending.
 
+### 38. Frontend: remove API-response debug logging
+**What happens:** The dashboard previously logged the full categories, expenses, and budgets API responses to the browser console.
+
+**Why it matters:** The responses include financial details such as amounts, dates, descriptions, and budget limits. Printing them adds avoidable exposure during screen-sharing/support and creates noisy production output.
+
+**Required correction:** PR #54 removes the three response-level `console.log` statements from `frontend/src/App.jsx`.
+
+**How QA will verify:** Confirm the active frontend source no longer logs these response objects, frontend lint/build passes, and the dashboard still renders categories, expenses, and budgets in a browser.
+
+**Evidence to close:** Passing current CI for the exact commit, source-search result, and browser smoke-test evidence. Current CI is pending.
+
 ## Release checklist
 
 Do not mark a check as passed until evidence is attached.
@@ -436,4 +447,4 @@ Do not mark a check as passed until evidence is attached.
 - [ ] Public HTTPS security headers are checked and the approved CSP is tested.
 - [ ] Screenshots, workflow run links, commit SHA, and test results are attached.
 
-**Current overall status:** CI run `38217288387` passed all eight jobs for correction commit `52438ec387ed2c9bfaff56081930e6df317604dd`. The backend job ran the full pytest suite twice; both runs passed all 57 tests, including database-name guard cases, per-test cleanup, date/month validation, summary totals, category name boundaries, and ownership checks. Both Docker builds, frontend lint/build, secret scan, database migrations, and aggregate CI passed. This is CI evidence only. AWS deployment, populated-volume migrations, staging failure/recovery, public health checks, and browser end-to-end verification remain pending. The findings register contains 63 findings and this summary contains 37 team actions. The frontend package still has no test script, so frontend functional tests can be skipped by the optional CI command.
+**Current overall status:** CI run `38217288387` passed all eight jobs for correction commit `52438ec387ed2c9bfaff56081930e6df317604dd`. The backend job ran the full pytest suite twice; both runs passed all 57 tests, including database-name guard cases, per-test cleanup, date/month validation, summary totals, category name boundaries, and ownership checks. Both Docker builds, frontend lint/build, secret scan, database migrations, and aggregate CI passed. This is CI evidence only. AWS deployment, populated-volume migrations, staging failure/recovery, public health checks, and browser end-to-end verification remain pending. The findings register contains 64 findings and this summary contains 38 team actions. The frontend package still has no test script, so frontend functional tests can be skipped by the optional CI command.
