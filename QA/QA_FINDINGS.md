@@ -781,3 +781,18 @@ Correction proposed in PR #54: Expense month filtering and both monthly/category
 Required retest: CI run `38216409164` passed all eight jobs for commit `7c3eb3a08464ff9b97ce854f5a105383db8646cb`; Flake8 and all 48 backend tests passed, including the month-query and summary regression test. Test valid `YYYY-MM` queries, reject `2026-1` and `2026-010` on expense filters and both summary endpoints, and verify monthly/category totals match known expense records.
 
 Closure evidence: Passing CI run and commit SHA, API responses for valid/invalid month parameters, and expected-vs-actual summary totals using controlled test data.
+
+
+## QA-FIND-063 — Category names over the database limit can become server errors
+
+Classification: API input validation and error handling. Status: Correction proposed in PR #54; current CI retest pending. Priority: Medium.
+
+Evidence: The category model and initial schema limit `expense_categories.name` to 100 characters, but the create/update routes previously checked only that the name was a non-empty string. A name longer than 100 characters can reach PostgreSQL and fail during commit; the API then reports a generic HTTP 500 rather than rejecting invalid input as HTTP 400.
+
+Impact: A client validation error is reported as a server failure, creating confusing behavior and unnecessary database work. A failed update must also leave the existing category name unchanged.
+
+Correction proposed in PR #54: Category create/update now reject names longer than 100 characters before querying or committing. A regression test covers oversized create and update values and verifies the existing name is unchanged after a rejected update.
+
+Required retest: Confirm the current CI run passes. Verify a 100-character name is accepted where otherwise valid, a 101-character name returns HTTP 400 on create/update, and a rejected update does not change the stored category.
+
+Closure evidence: Passing current CI and exact commit SHA, API responses for the boundary values, and a read-back confirming the category name remains unchanged.
