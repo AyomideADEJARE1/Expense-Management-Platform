@@ -458,6 +458,17 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Evidence to close:** Passing CI for the exact commit, schema/migration logs, API read-back, and AWS staging/browser evidence.
 
+### 42. Product/backend: decide whether notification controls must send real alerts
+**What happens:** Settings offers in-app push notifications and weekly summary email alerts, but the reviewed code stores the preference flags without a delivery service, scheduler, or browser-push implementation.
+
+**Why it matters:** A saved checkbox can look like a working feature even when no notification is delivered.
+
+**Required correction:** Confirm whether alerts are required. If yes, implement and test the delivery process, schedule/trigger rules, failures/retries, and per-user preferences. If not, label the controls clearly as inactive preferences or remove them until the feature is supported.
+
+**How QA will verify:** For a real implementation, trigger test notifications with each preference on and off, verify correct recipient and delivery behavior, and test failures/retries and duplicate prevention. For out-of-scope alerts, verify the UI does not promise active delivery.
+
+**Evidence to close:** Written scope decision, passing automated tests, and staging delivery evidence or approved UI wording.
+
 ## Release checklist
 
 Do not mark a check as passed until evidence is attached.
@@ -480,10 +491,13 @@ Do not mark a check as passed until evidence is attached.
 - [ ] Public HTTPS security headers are checked and the approved CSP is tested.
 - [ ] Screenshots, workflow run links, commit SHA, and test results are attached.
 
-**Current overall status:** CI run `38217288387` passed all eight jobs for correction commit `52438ec387ed2c9bfaff56081930e6df317604dd`. The backend job ran the full pytest suite twice; both runs passed all 57 tests, including database-name guard cases, per-test cleanup, date/month validation, summary totals, category name boundaries, and ownership checks. Both Docker builds, frontend lint/build, secret scan, database migrations, and aggregate CI passed. This is CI evidence only. AWS deployment, populated-volume migrations, staging failure/recovery, public health checks, and browser end-to-end verification remain pending. The findings register contains 67 findings and this summary contains 41 team actions. The frontend package still has no test script, so frontend functional tests can be skipped by the optional CI command.
+**Current overall status:** CI run `38217288387` passed all eight jobs for correction commit `52438ec387ed2c9bfaff56081930e6df317604dd`. The backend job ran the full pytest suite twice; both runs passed all 57 tests, including database-name guard cases, per-test cleanup, date/month validation, summary totals, category name boundaries, and ownership checks. Both Docker builds, frontend lint/build, secret scan, database migrations, and aggregate CI passed. This is CI evidence only. AWS deployment, populated-volume migrations, staging failure/recovery, public health checks, and browser end-to-end verification remain pending. The findings register contains 68 findings and this summary contains 42 team actions. The frontend package still has no test script, so frontend functional tests can be skipped by the optional CI command.
 
 
 **Latest date-validation addition:** Action 40 expands the verification for existing finding QA-FIND-059. Regression tests were added to the correction branch; the next CI result must include those tests before this item can be considered verified.
 
 
 **Latest profile correction:** Action 41 and QA-FIND-067 track phone persistence through migration 005. CI for the latest source and the populated AWS database migration check must pass before closure.
+
+
+**Notification status:** QA-FIND-068 is open pending a product decision. Stored preference flags are not proof of actual alert delivery.
