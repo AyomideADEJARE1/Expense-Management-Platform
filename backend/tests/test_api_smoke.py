@@ -285,7 +285,6 @@ def test_profile_partial_name_updates_preserve_the_other_name_part(client):
 
 
 
-
 def test_profile_update_rejects_non_string_name_and_currency(client):
     email = f"qa-profile-{uuid.uuid4().hex}@example.test"
     password = "TestPassword123!"
