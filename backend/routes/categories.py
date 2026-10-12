@@ -3,6 +3,7 @@ from sqlalchemy.exc import IntegrityError
 
 from extensions import db
 from models.category import ExpenseCategory
+from models.budget import Budget
 from models.expense import Expense
 from utils.responses import success_response, error_response
 
@@ -216,6 +217,12 @@ def delete_category(category_id):
         return error_response(
             "Category cannot be deleted because it is being used by "
             "an expense",
+            409
+        )
+
+    if Budget.query.filter_by(category_id=category.id).first():
+        return error_response(
+            "Category cannot be deleted because it is assigned to a budget",
             409
         )
 
