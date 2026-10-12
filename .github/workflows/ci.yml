@@ -131,7 +131,9 @@ jobs:
           done
           delete_rule=$(psql -tA -c "SELECT rc.delete_rule FROM information_schema.referential_constraints AS rc JOIN information_schema.table_constraints AS tc ON tc.constraint_catalog = rc.constraint_catalog AND tc.constraint_schema = rc.constraint_schema AND tc.constraint_name = rc.constraint_name WHERE tc.table_schema = 'public' AND tc.table_name = 'budgets' AND tc.constraint_name = 'fk_budgets_category';")
           test "$delete_rule" = "RESTRICT" || { echo "::error::Budget category foreign key must use ON DELETE RESTRICT; got '$delete_rule'."; exit 1; }
-          echo "Category deletion is restricted while budget references exist."
+          phone_column=$(psql -tA -c "SELECT count(*) FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'users' AND column_name = 'phone';")
+          test "$phone_column" = "1" || { echo "::error::User phone column was not created by migrations."; exit 1; }
+          echo "Category deletion is restricted while budget references exist; users.phone exists."
 
       - name: Verify duplicate legacy budgets block the uniqueness migration
         run: |
@@ -181,9 +183,10 @@ jobs:
           migration_002=$(grep -nF '002_user_settings.sql' .github/workflows/cd.yml | cut -d: -f1)
           migration_003=$(grep -nF '003_budget_uniqueness.sql' .github/workflows/cd.yml | cut -d: -f1)
           migration_004=$(grep -nF '004_restrict_category_budget_delete.sql' .github/workflows/cd.yml | cut -d: -f1)
+          migration_005=$(grep -nF '005_user_phone.sql' .github/workflows/cd.yml | cut -d: -f1)
           app_start=$(grep -nF 'docker compose up -d --remove-orphans backend frontend nginx' .github/workflows/cd.yml | cut -d: -f1)
-          test -n "$db_start" && test -n "$migration_002" && test -n "$migration_003" && test -n "$migration_004" && test -n "$app_start"
-          if [ "$db_start" -ge "$migration_002" ] || [ "$migration_002" -ge "$migration_003" ] || [ "$migration_003" -ge "$migration_004" ] || [ "$migration_004" -ge "$app_start" ]; then
+          test -n "$db_start" && test -n "$migration_002" && test -n "$migration_003" && test -n "$migration_004" && test -n "$migration_005" && test -n "$app_start"
+          if [ "$db_start" -ge "$migration_002" ] || [ "$migration_002" -ge "$migration_003" ] || [ "$migration_003" -ge "$migration_004" ] || [ "$migration_004" -ge "$migration_005" ] || [ "$migration_005" -ge "$app_start" ]; then
             echo "::error::Database migrations must complete before application services are restarted."
             exit 1
           fi
