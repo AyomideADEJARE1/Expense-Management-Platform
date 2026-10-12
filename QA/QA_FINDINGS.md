@@ -721,3 +721,18 @@ This verifies the source behavior in CI, not the actual AWS environment. Before 
 CI run [38213904072](https://github.com/AyomideADEJARE1/Expense-Management-Platform/actions/runs/38213904072) passed all eight jobs for correction commit `3bce1183a2916a62cca0018bccaeb8527adb8ebc`. The backend suite passed 47 tests. The run includes production signing-secret validation and the README explanation of production-mode behavior. Database migrations, frontend lint/build, secret scan, both Docker builds, and the aggregate check passed.
 
 The latest green CI result does not prove that AWS is running this commit, that populated-volume migrations or deployment failure/recovery work in staging, or that public health and browser flows pass. The frontend package still has no test script; category write authorization, production rate-limit storage/proxy handling, CSP/HSTS, and live AWS evidence remain open.
+
+
+## QA-FIND-059 — Expense create/update accept noncanonical date formats
+
+Classification: API input validation and contract consistency. Status: Correction proposed in PR #54; current CI and runtime retest pending. Priority: Low–Medium.
+
+Evidence: The expense create and update handlers use Python's `date.fromisoformat()` but previously did not compare the parsed date back to the submitted string. That parser accepts some ISO date representations beyond the documented `YYYY-MM-DD` format (for example, the compact `YYYYMMDD` form). The date-range query filters already check that the parsed date round-trips to the exact submitted `YYYY-MM-DD` value, so write and filter endpoints did not enforce the same contract.
+
+Impact: API clients can submit values that the endpoint claims are invalid, while equivalent filter parameters reject them. Inconsistent validation makes integration and debugging harder.
+
+Correction proposed in PR #54: Expense create/update now require `parsed_date.isoformat() == expense_date`. The regression test submits a compact date to both create and update, expects HTTP 400, and verifies the existing expense date remains unchanged.
+
+Required retest: Confirm the current CI run passes the new regression test. Verify canonical dates still create/update successfully, compact and other noncanonical forms return 400, and a rejected update leaves the stored record unchanged.
+
+Closure evidence: Current passing CI run and commit SHA, API results for canonical/noncanonical create and update requests, and a database/API read confirming the failed update did not modify the expense.
