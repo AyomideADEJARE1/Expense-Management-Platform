@@ -171,3 +171,6 @@ Record date, commit/branch, environment, steps, expected result, actual result, 
 
 | TC-CAT-008 | Delete category referenced by a budget | Return HTTP 409 with a clear message; the budget remains present with the same category ID and amount |
 | TC-CAT-009 | Budget-category foreign-key behavior | Database reports `ON DELETE RESTRICT`; direct or concurrent category deletion cannot silently clear a budget's category reference |
+
+| TC-CAT-010 | Category name uniqueness race on create/update | Known `uq_expense_category_name` conflicts return HTTP 409 after rollback; stored category data remains correct |
+| TC-CAT-011 | Unexpected category commit failure | Generic HTTP 500 with no internal details; transaction rolls back and a later valid create succeeds |
