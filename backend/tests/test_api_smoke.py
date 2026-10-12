@@ -717,7 +717,6 @@ def test_budget_category_foreign_key_restricts_deletion():
     assert constraint == "RESTRICT"
 
 
-
 def test_category_name_constraint_conflict_returns_409_for_create_and_update(
     client, monkeypatch
 ):
