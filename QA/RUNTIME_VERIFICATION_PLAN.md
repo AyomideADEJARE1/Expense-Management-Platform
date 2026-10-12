@@ -402,7 +402,7 @@ Latest correction CI result: run `38213904072` passed all eight jobs for commit 
 
 ## RV-36 — Apply the saved currency preference across financial screens
 
-**Related finding:** QA-FIND-066.
+**Related finding:** QA-FIND-059.
 
 **Check:** Set the profile currency to each supported option (NGN, USD, EUR, GBP), then inspect Dashboard, Transactions, Budgets, Reports, dashboard chart tooltips, budget overview, and budget search results. All monetary labels should use the selected currency symbol consistently. Change back to NGN and confirm the display updates without changing the underlying numeric amounts.
 
