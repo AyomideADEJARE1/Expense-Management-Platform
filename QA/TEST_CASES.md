@@ -168,3 +168,6 @@ Record date, commit/branch, environment, steps, expected result, actual result, 
 | TC-CD-007 | Migration failure during deployment | Migration runs before app restart; if migration fails, the currently running app containers remain running and healthy |
 
 | TC-CD-008 | PostgreSQL cold-start readiness during deployment | Deployment waits for the database health check before migrations and does not restart application services until migrations complete |
+
+| TC-CAT-008 | Delete category referenced by a budget | Return HTTP 409 with a clear message; the budget remains present with the same category ID and amount |
+| TC-CAT-009 | Budget-category foreign-key behavior | Database reports `ON DELETE RESTRICT`; direct or concurrent category deletion cannot silently clear a budget's category reference |
