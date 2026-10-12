@@ -34,7 +34,7 @@ export default function MonthlyExpensesChart({
       const expense = transactions
         .filter((item) => {
           const dateValue = item.expense_date || item.date;
-          const date = new Date(dateValue);
+          const date = new Date(`${dateValue}T00:00:00`);
 
           return (
             !Number.isNaN(date.getTime()) &&
@@ -137,7 +137,7 @@ export default function MonthlyExpensesChart({
 
               <Tooltip
                 formatter={(value) => [
-                  formatCurrency(value),
+                  formatCurrency(value, currency),
                   'Expenses',
                 ]}
                 labelFormatter={(label) =>
