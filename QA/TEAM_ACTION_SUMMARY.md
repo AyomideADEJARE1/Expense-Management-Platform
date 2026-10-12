@@ -469,6 +469,17 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Evidence to close:** Written scope decision, passing automated tests, and staging delivery evidence or approved UI wording.
 
+### 43. Product/backend: define currency behavior before changing account currency
+**What happens:** Expense and budget records store numeric amounts without a currency per record. The profile has one preferred currency, and the UI changes the displayed symbol without converting saved amounts.
+
+**Why it matters:** A value recorded as 10,000 NGN could later display as $10,000 after the preference changes, even though no conversion occurred. This can mislead users and distort the meaning of historical reports.
+
+**Required decision:** Confirm whether currency is a display label for a single-currency account or whether users can convert/mix currencies. For display-only behavior, warn clearly before changing currency and consider locking it after financial records exist. For conversion/mixed-currency support, define per-record currency, approved exchange-rate source/time policy, rounding, and a reviewed migration for existing records.
+
+**How QA will verify:** Record an expense and budget under NGN, switch to USD, then inspect Transactions, Budgets, Dashboard, and Reports. Confirm behavior matches the written decision. If conversion exists, test known rates and rounding and confirm totals remain consistent.
+
+**Evidence to close:** Written product decision, approved UI/data-model behavior, regression tests, and browser evidence across financial screens.
+
 ## Release checklist
 
 Do not mark a check as passed until evidence is attached.
@@ -503,3 +514,6 @@ Do not mark a check as passed until evidence is attached.
 
 
 **Latest CI note:** Run `38219803561` passed all eight jobs for the branch-head commit `92eefc22555c7c98df240014721084e2f41698f8`. The backend suite passed 58 tests twice; migrations 001–005, the `users.phone` column, and deployment order were checked. Existing-volume AWS migration, live deployment/health, browser flows, and notification delivery are still pending.
+
+
+**Currency behavior:** QA-FIND-069 remains open for a product decision. Changing the symbol is not the same as converting historical amounts.
