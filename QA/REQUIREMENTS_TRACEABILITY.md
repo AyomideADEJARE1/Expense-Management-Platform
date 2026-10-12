@@ -14,7 +14,7 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 | REQ-08 | Dashboard with charts | TC-DASH-001–003 | FINDING OPEN |
 | REQ-09 | Date/category filtering | TC-FLT-001–005, TC-FLT-MONTH-006 | Expense month filters now validate exact `YYYY-MM`; malformed values and summary endpoints have regression tests. Current CI pending; browser/runtime retest remains open |
 | REQ-10 | CSV export | TC-EXP-004–005 | UI correction proposed in PR #54; retest pending |
-| REQ-11 | React frontend | TC-UI-001 | PENDING |
+| REQ-11 | React frontend | TC-UI-001, TC-UI-DEBUG-002 | PR #54 removes API-response debug logs for categories, expenses, and budgets. Frontend lint/build and browser smoke verification for the newest commit are pending |
 | REQ-12 | Flask REST API | TC-API-001–004, TC-EXP-DATE-006 | Expense create/update now enforce canonical `YYYY-MM-DD` values; new compact-date regression tests are in PR #54. CI for the latest commit is pending; API runtime evidence remains required |
 | REQ-13 | PostgreSQL | TC-DB-001–003 | PENDING |
 | REQ-14 | Docker Compose | TC-DEV-001–004 | PENDING |
@@ -89,3 +89,8 @@ The API now checks the 100-character category name limit on create and update be
 ## QA-FIND-043 trace — test database safety and repeatability
 
 PR #54 now tightens the database-name guard, rejects names containing production/staging/live markers, truncates the test tables and resets identities after each API test, and runs the backend test suite twice consecutively. CI run `38217288387` passed all eight jobs for commit `52438ec387ed2c9bfaff56081930e6df317604dd`; both pytest runs collected and passed all 57 tests. This verifies the correction in CI. Keep the gate open if local or staging test database configuration differs from CI, and do not point tests at a shared live database.
+
+
+## QA-FIND-064 trace — frontend response logging
+
+The three `console.log` statements that printed the categories, expenses, and budgets API response objects have been removed from `frontend/src/App.jsx`. Current CI is pending; closure requires a passing frontend lint/build for the exact commit, source search confirming the response logs are absent, and browser evidence that the dashboard still loads.
