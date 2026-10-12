@@ -19,7 +19,7 @@ def client():
     with app.test_client() as test_client:
         yield test_client
 
-    # API tests commit through the real session; clear state before the next test.
+    # Clear committed API data between tests.
     with app.app_context():
         db.session.rollback()
         db.session.execute(
@@ -561,9 +561,8 @@ def test_monthly_and_category_summaries_validate_month_and_aggregate(
         json={"email": second_email, "password": password},
     )
     assert second_login.status_code == 200
-    second_headers = {
-        "Authorization": f"Bearer {second_login.get_json()['data']['access_token']}"
-    }
+    second_token = second_login.get_json()["data"]["access_token"]
+    second_headers = {"Authorization": f"Bearer {second_token}"}
 
     other_monthly = client.get(
         "/api/summaries/monthly?month=2026-10",
