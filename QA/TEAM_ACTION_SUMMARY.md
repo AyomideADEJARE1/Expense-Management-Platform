@@ -55,7 +55,7 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Backend/test owner:** Use a dedicated disposable test database, reject database names marked production/staging/live, clean up the test tables after every test, and run the suite twice in CI.
 
-**QA check:** Confirm the test-database guard rejects unsafe names, cleanup resets data between tests, and two consecutive full test runs pass. The newest CI run is pending.
+**QA check:** Confirm the test-database guard rejects unsafe names, cleanup resets data between tests, and two consecutive full test runs pass. The first CI attempt, run `38217113207`, failed backend lint because of two overlong test lines; they were corrected in commit `52438ec387ed2c9bfaff56081930e6df317604dd`. Run `38217288387` is queued to verify the correction.
 
 ### 6. DevOps owner: deploy the exact version that passed CI
 **What happens:** The deployment workflow publishes commit-tagged images but deploys the moving `latest` tag. The VM also runs `git pull`, which can move its source checkout separately from the image.
@@ -142,7 +142,7 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Why it matters:** Leftover data can make tests unreliable, and incorrect database configuration could affect data outside the test environment.
 
-**Required correction:** Use a dedicated disposable test database. The correction branch now uses an explicit test-database name guard, rejects production/staging/live markers, truncates the test tables and resets identities after each API test, and runs the backend suite twice in CI. The newest CI run must pass to verify the full correction.
+**Required correction:** Use a dedicated disposable test database. The correction branch now uses an explicit test-database name guard, rejects production/staging/live markers, truncates the test tables and resets identities after each API test, and runs the backend suite twice in CI. The first CI attempt, run `38217113207`, failed backend lint on two overlong test lines. They were corrected in commit `52438ec387ed2c9bfaff56081930e6df317604dd`; run `38217288387` is queued to verify the latest code.
 
 **QA verification and closure evidence:** Retain passing CI output showing both full test runs, database guard boundary tests, cleanup implementation, and the dedicated CI test database configuration.
 
