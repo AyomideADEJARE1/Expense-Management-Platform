@@ -71,7 +71,9 @@ Related finding: Existing production-secret finding noted in PR #53/#54. Priorit
 
 Why it matters: If Flask/JWT signing keys are missing, weak, or predictable in production, token integrity and session security can be compromised. A local development default must never silently become a production secret.
 
-Action: Validate required secrets at production startup. Reject absent, placeholder, known-default, or insufficiently strong keys; do not log their values. Keep test/development values explicitly scoped to non-production test configuration. Confirm whether SECRET_KEY and JWT_SECRET_KEY should be distinct, and wire each config key to its intended environment variable.
+Correction status update — 2026-10-12: PR #54 adds startup validation. Production now requires a strong, non-placeholder Flask secret and a separate strong JWT secret. Missing, short, placeholder, or identical values raise a startup error; non-production test configuration remains allowed. Tests have been added, and the current source CI run is pending.
+
+Action: Confirm the new tests pass and verify the production startup check uses the deployed environment mode.
 
 Pass evidence: Automated configuration tests prove production startup fails for missing/placeholder keys and succeeds with valid configured keys; secret scanning passes; no secret values appear in logs.
 
@@ -138,9 +140,7 @@ Related finding: QA-FIND-036. Priority: High; security configuration blocker.
 
 Why it matters: The previous app configuration read SECRET_KEY for JWT_SECRET_KEY even though CI and operators can supply JWT_SECRET separately. An operator could rotate JWT_SECRET and believe token signing had changed while the app continued using SECRET_KEY.
 
-Source correction now proposed in PR #54: app.py reads JWT_SECRET_KEY first, then JWT_SECRET, and uses SECRET_KEY only as a backward-compatible fallback if no dedicated JWT variable is set. The example environment file now documents separate Flask and JWT secret placeholders.
-
-Remaining action: remove the production ambiguity by requiring a dedicated JWT signing secret in production; reject missing or placeholder values and add configuration tests proving that the dedicated variable is used. The compatibility fallback must not allow production to start without the dedicated JWT key.
+Correction status update — 2026-10-12: PR #54 now reads `JWT_SECRET_KEY` first, then `JWT_SECRET`; production cannot use `SECRET_KEY` as a fallback and must provide distinct strong keys. The new tests cover missing, placeholder, short, shared, and valid distinct values. The current source CI result is pending.
 
 Pass evidence: automated tests show that distinct Flask and JWT values populate distinct config keys; production fails when either is missing/placeholder; test environment remains deterministic; CI and secret scan pass. Until those tests and fail-closed behavior exist, QA-FIND-036 remains RETEST PENDING.
 
