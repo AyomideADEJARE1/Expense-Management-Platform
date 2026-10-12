@@ -212,3 +212,7 @@ PR #54 now filters budget results by title/subtitle and adds Node tests for cate
 ## Latest correction CI checkpoint — 2026-10-12
 
 Run 38273922288 passed all eight jobs for correction commit 77620d6547cad3ee3774657df9dd0b9256ed9ff6. The backend suite passed 62 tests twice and all seven frontend Node tests passed, including global budget-search relevance. This verifies CI only; browser and AWS runtime evidence remains pending. The in-memory rate-limit storage warning remains open under QA-FIND-073.
+
+
+## QA-FIND-082 trace — Formula protection in Reports CSV export
+The report export previously escaped CSV quotes but did not neutralize formula-leading text, unlike the Transactions export. PR #54 now introduces a shared CSV cell helper used by both paths and adds Node regression tests. Current-head CI and browser download verification are pending. Closure requires passing tests and evidence from both export paths.
