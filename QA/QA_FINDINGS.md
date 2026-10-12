@@ -240,7 +240,7 @@ PR #54 resets rate-limit state between functional tests. CI run `38164448383` pa
 
 
 ## QA-FIND-030 — Budget uniqueness is enforced only in application code
-Classification: Data-integrity risk. Status: Open. Priority: Medium.
+Classification: Data-integrity risk. Status: Database uniqueness migration and conflict handling are implemented in PR #54; CI passed in run 38213583630; populated AWS-volume and concurrency verification remain pending. Priority: Medium.
 
 The budget API checks whether a budget already exists for a user, month, and category before inserting or updating it. The PostgreSQL schema does not define a corresponding uniqueness constraint/index for that business key. Two concurrent requests can therefore both pass the application check and create duplicate budgets.
 
@@ -405,7 +405,7 @@ Required tests: workflow verifies the CI-tested SHA is the one published and dep
 Closure evidence: workflow changes, successful release run showing commit and digest, VM/container evidence, and a tested rollback procedure.
 
 ## QA-FIND-041 — Database init scripts are manually replayed as migrations
-Classification: Deployment reliability / schema migration. Priority: High. Status: Open pending idempotency and rollback proof.
+Classification: Deployment reliability / schema migration. Priority: High. Status: Migrations 002–004 are applied explicitly before app restart and pass CI; a formal migration ledger plus populated-volume rollback/recovery proof remain pending.
 
 Evidence reviewed in `.github/workflows/cd.yml`: deployment invokes `docker compose exec -T postgres ... psql ... -f /docker-entrypoint-initdb.d/002_user_settings.sql`. The same SQL file is mounted from `database/migrations` into the PostgreSQL init directory, where scripts are automatically run for a newly initialized data directory. The CD workflow comments that the script is idempotent, but that claim must be verified from the SQL contents and against an existing database.
 
@@ -420,7 +420,7 @@ Closure evidence: repeatable migration strategy, fresh/existing-volume test logs
 Correction status update — 2026-10-11: PR #54 now applies migration 002 and the new idempotent budget uniqueness migration 003 explicitly on existing volumes. Migration 003 stops deployment with a clear error if duplicate legacy budgets are found. CI has been extended to exercise the duplicate-data guard on a separate test database. This reduces the known risk but does not close the finding until the current CI run passes and a populated existing database is tested. A versioned migration history and recovery proof remain release requirements.
 
 ## QA-FIND-042 — Budget creation converts all database failures into HTTP 500
-Classification: API error handling / data integrity. Priority: Medium–High. Status: Open.
+Classification: API error handling / data integrity. Priority: Medium–High. Status: Known budget unique-index violations map to HTTP 409 and rollback/recovery tests pass in CI run 38213583630; unexpected-error runtime verification remains pending.
 
 Evidence reviewed in `backend/routes/budgets.py` on `stephen/qa-transaction-fixes`: the budget creation handler catches every exception raised by `db.session.commit()`, rolls back, and returns the same generic HTTP 500 response. The handler does not distinguish an expected uniqueness conflict from an unexpected database outage or programming error.
 
@@ -435,7 +435,7 @@ Closure evidence: implementation commit, targeted tests for both expected and un
 Correction status update — 2026-10-11: PR #54 now catches SQLAlchemy IntegrityError separately in both budget creation and update, rolls back the session, and returns HTTP 409 only when the database reports one of the two known budget unique-index names. Other integrity violations and unexpected exceptions return a generic HTTP 500. Tests cover the known-index classifier, duplicate general budget response, and simulated unexpected commit failure with rollback/session recovery. The current CI run must pass before this finding is closed.
 
 ## QA-FIND-043 — API tests do not establish database isolation between test cases
-Classification: Test reliability / reproducibility. Priority: Medium. Status: Open pending test-environment review.
+Classification: Test reliability / reproducibility. Priority: Medium. Status: An autouse guard rejects non-test database names; CI tests pass. Reliable cleanup/repeatability and negative non-test-database verification remain pending.
 
 Evidence reviewed in `backend/tests/test_api_smoke.py` on `stephen/qa-transaction-fixes`: the client fixture toggles Flask testing and rate-limit settings and resets the limiter, but it does not itself create an isolated test database, wrap each test in a transaction that is rolled back, or remove created user/category records. Several tests register users and create globally named categories through the application's configured database.
 
