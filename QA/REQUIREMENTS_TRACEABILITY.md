@@ -232,3 +232,7 @@ Run `38276034129` passed all eight jobs for code commit `97e6515f00c15e240532da6
 
 ## Latest CI evidence — QA-FIND-083
 CI run `38276034129` passed all eight jobs for code commit `97e6515f00c15e240532da653235421a2c6fb055`. The Reports export now delays Blob URL revocation by one second. Browser download completion and row-count evidence remain required.
+
+
+## QA-FIND-084 trace — Debug mode for direct app execution
+The direct-execution block previously used `app.run(debug=True)` regardless of configured environment. PR #54 now uses a helper that enables debug only for explicit development/test modes and adds parameterized tests. Current-head CI retest is pending; production-container behavior should remain Gunicorn-based.
