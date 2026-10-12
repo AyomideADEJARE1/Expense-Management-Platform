@@ -447,6 +447,17 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Evidence to close:** Passing frontend lint/build for the exact commit and browser screenshots for each supported currency across the named screens. Automated frontend tests are not currently configured, so browser evidence is required.
 
+### 41. Backend/frontend/DevOps: make the Settings phone field persist
+**What happens:** Settings showed a Phone Number field, but the backend did not store or return the value. The save message could appear even though the phone number disappeared after reload.
+
+**Why it matters:** A visible editable field must either save reliably or be clearly marked as unsupported. Silent data loss makes profile settings unreliable.
+
+**Required correction:** PR #54 adds migration 005 for nullable `users.phone`, validates and returns the value in the profile API, sends it from the frontend, and checks migration 005 in CI and deployment ordering.
+
+**How QA will verify:** Run CI, then test fresh and existing databases. Save a phone number and reload the profile; verify the exact value remains. Test blank input, non-string input, more than 30 characters, and control characters. Rejected updates must leave the previous value unchanged.
+
+**Evidence to close:** Passing CI for the exact commit, schema/migration logs, API read-back, and AWS staging/browser evidence.
+
 ## Release checklist
 
 Do not mark a check as passed until evidence is attached.
@@ -469,7 +480,10 @@ Do not mark a check as passed until evidence is attached.
 - [ ] Public HTTPS security headers are checked and the approved CSP is tested.
 - [ ] Screenshots, workflow run links, commit SHA, and test results are attached.
 
-**Current overall status:** CI run `38217288387` passed all eight jobs for correction commit `52438ec387ed2c9bfaff56081930e6df317604dd`. The backend job ran the full pytest suite twice; both runs passed all 57 tests, including database-name guard cases, per-test cleanup, date/month validation, summary totals, category name boundaries, and ownership checks. Both Docker builds, frontend lint/build, secret scan, database migrations, and aggregate CI passed. This is CI evidence only. AWS deployment, populated-volume migrations, staging failure/recovery, public health checks, and browser end-to-end verification remain pending. The findings register contains 66 findings and this summary contains 40 team actions. The frontend package still has no test script, so frontend functional tests can be skipped by the optional CI command.
+**Current overall status:** CI run `38217288387` passed all eight jobs for correction commit `52438ec387ed2c9bfaff56081930e6df317604dd`. The backend job ran the full pytest suite twice; both runs passed all 57 tests, including database-name guard cases, per-test cleanup, date/month validation, summary totals, category name boundaries, and ownership checks. Both Docker builds, frontend lint/build, secret scan, database migrations, and aggregate CI passed. This is CI evidence only. AWS deployment, populated-volume migrations, staging failure/recovery, public health checks, and browser end-to-end verification remain pending. The findings register contains 67 findings and this summary contains 41 team actions. The frontend package still has no test script, so frontend functional tests can be skipped by the optional CI command.
 
 
 **Latest date-validation addition:** Action 40 expands the verification for existing finding QA-FIND-059. Regression tests were added to the correction branch; the next CI result must include those tests before this item can be considered verified.
+
+
+**Latest profile correction:** Action 41 and QA-FIND-067 track phone persistence through migration 005. CI for the latest source and the populated AWS database migration check must pass before closure.
