@@ -21,59 +21,59 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **QA check:** Requests without permission must fail. An authorized administrator or owner must still be able to make allowed changes.
 
-### 2. Backend and database owner: prevent duplicate budgets
-**What happens:** The application checks for an existing budget before saving, but the database does not yet guarantee that duplicate budgets are impossible.
+### 2. Backend and database owner: verify budget uniqueness correction
+**What happens:** The original route checked for duplicate budgets in application code only, which could allow concurrent requests to race.
 
-**Why it matters:** Two requests sent at nearly the same time can create duplicate budgets and make totals misleading.
+**Why it matters:** Duplicate budgets can distort spending limits and reports.
 
-**Backend/database owner:** Add a database constraint or unique index and a safe migration. Handle a duplicate as HTTP 409 (conflict), not as a general server error.
+**Correction status:** PR #54 adds database unique indexes for category and whole-month budgets, maps the known uniqueness conflict to HTTP 409, rolls back failed commits, and preserves generic HTTP 500 responses for unexpected failures. CI run 38219803561 passed all 58 backend tests twice and verified the migrations in the CI database.
 
-**QA check:** Submit the same budget twice, including at the same time. Only one record should be saved. Different users must still be able to create their own budgets.
+**QA check still required:** Verify duplicate behavior against a populated AWS database, including concurrent requests and whole-month budgets. Retain response codes and row-count evidence.
 
-### 3. Backend/configuration owner: remove fixed database passwords
-**What happens:** Docker Compose sets the same fixed database credentials for the backend and PostgreSQL.
+### 3. Backend/configuration owner: verify external database credentials
+**What happens:** The original Compose file used fixed database credentials.
 
-**Why it matters:** Production may keep using predictable credentials even when someone believes they supplied different values in an environment file.
+**Correction status:** PR #54 now requires POSTGRES_USER, POSTGRES_PASSWORD, and POSTGRES_DB from the root environment configuration. CI resolves the Compose file with test values and checks that the legacy fixed password is absent.
 
-**Backend/DevOps owner:** Read credentials from one documented configuration source or a secret store. Do not silently use sample passwords in production. Rotate any real credentials that were exposed or reused.
+**Why it matters:** Fixed credentials can be reused unintentionally and are not safe for production.
 
-**QA check:** A fresh local setup works with documented environment values; missing production values stop startup; logs do not reveal passwords.
+**QA check still required:** Verify a clean startup using documented variables, ensure missing values stop Compose, and confirm AWS secrets are set without exposing them in logs. Rotate any real credentials that were previously exposed or reused.
 
-### 4. Backend owner: use the intended JWT secret
-**What happens:** The application previously read the Flask secret for JWT signing even though a separate JWT secret was supplied by CI. PR #54 now checks the dedicated JWT variables and validates production startup: Flask and JWT secrets must be strong, separate, and not placeholders. Automated tests cover missing, short, placeholder, shared, and valid distinct values. CI run `38213904072` passed all eight jobs for commit `3bce1183a2916a62cca0018bccaeb8527adb8ebc`, including 47 backend tests and README documentation of the production secret rule. The deployed AWS environment must still be checked for distinct strong secrets and the intended production mode.
+### 4. Backend owner: verify production signing-secret configuration
+**What happens:** The original app ignored the dedicated JWT secret and did not fail closed for weak production signing keys.
 
-**Why it matters:** A person may change the JWT secret but the application may continue using another key. That makes secret rotation unreliable.
+**Correction status:** PR #54 now reads the dedicated JWT secret variables and rejects missing, weak, placeholder, or shared Flask/JWT secrets in production. CI run 38219803561 passed all 58 backend tests twice.
 
-**Backend owner:** Require a dedicated strong JWT secret in production and add tests for missing, placeholder, and valid separate secrets.
+**Why it matters:** Secret rotation would be unreliable and weak signing keys could allow forged or misused sessions.
 
-**QA check:** Flask and JWT configuration use their intended separate values; production does not start if the JWT secret is missing or a placeholder.
+**QA check still required:** Confirm AWS uses distinct strong SECRET_KEY and JWT_SECRET/JWT_SECRET_KEY values and the service starts in production mode. Do not expose secret values in screenshots or logs.
 
 ### 5. Backend/test owner: make tests safe to repeat
-**What happens:** The test fixture does not itself prove that test data is isolated and cleaned up.
+**What happens:** The original fixture did not prove that test data was isolated and cleaned up.
 
 **Why it matters:** A test may pass once but fail the next time because old users or categories remain. A wrong local configuration could also point tests at a database that should not be changed.
 
-**Backend/test owner:** Use a dedicated disposable test database, reject database names marked production/staging/live, clean up the test tables after every test, and run the suite twice in CI.
+**Correction status:** The correction branch uses a dedicated test database, rejects unsafe database names, truncates test tables and resets identities after each test, and runs the backend suite twice. CI run 38219803561 passed all eight jobs and both 58-test runs.
 
-**QA check:** Confirm the test-database guard rejects unsafe names, cleanup resets data between tests, and two consecutive full test runs pass. The first CI attempt, run `38217113207`, failed backend lint because of two overlong test lines. They were corrected in commit `52438ec387ed2c9bfaff56081930e6df317604dd`; run `38217288387` then passed all eight jobs and both pytest runs passed all 57 tests.
+**QA check still required:** Confirm local/staging test database configuration is separate from production and retain the database guard, cleanup implementation, and repeated CI test results.
 
-### 6. DevOps owner: deploy the exact version that passed CI
-**What happens:** The deployment workflow publishes commit-tagged images but deploys the moving `latest` tag. The VM also runs `git pull`, which can move its source checkout separately from the image.
+### 6. DevOps owner: prove the running image matches the tested commit
+**What happens:** The original CD workflow used a moving latest tag and separately updated the VM source checkout. PR #54 now selects commit-specific SHA image tags for the successful CI commit.
 
-**Why it matters:** The live app might not be running the same version that passed CI. This makes failures harder to investigate and rollback less reliable.
+**Why it matters:** A VM could otherwise run a different build from the one QA reviewed.
 
-**DevOps owner:** Deploy a commit-specific SHA-tagged image, and either enforce registry tag immutability or pin the image digest. Record the running digest and test rollback to a known-good version.
+**Correction status:** CI run 38219803561 passed the source-level deployment checks.
 
-**QA check:** Compare the CI commit, published image digest, and running container version. They must match.
+**QA check still required:** On AWS, compare the CI commit SHA, published image digest, and running container version. Confirm the deployed source/image cannot drift, retain rollback evidence, and verify the VM runs the expected image after restart. SHA-tag use alone does not prove that the tag is immutable.
 
 ### 7. DevOps owner: verify migrations on existing databases
-**What happens:** The deployment workflow manually runs a SQL file that is also mounted in PostgreSQL's initialization directory. Initialization scripts do not automatically run again for an already-created data volume.
+**What happens:** PostgreSQL initialization scripts do not automatically run again for an already-created data volume, so the deployment workflow applies migration files explicitly.
 
 **Why it matters:** A new database may work while an existing deployment fails during an update. A failed migration can leave the application and database out of step.
 
-**DevOps/backend owner:** Confirm the migration can be safely applied to a populated database. Prefer a versioned migration process, back up before production changes, and stop deployment if migration fails. The current correction also adds migration 004 to change the budget-category foreign key to `ON DELETE RESTRICT`, so category deletion cannot silently turn a category budget into a whole-month budget.
+**Correction status:** The current workflow waits for PostgreSQL, applies migrations 002–005 before restarting application services, and CI checks the ordering. Migration 004 protects category-linked budgets; migration 005 adds the optional phone column. The workflow still replays SQL files rather than maintaining a formal migration ledger.
 
-**QA check:** Test a fresh database, an existing database, and a simulated migration failure. Record the results and recovery steps.
+**QA check still required:** Test migration 005 on a populated AWS volume, retain a backup/restore plan, and simulate a migration failure to prove the old application remains running and recovery is documented.
 
 ### 8. Team lead/DevOps: use AWS as the approved deployment target
 **Decision recorded for this audit:** The QA owner reports that the project tutor approved AWS as an alternative deployment target. The upstream README also identifies AWS EC2 as the current production environment.
@@ -88,14 +88,14 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Evidence to close:** Retain the tutor's approval with submission records, workflow run, EC2/container status, timestamped public URL checks, and screenshots showing the deployed version.
 
-### 9. Backend/DevOps owner: test health checks through Nginx
-**What happens:** A health endpoint may work inside the backend but fail through the public Nginx route.
+### 9. Backend/DevOps owner: verify both health checks through Nginx
+**What happens:** The original public database-health route was missing. PR #54 now maps both /api/health and /api/health/db to the backend and checks both after deployment.
 
-**Why it matters:** The deployment may be marked failed even when the backend is running, or the pipeline may miss a database problem.
+**Why it matters:** A backend-only health check does not prove the public proxy route works or that the database is ready.
 
-**Backend/DevOps owner:** Ensure Nginx maps both public health paths to the correct backend endpoints and the deployment checks both.
+**Correction status:** CI passed the source-level health-route and deployment-order checks.
 
-**QA check:** Test the public application and database health URLs with the database running and unavailable. Record status codes and response bodies.
+**QA check still required:** Call both public AWS endpoints with the database healthy and unavailable. Record status codes, safe response bodies, and deployment logs. Do not mark this complete from source inspection alone.
 
 ### 10. Frontend and backend owners: complete the user-flow checks
 **What happens:** Passing code checks does not prove that registration, transactions, filters, CSV export, budgets, reports, and dashboard totals work together in a browser.
@@ -128,23 +128,23 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **QA verification and closure evidence:** Test requests across workers and retain production configuration, results, and monitoring/failure-behavior evidence.
 
-### 13. Backend/database: handle budget-save failures by cause
-**What happens:** The budget creation route catches every exception from database commit and returns HTTP 500. A uniqueness conflict could be treated as a server failure after a database constraint is added.
+### 13. Backend/database: verify budget-save conflict handling
+**What happens:** The original budget route mapped every commit error to HTTP 500.
 
-**Why it matters:** Expected duplicate requests are reported incorrectly, and a failed transaction may affect later requests if session rollback is not handled.
+**Correction status:** PR #54 now rolls back failed commits, maps only known budget uniqueness violations to HTTP 409, and returns a generic 500 for unexpected errors. CI run 38219803561 passed the budget conflict and session-recovery tests.
 
-**Required correction:** Roll back failed commits, map known uniqueness violations to HTTP 409, and return a generic 500 only for unexpected errors. Do not expose SQL details.
+**Why it matters:** Duplicate budgets are expected conflicts; unexpected failures must remain server errors and must not poison the next request.
 
-**QA verification and closure evidence:** Test sequential and concurrent duplicates, then submit a valid budget after the conflict. Retain response codes, row counts, regression tests, and proof that sensitive details are not returned.
+**QA verification and closure evidence:** Recheck duplicate and concurrent budget requests against AWS, then submit a valid budget after a conflict. Retain response codes, row counts, and sanitized-error evidence.
 
-### 14. Backend/test owner: prove test-database isolation
-**What happens:** The reviewed fixture does not by itself prove that test data is isolated, cleaned up, or protected against destructive setup targeting a non-test database.
+### 14. Backend/test owner: verify test-database isolation
+**What happens:** The original test fixture did not prove isolation or cleanup.
 
-**Why it matters:** Leftover data can make tests unreliable, and incorrect database configuration could affect data outside the test environment.
+**Correction status:** The correction branch uses a dedicated test database, rejects unsafe database names, truncates test tables and resets identities after each test, and runs the full backend suite twice. CI run 38219803561 passed all eight jobs and both 58-test runs.
 
-**Required correction:** Use a dedicated disposable test database. The correction branch now uses an explicit test-database name guard, rejects production/staging/live markers, truncates the test tables and resets identities after each API test, and runs the backend suite twice in CI. The first CI attempt, run `38217113207`, failed backend lint on two overlong test lines. They were corrected in commit `52438ec387ed2c9bfaff56081930e6df317604dd`; run `38217288387` is queued to verify the latest code.
+**Why it matters:** Tests must not depend on leftover records or risk touching a live database.
 
-**QA verification and closure evidence:** Retain passing CI output showing both full test runs, database guard boundary tests, cleanup implementation, and the dedicated CI test database configuration.
+**QA verification and closure evidence:** Retain the CI database guard, cleanup implementation, both passing test runs, and evidence that local/staging tests cannot point to production data.
 
 ### 15. Frontend/backend: normalize the signed-in user profile
 
