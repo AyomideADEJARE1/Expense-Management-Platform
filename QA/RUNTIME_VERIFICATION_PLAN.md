@@ -546,16 +546,6 @@ Run `38221595123` passed all eight jobs for source-branch head `72ff22992e8561b5
 Code CI run 38270547450 passed all eight jobs for correction commit 8d5fddc6c163a3f48986d22b770bd76d4547a81c. Backend lint passed and the backend suite passed 59 tests twice, including the trusted-proxy regression test. Migrations 001–005, the budget-category RESTRICT rule, the phone column, and migration ordering were checked; frontend lint/build, secret scanning, both Docker builds, and aggregate CI passed. CI still warns that Flask-Limiter uses in-memory storage. The proxy code correction is source/CI-verified for one Nginx hop, but shared production storage and AWS topology/runtime checks remain open. This checkpoint does not close any gate requiring populated AWS database, public health, browser flows, reboot recovery, or backup restore.
 
 
-## RV-38 — Partial profile-name update integrity
-**Purpose:** Verify that profile updates do not erase a name part omitted from a partial request.
-
-**Procedure:** On a disposable test account with a two-part full name, send `PUT /api/auth/me` with only `first_name`; verify the response and a subsequent `GET /api/auth/me` preserve the existing last name. Then send only `last_name` and verify the updated first name remains. Submit an explicitly empty first name and verify HTTP 400 and no change to the stored profile.
-
-**Current correction:** PR #54 preserves omitted name parts and adds an API regression test. The latest source commit must pass CI before this is source/CI-verified.
-
-**Pass evidence:** CI run and exact commit SHA, status/body for both successful partial updates and the rejected empty-name update, and a profile read-back showing the final stored full name. AWS/browser verification remains separate.
-
-
 ## RV-47 — Verify partial profile updates preserve omitted name fields
 
 **Finding:** QA-FIND-077. **Owner:** Backend + frontend + QA. **Status:** Open pending current-head CI and browser retest.
