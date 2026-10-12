@@ -751,3 +751,18 @@ Correction proposed in PR #54: Budget create/update now require `parsed_month.is
 Required retest: Confirm the current CI run passes. Verify canonical first-of-month dates succeed; compact/noncanonical month strings return 400 on create and update; and rejected updates preserve the existing month.
 
 Closure evidence: Current passing CI run and tested commit SHA, API results for both invalid requests, and a read-back showing the stored month is unchanged.
+
+
+## QA-FIND-061 — The browser budget form cannot create a whole-month budget
+
+Classification: Functional coverage / requirement clarification. Status: Observation; team decision required before classifying as a confirmed defect. Priority: Medium if whole-month budgets are required.
+
+Evidence: The backend API and database explicitly support whole-month budgets with `category_id = NULL`; migration 003 creates a separate unique index for that case. The React budget form currently rejects submission when `formData.category` is empty and requires a selected category before building the request payload. The browser therefore cannot create a whole-month budget through the normal interface even though the API supports it.
+
+Impact: If the capstone requires a general monthly spending limit in addition to per-category limits, users cannot configure that limit through the app UI. If the product is intentionally category-only, this is a documentation/API capability mismatch rather than a user-facing defect.
+
+Required decision/correction: The product/team lead should confirm whether whole-month budgets are in scope. If yes, add an explicit “Overall monthly budget” option that sends `category_id: null`, display it clearly in budget lists and dashboard totals, and prevent it from being confused with category-specific budgets. If no, document the category-only rule and consider removing unused whole-month API/migration complexity in a separately reviewed change.
+
+Required retest: If enabled, create one whole-month budget and one category budget for the same month; verify both persist, duplicate whole-month creation returns 409, edits preserve the correct type/month, and the dashboard displays the intended totals. If category-only is confirmed, verify UI copy and requirements documentation consistently state that limit.
+
+Closure evidence: Team's recorded requirement decision; if overall budgets are required, passing browser/API tests and screenshots; if not, updated requirements documentation and an agreed API/schema disposition.
