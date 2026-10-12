@@ -175,7 +175,9 @@ jobs:
             echo "::error::Resolved Compose configuration still contains the old fixed password."
             exit 1
           fi
-          echo "Compose configuration resolves required database variables and contains no fixed legacy password."
+          restart_count=$(grep -c 'restart: unless-stopped' /tmp/compose-resolved.yml)
+          test "$restart_count" -eq 4 || { echo "::error::Expected restart policies for all four services; found $restart_count."; exit 1; }
+          echo "Compose configuration resolves database variables, contains no fixed legacy password, and defines restart policies for all four services."
 
       - name: Verify deployment migrations run before app restart
         run: |
