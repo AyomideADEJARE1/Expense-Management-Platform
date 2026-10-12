@@ -1020,3 +1020,18 @@ Run `38270979144` failed at Flake8 before pytest ran because `backend/routes/aut
 
 ## Latest correction CI checkpoint — 2026-10-12
 Run `38271222415` passed all eight CI jobs for commit `2316a358ca37495ecc41eff8aaf48f888654e5b8`. Flake8 passed; backend tests reported 60 passed, including the partial profile-name update regression. Frontend lint/build, database migration checks, secret scan, both Docker builds, and aggregate CI passed. CI still warns that Flask-Limiter uses in-memory storage. This does not close AWS deployment, populated-volume migration, browser, reboot recovery, backup restore, or shared production rate-limit gates.
+
+
+## QA-FIND-078 — Concurrent category deletion can misreport a budget-reference conflict
+
+**Classification:** API error handling and concurrent data integrity. **Status:** Correction proposed in PR #54; CI retest pending. **Priority:** Medium.
+
+**Evidence:** The category deletion route first checks whether expenses or budgets reference the category, then attempts the database delete. These separate checks are subject to a race: a budget can be inserted after the pre-check but before the delete commit. The database correctly rejects that delete through the `fk_budgets_category` foreign key, but the previous exception handler recognized only `fk_expenses_category`. The budget foreign-key conflict would therefore be returned as HTTP 500 instead of the expected HTTP 409.
+
+**Impact:** A normal conflict caused by a category being referenced by a budget can look like an internal server failure. This confuses the user and makes monitoring less accurate, even though the database correctly protects the budget record.
+
+**Correction proposed in PR #54:** The category delete handler now classifies both `fk_expenses_category` and `fk_budgets_category` as expected reference conflicts and returns HTTP 409 with a message that covers expenses and budgets. A regression test simulates the budget foreign-key race and verifies the category remains stored.
+
+**Required retest:** Run CI for the latest correction commit. Verify both foreign-key names map to 409, unexpected database errors still map to 500, and the category remains present after a rejected delete. On AWS staging, if feasible, exercise deletion while another request creates a linked budget and confirm the database retains the relationship.
+
+**Closure evidence:** Passing CI for the exact commit, API response and read-back from the simulated budget-foreign-key conflict, regression results for unexpected failures, and AWS staging evidence if the race test can be safely performed.
