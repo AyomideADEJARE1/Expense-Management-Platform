@@ -128,4 +128,4 @@ Settings stores the budget_threshold preference, but the reviewed budget/dashboa
 
 ## QA-FIND-071 trace — AWS reboot recovery
 
-PR #54 now adds `restart: unless-stopped` to all four Compose services and CI checks the resolved configuration. Verify the AWS host starts Docker on boot and that the stack recovers without manual commands, while preserving migration ordering. Closure requires an AWS staging reboot test, container/image evidence, public health checks, and proof that persisted database records survive.
+PR #54 now adds `restart: unless-stopped` to all four Compose services. CI run `38221334646` passed and checked the resolved configuration. Verify the AWS host starts Docker on boot and that the stack recovers without manual commands, while preserving migration ordering. Closure requires an AWS staging reboot test, container/image evidence, public health checks, and proof that persisted database records survive.
