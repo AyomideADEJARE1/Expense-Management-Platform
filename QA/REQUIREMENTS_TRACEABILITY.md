@@ -180,3 +180,8 @@ PR #54 now classifies both `fk_expenses_category` and `fk_budgets_category` as e
 ## Latest category-deletion correction CI — 2026-10-12
 
 Run 38272033341 passed all eight jobs for correction commit ea775178ea545b48bfea9cdaadd77b7b0965d4b8, including the test for a simulated fk_budgets_category delete race. Both known category-reference foreign keys now map to HTTP 409; unexpected database failures remain HTTP 500. AWS staging concurrency and session-recovery evidence remains pending.
+
+
+
+## QA-FIND-079 trace — Whole-month budget spending total
+The reviewed frontend code converted a null category ID to numeric zero and compared it to expense category IDs, which could make a whole-month budget report zero spending. PR #54 now has a shared spending helper and Node regression tests; `npm test` is configured so CI should execute them. Current-head CI and browser evidence are required before closure.
