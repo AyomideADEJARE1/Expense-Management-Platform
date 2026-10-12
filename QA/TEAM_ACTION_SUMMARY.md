@@ -573,3 +573,15 @@ Run `38270979144` stopped at Flake8 because one line in the new partial-name pre
 **How to verify:** Run the category delete regression test. Confirm a budget foreign-key conflict returns 409 and the category still exists; confirm an unrelated database error returns 500.
 
 **Evidence required:** Passing CI for the latest commit, API response and read-back from the regression test, and staging evidence if the race can be tested safely.
+
+
+### 52. Backend/QA: verify category deletion classifies budget-reference races correctly
+**What happens:** A category can pass the initial “is this in use?” query, then a budget may reference it before the database delete commits. PostgreSQL rejects the delete through the budget foreign key. PR #54 now treats the known budget and expense foreign-key constraints as expected conflicts and returns HTTP 409.
+
+**Why it matters:** A normal data conflict should not appear as an internal server error, and the category/budget relationship must remain intact.
+
+**Required correction:** Keep the explicit classification for known reference constraints. Unexpected database failures must still return HTTP 500 after rollback.
+
+**How QA will verify:** Test the simulated budget foreign-key race and the expense foreign-key case. Confirm both return 409 and the category remains stored. Confirm an unrelated commit failure returns 500 and the session recovers.
+
+**Evidence to close:** Passing CI for the current commit, API results and category read-back for the budget-FK test, and the unexpected-failure regression result.
