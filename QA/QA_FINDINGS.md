@@ -1142,3 +1142,18 @@ QA-FIND-082 and QA-FIND-083 are verified at the source/CI level. The browser dow
 
 ## Latest code CI checkpoint — 2026-10-12
 CI run `38276034129` passed all eight jobs for code commit `97e6515f00c15e240532da653235421a2c6fb055`. Backend lint passed and 62 backend tests passed twice. Frontend lint/build passed and all nine Node tests passed, including budget-spending, global-search, CSV formula neutralization, and CSV quoting. Database migrations 001–005, secret scan, both Docker builds, and aggregate CI passed. Browser verification for CSV downloads, search results, budget totals, and the main expense/budget/report journeys remains open. AWS populated-volume migrations, deployed commit/image verification, public health, reboot recovery, backup restore, and shared rate-limit storage remain open.
+
+
+## QA-FIND-084 — Direct app execution always enables the Werkzeug debugger
+
+**Classification:** Security configuration. **Priority:** Medium. **Status:** Correction proposed in PR #54; current-head CI retest pending.
+
+**Evidence:** At the bottom of `backend/app.py`, direct execution previously called `app.run(debug=True)` unconditionally. The container's Dockerfile uses Gunicorn, so the risk applies when the module is launched directly (for example, by an operator or local script) rather than through the normal container entry point. The application defaults to production mode when no environment is specified, making unconditional debug mode inconsistent with that default.
+
+**Why it matters:** The Werkzeug interactive debugger is not suitable for production exposure. An operator who starts the app directly with production configuration could unintentionally expose development-only debugging behavior.
+
+**Correction in PR #54:** A `debug_mode_enabled()` helper now enables debug mode only for explicit `development`, `dev`, `testing`, or `test` modes. Direct execution in production or an unknown/empty mode starts with debug disabled. Parameterized tests cover the allowed and denied modes.
+
+**Required retest:** Confirm current-head CI passes Flake8 and all backend tests, including the new debug-mode selection cases. Verify the Docker/Gunicorn production entry point remains unchanged and does not enable Flask debug mode.
+
+**Closure evidence:** Passing current-head CI, exact commit SHA, the parameterized test result, and confirmation that the production container still runs Gunicorn without debug mode.
