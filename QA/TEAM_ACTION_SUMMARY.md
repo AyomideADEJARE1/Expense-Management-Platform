@@ -436,16 +436,16 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Evidence to close:** Passing frontend lint/build for the exact commit and browser results with timezone, local date, dashboard query, default form date, and report month recorded. Frontend automated tests are not currently configured.
 
-### 40. Backend: enforce one expense-date format
-**What happens:** The API contract requires `YYYY-MM-DD`, but Python's date parser also accepts compact and week-date forms unless the route checks the canonical value.
+### 40. Frontend: apply the saved currency preference consistently
+**What happens:** The profile supports NGN, USD, EUR, and GBP, but several financial screens previously hardcoded the naira symbol. The dashboard chart tooltip also used the formatter's default currency instead of the saved preference.
 
-**Why it matters:** Clients can send different date representations even though the frontend and API contract expect one consistent format. This can make integrations and validation harder to maintain.
+**Why it matters:** A user can select USD, EUR, or GBP in Settings but still see ₦ in Budgets, Transactions, Reports, or dashboard widgets. This makes the displayed amounts inconsistent with the selected preference.
 
-**Required correction:** PR #54 now requires the parsed date's `isoformat()` to match the submitted value on both create and update. Regression tests reject `20261001` and `2026-W40-4` on create and reject a compact date on update.
+**Required correction:** PR #54 adds a shared currency-symbol helper, passes the saved user currency to financial pages, and uses the shared formatter for budget amounts, transaction amounts, report totals, dashboard widgets, chart tooltips, and budget search results.
 
-**How QA will verify:** Run the current CI. Check that `YYYY-MM-DD` succeeds; compact/week-date values return HTTP 400; and a rejected update leaves the original stored date unchanged. Check date-range filters too.
+**How QA will verify:** Save each supported currency and inspect Dashboard, Transactions, Budgets, Reports, dashboard chart tooltips, and budget search results. All amount labels must match the selected currency. Switching back to NGN must update the display without changing numeric values.
 
-**Evidence to close:** Passing CI for the exact commit, request/response examples, and a read-back of the unchanged date after the rejected update.
+**Evidence to close:** Passing frontend lint/build for the exact commit and browser screenshots for each supported currency across the named screens. Automated frontend tests are not currently configured, so browser evidence is required.
 
 ## Release checklist
 
