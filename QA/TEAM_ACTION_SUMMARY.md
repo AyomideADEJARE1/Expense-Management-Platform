@@ -425,6 +425,17 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Evidence to close:** Passing current CI for the exact commit, source-search result, and browser smoke-test evidence. Current CI is pending.
 
+### 39. Frontend: use local calendar dates consistently
+**What happens:** The dashboard and transaction form previously used UTC date strings for the current month/default date. Reports parsed date-only values as UTC and then read local month fields.
+
+**Why it matters:** Near midnight or month boundaries, the dashboard may request the wrong month, a new expense may default to the previous local date, or Reports may group an expense into the previous month in timezones west of UTC.
+
+**Required correction:** PR #54 now builds the dashboard month from local year/month fields, uses a local-calendar date helper in Transactions, and parses report date-only values as local midnight.
+
+**How QA will verify:** Record the browser timezone and local date; at a timezone boundary, verify the dashboard month, new-expense default date, and report grouping match the local/API date. Repeat in a timezone west of UTC.
+
+**Evidence to close:** Passing frontend lint/build for the exact commit and browser results with timezone, local date, dashboard query, default form date, and report month recorded. Frontend automated tests are not currently configured.
+
 ## Release checklist
 
 Do not mark a check as passed until evidence is attached.
@@ -447,4 +458,4 @@ Do not mark a check as passed until evidence is attached.
 - [ ] Public HTTPS security headers are checked and the approved CSP is tested.
 - [ ] Screenshots, workflow run links, commit SHA, and test results are attached.
 
-**Current overall status:** CI run `38217288387` passed all eight jobs for correction commit `52438ec387ed2c9bfaff56081930e6df317604dd`. The backend job ran the full pytest suite twice; both runs passed all 57 tests, including database-name guard cases, per-test cleanup, date/month validation, summary totals, category name boundaries, and ownership checks. Both Docker builds, frontend lint/build, secret scan, database migrations, and aggregate CI passed. This is CI evidence only. AWS deployment, populated-volume migrations, staging failure/recovery, public health checks, and browser end-to-end verification remain pending. The findings register contains 64 findings and this summary contains 38 team actions. The frontend package still has no test script, so frontend functional tests can be skipped by the optional CI command.
+**Current overall status:** CI run `38217288387` passed all eight jobs for correction commit `52438ec387ed2c9bfaff56081930e6df317604dd`. The backend job ran the full pytest suite twice; both runs passed all 57 tests, including database-name guard cases, per-test cleanup, date/month validation, summary totals, category name boundaries, and ownership checks. Both Docker builds, frontend lint/build, secret scan, database migrations, and aggregate CI passed. This is CI evidence only. AWS deployment, populated-volume migrations, staging failure/recovery, public health checks, and browser end-to-end verification remain pending. The findings register contains 65 findings and this summary contains 39 team actions. The frontend package still has no test script, so frontend functional tests can be skipped by the optional CI command.
