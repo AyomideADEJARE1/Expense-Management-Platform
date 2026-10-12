@@ -736,3 +736,18 @@ Correction proposed in PR #54: Expense create/update now require `parsed_date.is
 Required retest: Confirm the current CI run passes the new regression test. Verify canonical dates still create/update successfully, compact and other noncanonical forms return 400, and a rejected update leaves the stored record unchanged.
 
 Closure evidence: Current passing CI run and commit SHA, API results for canonical/noncanonical create and update requests, and a database/API read confirming the failed update did not modify the expense.
+
+
+## QA-FIND-060 — Budget month create/update accept noncanonical date formats
+
+Classification: API input validation and contract consistency. Status: Correction proposed in PR #54; current CI retest pending. Priority: Low–Medium.
+
+Evidence: Budget create/update parse the `month` value with Python's `date.fromisoformat()` and check that it is the first day of a month, but previously did not verify the exact submitted representation. The parser accepts some alternate ISO representations such as compact `YYYYMMDD`, even though the API error message documents `YYYY-MM-DD`. This is inconsistent with the stated request contract.
+
+Impact: Clients can submit undocumented values that are accepted on one path but rejected by other endpoints. The API contract becomes less predictable and harder to validate consistently.
+
+Correction proposed in PR #54: Budget create/update now require `parsed_month.isoformat() == month` in addition to requiring day 1. Regression tests expect compact values to return HTTP 400 for create and update and confirm a rejected update does not change the stored month.
+
+Required retest: Confirm the current CI run passes. Verify canonical first-of-month dates succeed; compact/noncanonical month strings return 400 on create and update; and rejected updates preserve the existing month.
+
+Closure evidence: Current passing CI run and tested commit SHA, API results for both invalid requests, and a read-back showing the stored month is unchanged.
