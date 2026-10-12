@@ -593,13 +593,13 @@ CI run 38272033341 passed all eight jobs for correction commit ea775178ea545b48b
 1. Run the frontend test command and confirm the CI job executes (not skips) `npm test`.
 2. Confirm whole-month budget tests add all same-month expense categories and exclude other months.
 3. Confirm category-budget tests count only the matching category.
-4. In a browser, create a whole-month budget and add two same-month expenses in different categories plus one expense in a different month.
+4. Because the browser form's support for creating whole-month budgets remains an unresolved product-scope decision (QA-FIND-061), create a whole-month test budget through the authenticated API or seed it in a disposable test database, then load it in the browser. Do not treat this as proof that the UI can create that budget.
 5. Confirm spent amount, percent spent, remaining amount, and exceeded/on-track status are correct.
 6. Repeat with a category-specific budget and confirm only its matching category is counted.
 
 **Pass evidence:** Current-head CI success, test output showing the test count, and redacted browser evidence with expected and displayed totals.
 
-**Fail conditions:** Whole-month budget shows zero despite expenses, includes another month's expense, a category budget includes other categories, or CI skips the frontend tests.
+**Fail conditions:** Whole-month budget shows zero despite expenses, includes another month's expense, a category budget includes other categories, or CI skips the frontend tests. UI creation of whole-month budgets remains governed separately by QA-FIND-061 and its product decision gate.
 
 
 ## RV-50 — Verify a clean Docker setup using both environment files
