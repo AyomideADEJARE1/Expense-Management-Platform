@@ -623,7 +623,7 @@ Run `38272803374` passed all eight jobs for correction commit `f58bd3fbc4e75ae22
 
 ## RV-51 — Verify global search filters budget results correctly
 
-**Finding:** QA-FIND-081. **Owner:** Frontend + QA. **Status:** Open pending current-head CI and browser retest.
+**Finding:** QA-FIND-081. **Owner:** Frontend + QA. **Status:** CI passed for code head `77620d6547cad3ee3774657df9dd0b9256ed9ff6`; browser retest remains open.
 
 **Procedure:**
 1. Create or load budgets for at least two categories and two months.
@@ -633,7 +633,7 @@ Run `38272803374` passed all eight jobs for correction commit `f58bd3fbc4e75ae22
 5. If a whole-month budget exists, verify it displays a clear “Overall Monthly Budget” title.
 6. Confirm matching expense and category search results still work.
 
-**Pass evidence:** Passing CI for the current code head, output showing the new Node tests ran, and browser evidence for category/month/non-matching searches.
+**CI evidence:** Run `38273922288` passed all eight jobs for code head `77620d6547cad3ee3774657df9dd0b9256ed9ff6`; all seven frontend Node tests passed and backend tests passed 62 tests twice. **Still required:** Browser evidence for category/month/non-matching searches.
 
 **Fail conditions:** Unrelated budgets are returned, matching budgets are omitted, or the change breaks expense/category search.
 
