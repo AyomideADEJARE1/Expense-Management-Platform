@@ -248,3 +248,7 @@ Transactions export already included a UTF-8 BOM, but Reports export did not. PR
 
 ## Latest source CI evidence — QA-FIND-085
 Run `38277483412` passed all eight jobs for code commit `2cc775b4ddc514e8dea5c6c1d80d633d47991ff1`. Backend lint and 69 tests passed; frontend lint/build and nine Node tests passed; migrations, secret scan, both Docker builds, and aggregate CI passed. This closes the CI portion of QA-FIND-085. Browser/spreadsheet encoding checks remain open.
+
+
+## QA-FIND-086 trace — PostgreSQL runtime privilege separation
+The current Compose file gives the backend the same `POSTGRES_USER` credentials used to initialize PostgreSQL. The team must introduce a restricted application role separate from the administrative migration role and verify existing-database ownership/grants safely. This remains open until privilege tests and AWS staging migration evidence pass.
