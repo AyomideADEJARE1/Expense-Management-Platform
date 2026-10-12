@@ -612,15 +612,3 @@ Run `38270979144` stopped at Flake8 because one line in the new partial-name pre
 **How QA will verify:** Search by category name, month, and unrelated text. Confirm only matching budgets appear and the whole-month budget has a clear title. Confirm expense and category results still work.
 
 **Evidence to close:** Passing current-head CI with the frontend search tests, plus browser evidence for matching and non-matching searches.
-
-
-### 55. Team lead/product owner: decide whether whole-month budgets are in scope
-**What happens:** The API and database allow budgets with no category, but the browser form currently requires a category. The QA correction fixes spending calculation for a whole-month budget if one exists; it does not add UI creation, because the product requirement has not been confirmed.
-
-**Why it matters:** Adding the option changes the user-facing feature scope. Removing API/database support would also be a design change and could affect existing data.
-
-**Required decision:** Confirm one of two options: (A) whole-month budgets are required—then approve an explicit “All Categories” form option and UI regression tests; or (B) budgets are category-only—then document that requirement consistently and decide whether unused whole-month API/database support should be removed in a separately reviewed change.
-
-**How to verify:** Record the decision in the requirements/PR discussion. If option A is selected, verify create, duplicate conflict (HTTP 409), edit, reload, delete, and whole-month spending totals. If option B is selected, verify the UI and documentation say category-only and review the API/schema disposition.
-
-**Evidence required:** A written team decision and, for the selected option, passing CI plus API/browser evidence. Do not close QA-FIND-061 solely because the calculation helper passes.
