@@ -502,6 +502,17 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Evidence to close:** Compose/systemd configuration, reboot and recovery logs, container/image version evidence, health checks, and a test-record persistence check.
 
+### 46. DevOps: prove database backups can be restored
+**What happens:** The application stores PostgreSQL data in a Compose volume on the AWS VM. The repository does not show a scheduled off-host backup, retention policy, or tested restore process. An AWS snapshot or backup may exist outside the repository, but it has not been evidenced here.
+
+**Why it matters:** VM/volume loss or a bad migration could permanently lose expense and budget records if there is no usable recovery copy.
+
+**Required correction:** Document the actual backup method. Use an approved encrypted off-host backup or managed snapshot, define schedule/retention/access controls, and take a recoverable backup before production migrations. Do not keep the only backup on the same VM/volume or commit dumps to Git.
+
+**How QA will verify:** Restore a recent backup into an isolated database. Compare known user/expense/budget counts and representative totals. Record recovery point and recovery time; confirm logs do not expose credentials.
+
+**Evidence to close:** Backup schedule/configuration, retention/access policy, redacted successful restore log, data-integrity checks, and pre-migration backup recovery evidence.
+
 ## Release checklist
 
 Do not mark a check as passed until evidence is attached.
@@ -545,3 +556,6 @@ Do not mark a check as passed until evidence is attached.
 
 
 **AWS reboot recovery:** CI run `38221595123` verified all four Compose restart policies. QA-FIND-071 remains open until a staging VM/Docker restart demonstrates automatic recovery and data persistence.
+
+
+**Database recovery:** QA-FIND-072 remains open until an off-host backup and successful isolated restore are evidenced.
