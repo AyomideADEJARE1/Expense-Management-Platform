@@ -856,3 +856,18 @@ Classification: Profile data integrity / UI-to-API mismatch. Status: Correction 
 **Required retest:** Confirm migration 005 works on a fresh database and an existing populated AWS database. Save a phone number, reload the profile, and confirm the exact value persists. Verify blank input clears it, non-string/overlong/control-character values return HTTP 400, and rejected updates preserve the previous number.
 
 **Closure evidence:** Passing CI for the exact commit, migration logs/schema evidence for `users.phone`, API request/response and read-back evidence, and an AWS staging/browser result after deployment.
+
+
+## QA-FIND-068 — Notification settings are saved, but no delivery mechanism was found
+
+Classification: Feature completeness / misleading preference controls. Status: Requires product/team decision and implementation or clearer UI wording. Priority: Medium if notifications are a stated capstone requirement.
+
+**What happens:** Settings offers “In-App Push Notifications” and “Weekly Summary Email Alerts”. The profile API stores the two boolean preferences, but the reviewed backend source has no email-sending library/service, notification worker/scheduler, or browser push delivery implementation. Saving the checkboxes therefore saves preferences; it does not demonstrate that alerts are actually delivered.
+
+**Why it matters:** Users may believe alerts are active because the controls are available and the page confirms that settings were saved. If no delivery service consumes these values, the preferences have no user-visible effect.
+
+**Required decision/correction:** The team lead should confirm whether actual in-app and weekly email notifications are required. If required, implement the delivery path, scheduling/trigger rules, delivery failure logging, and tests that prove enabled/disabled behavior. If out of scope, relabel the controls as preferences not yet connected to delivery or remove them until supported. Do not claim notifications work based only on storing booleans.
+
+**Required retest:** For an implemented service, enable each setting and trigger a deterministic test notification; verify delivery when enabled and no delivery when disabled. Verify scheduling, duplicate prevention, retry/failure handling, and that one user's preferences do not affect another user. For a UI-only scope, confirm the wording clearly says these settings are not yet active.
+
+**Closure evidence:** Written scope decision, implementation/configuration evidence if required, automated tests, and a staging delivery record or approved revised UI copy.
