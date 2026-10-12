@@ -641,3 +641,77 @@ def test_unexpected_category_delete_failure_returns_500_and_recovers(
 
     recovered = client.delete(f"/api/categories/{category_id}")
     assert recovered.status_code == 200
+
+
+
+def test_category_with_budget_cannot_be_deleted_or_reclassified(client):
+    email = f"qa-category-budget-{uuid.uuid4().hex}@example.test"
+    password = "TestPassword123!"
+
+    registration = client.post(
+        "/api/auth/register",
+        json={
+            "full_name": "QA Category Budget Test",
+            "email": email,
+            "password": password,
+        },
+    )
+    assert registration.status_code == 201
+
+    login = client.post(
+        "/api/auth/login",
+        json={"email": email, "password": password},
+    )
+    assert login.status_code == 200
+    token = login.get_json()["data"]["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    category_response = client.post(
+        "/api/categories",
+        json={"name": f"QA budget category {uuid.uuid4().hex}"},
+    )
+    assert category_response.status_code == 201
+    category_id = category_response.get_json()["data"]["id"]
+
+    budget_response = client.post(
+        "/api/budgets",
+        headers=headers,
+        json={
+            "amount": 250,
+            "month": "2026-10-01",
+            "category_id": category_id,
+        },
+    )
+    assert budget_response.status_code == 201
+
+    deletion = client.delete(f"/api/categories/{category_id}")
+    assert deletion.status_code == 409
+    assert "assigned to a budget" in deletion.get_json()["message"]
+
+    budgets = client.get("/api/budgets", headers=headers)
+    assert budgets.status_code == 200
+    matching = [
+        item for item in budgets.get_json()["data"]
+        if item["id"] == budget_response.get_json()["data"]["id"]
+    ]
+    assert len(matching) == 1
+    assert matching[0]["category_id"] == category_id
+
+
+def test_budget_category_foreign_key_restricts_deletion():
+    with app.app_context():
+        constraint = db.session.execute(
+            db.text(
+                "SELECT rc.delete_rule "
+                "FROM information_schema.referential_constraints AS rc "
+                "JOIN information_schema.table_constraints AS tc "
+                "ON tc.constraint_catalog = rc.constraint_catalog "
+                "AND tc.constraint_schema = rc.constraint_schema "
+                "AND tc.constraint_name = rc.constraint_name "
+                "WHERE tc.table_schema = 'public' "
+                "AND tc.table_name = 'budgets' "
+                "AND tc.constraint_name = 'fk_budgets_category'"
+            )
+        ).scalar_one()
+
+    assert constraint == "RESTRICT"
