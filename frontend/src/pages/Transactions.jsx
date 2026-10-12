@@ -4,6 +4,7 @@ import { Search, Filter, ArrowUpRight, Trash2, Plus, Edit3, Download } from 'luc
 import ConfirmationModal from '../Components/ConfirmationModal';
 import { useToast } from '../context/ToastContext';
 import { formatCurrency, getCurrencySymbol } from '../utils/currency';
+import { escapeCsvCell } from '../utils/csv';
 
 const getLocalDateString = () => {
   const now = new Date();
@@ -269,19 +270,13 @@ export default function Transactions({
   // Export only the rows currently visible after search and filters.
   const handleExportCsv = () => {
     const headers = ['Date', 'Description', 'Category', 'Amount'];
-    const csvCell = (value) => {
-      const raw = String(value ?? '');
-      // Prevent spreadsheet formula execution for untrusted text fields.
-      const safe = /^\s*[=+@-]/.test(raw) ? `'${raw}` : raw;
-      return `"${safe.replace(/"/g, '""')}"`;
-    };
     const rows = filteredTransactions.map((tx) => [
       tx.expense_date || tx.date || '',
       tx.description || tx.desc || tx.source || tx.title || 'Expense',
       tx.category || 'Uncategorized',
       Number(tx.amount || 0).toFixed(2),
     ]);
-    const csv = [headers, ...rows].map((row) => row.map(csvCell).join(',')).join('\r\n');
+    const csv = [headers, ...rows].map((row) => row.map(escapeCsvCell).join(',')).join('\r\n');
     const blob = new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
