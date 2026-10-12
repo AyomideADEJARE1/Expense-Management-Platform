@@ -135,6 +135,8 @@ def create_budget():
 
     try:
         parsed_month = date.fromisoformat(month)
+        if parsed_month.isoformat() != month:
+            raise ValueError
 
     except (TypeError, ValueError):
         return error_response(
@@ -424,6 +426,8 @@ def update_budget(budget_id):
 
         try:
             parsed_month = date.fromisoformat(month)
+            if parsed_month.isoformat() != month:
+                raise ValueError
 
         except (TypeError, ValueError):
             return error_response(
