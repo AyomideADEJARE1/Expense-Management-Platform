@@ -305,6 +305,9 @@ Latest source CI checkpoint: run `38212554474` passed all eight jobs for commit 
 ## RV-27 — Verify email uniqueness conflict handling and recovery
 Related finding: QA-FIND-058. Priority: Medium.
 
-PR #54 now catches the database email unique constraint for registration and profile updates, rolls back, and returns HTTP 409 for that known conflict. Other integrity errors and unexpected failures remain generic HTTP 500 responses. Tests simulate the unique constraint on both routes and test recovery after an unexpected registration commit failure.
+PR #54 now catches the database email unique constraint for registration and profile updates, rolls back, and returns HTTP 409 for that known conflict. Other integrity errors and unexpected failures remain generic HTTP 500 responses. CI run `38212818430` passed all eight jobs for commit `0207384272129a22c719425fee062a87fc0f29ae`; the backend suite passed 39 tests, including the new email conflict/recovery tests. AWS runtime checks remain pending.
 
 Pass evidence: current CI passes the new tests; registration/profile email conflict returns 409; the original profile email remains unchanged after a failed update; unexpected errors expose no internal details; and a later valid registration succeeds. Do not close this gate from source review alone.
+
+
+Latest correction CI checkpoint: run `38212818430` passed all eight jobs for commit `0207384272129a22c719425fee062a87fc0f29ae`; 39 backend tests passed. This does not close AWS runtime, populated-volume migration, public health, or browser journey gates.
