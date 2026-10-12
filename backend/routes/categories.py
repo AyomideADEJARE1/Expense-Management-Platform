@@ -24,6 +24,15 @@ def _is_category_name_conflict(error):
     )
 
 
+def _is_category_reference_conflict(error):
+    """Return True for known foreign keys that prevent category deletion."""
+    diag = getattr(getattr(error, "orig", None), "diag", None)
+    return getattr(diag, "constraint_name", None) in {
+        "fk_expenses_category",
+        "fk_budgets_category",
+    }
+
+
 @categories_bp.get("")
 def get_categories():
     categories = ExpenseCategory.query.order_by(
@@ -294,13 +303,10 @@ def delete_category(category_id):
     except IntegrityError as error:
         db.session.rollback()
 
-        diag = getattr(getattr(error, "orig", None), "diag", None)
-        constraint_name = getattr(diag, "constraint_name", None)
-
-        if constraint_name == "fk_expenses_category":
+        if _is_category_reference_conflict(error):
             return error_response(
-                "Category cannot be deleted because it is being used by "
-                "an expense",
+                "Category cannot be deleted because it is referenced by "
+                "an expense or budget",
                 409
             )
 
