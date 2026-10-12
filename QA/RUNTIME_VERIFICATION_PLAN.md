@@ -193,35 +193,35 @@ Pass evidence: Browser/API test showing the month before edit and after reload i
 
 
 
-## RV-14 — Category API authorization
+## RV-15 — Category API authorization
 Related finding: QA-FIND-010. Priority: High.
 
 Test unauthenticated POST, PUT, and DELETE requests to the category API. They must be rejected. Repeat as a normal signed-in user and as the role authorized by the team's written category policy. Verify changes do not affect another user's category records where categories are user-owned. Do not close this gate until the intended global/shared versus user-owned category policy is documented.
 
 Pass evidence: Policy decision, API responses for each role, automated tests, and tested commit SHA.
 
-## RV-15 — Compose credential configuration
+## RV-16 — Compose credential configuration
 Related finding: QA-FIND-037. Priority: High.
 
 From a clean checkout, copy the root example environment file to .env, set a unique local database password, and run docker compose config. Confirm the rendered configuration uses the supplied values, contains no embedded fixed password, and does not expose secret values in captured logs. Repeat with required values absent and confirm Compose fails before services start. Start the stack and verify both application and database health endpoints.
 
 Pass evidence: Sanitized config, startup/health results, CI run for the exact correction commit, and confirmation that real secrets are not tracked.
 
-## RV-16 — Confirm frontend automated tests execute
+## RV-17 — Confirm frontend automated tests execute
 Related finding: QA-FIND-048. Priority: Medium.
 
 Inspect frontend/package.json and the CI logs. The current package has no test script, so npm test with if-present behavior can skip tests. Closure requires a test script and CI logs showing a non-zero number of tests executed. Include profile refresh, expense-search navigation, and budget create/edit cases.
 
 Pass evidence: Test files, package script, CI test output, and tested commit SHA.
 
-## RV-17 — Verify documented port and clean-start steps
+## RV-18 — Verify documented port and clean-start steps
 Related finding: QA-FIND-049. Priority: Low–Medium.
 
 Follow README and Docker guide instructions from a clean checkout, configure the required environment files, start Compose, and use the exact URL documented for the host port. Confirm the frontend and public health routes respond.
 
 Pass evidence: Sanitized startup output, docker compose ps, tested URLs, and documentation diff.
 
-## RV-18 — Inspect public security headers and CSP
+## RV-19 — Inspect public security headers and CSP
 Related finding: QA-FIND-050. Priority: Medium.
 
 Inspect headers from the deployed public HTTPS endpoint. Verify the existing headers remain present, review CSP compatibility with the React app, and test login/navigation/API calls with CSP enabled. Only expect HSTS after HTTPS is confirmed and the deployment layer is configured to emit it.
@@ -229,7 +229,7 @@ Inspect headers from the deployed public HTTPS endpoint. Verify the existing hea
 Pass evidence: Header capture, CSP policy, browser test results, and tested deployment/version. Do not treat source configuration alone as runtime proof.
 
 
-## RV-19 — Verify rate limits through the reverse proxy
+## RV-20 — Verify rate limits through the reverse proxy
 Related finding: QA-FIND-051. Priority: Medium–High.
 
 Login and registration have per-route limits, but the backend uses get_remote_address without explicit trusted-proxy configuration and the default limiter storage is in memory. Through the deployed Nginx endpoint, test two independent client addresses. Verify one client's repeated requests do not throttle the other, excess requests return 429, and limits behave consistently across workers/restarts. Confirm forwarding headers cannot be spoofed to bypass limits.
@@ -237,7 +237,7 @@ Login and registration have per-route limits, but the backend uses get_remote_ad
 Pass evidence: Reviewed trusted-proxy count and Nginx forwarding configuration, shared production store configuration, controlled test results, response codes, and deployed version.
 
 
-## RV-20 — Verify budget spending is derived from recorded expenses
+## RV-21 — Verify budget spending is derived from recorded expenses
 Related finding: QA-FIND-046. Priority: Low–Medium.
 
 Open both new-budget and edit-budget forms. Confirm the "Amount Already Spent" value is read-only and helper text explains that it is calculated from recorded expenses. Save a budget, reload, and compare the displayed spending value with the relevant expense records and API response.
@@ -245,7 +245,7 @@ Open both new-budget and edit-budget forms. Confirm the "Amount Already Spent" v
 Pass evidence: CI result for the correction commit, browser screenshot, and a before/after comparison against recorded expenses. Do not mark the finding closed from source review alone.
 
 
-## RV-21 — Verify category deletion error classification and recovery
+## RV-22 — Verify category deletion error classification and recovery
 Related finding: QA-FIND-052. Priority: Medium.
 
 Test deletion of a category referenced by an expense. The API should return HTTP 409 with the category-in-use message. Then simulate an unexpected database commit failure during category deletion and verify a generic HTTP 500, rollback, no internal error details in the response, and that the category still exists and can be deleted after recovery.
@@ -253,7 +253,7 @@ Test deletion of a category referenced by an expense. The API should return HTTP
 Pass evidence: Current CI passes both new tests; response codes and sanitized bodies are captured; a subsequent valid operation succeeds.
 
 
-## RV-22 — Verify Docker build contexts exclude local secrets
+## RV-23 — Verify Docker build contexts exclude local secrets
 Related finding: QA-FIND-053. Priority: High when building/publishing images from a developer workspace.
 
 Check that backend/.dockerignore and frontend/.dockerignore exclude .env and .env.*. Confirm frontend/.dockerignore excludes node_modules and generated output. CI now validates these required patterns. For stronger closure evidence, create harmless sentinel environment files in a disposable workspace, build both images, and verify the sentinel values are absent from image layers and frontend assets.
@@ -261,7 +261,7 @@ Check that backend/.dockerignore and frontend/.dockerignore exclude .env and .en
 Pass evidence: current CI ignore-rule check and Docker builds pass; sentinel-based image/bundle inspection is recorded where feasible. Do not claim an actual secret was exposed without evidence.
 
 
-## RV-23 — Verify migrations complete before application restart
+## RV-24 — Verify migrations complete before application restart
 Related finding: QA-FIND-054. Priority: High.
 
 CI now checks that the CD workflow starts PostgreSQL, applies migration 002, applies migration 003, and only then restarts backend/frontend/Nginx. Confirm that check passes. In a controlled staging environment, create duplicate legacy budget data so migration 003 fails, then verify the currently running app version remains up and healthy. After resolving the test data, redeploy and verify the new image/commit and health checks.
@@ -269,7 +269,7 @@ CI now checks that the CD workflow starts PostgreSQL, applies migration 002, app
 Pass evidence: CI order check, staging failure/recovery evidence, deployed commit/image identity, and public health checks. Do not mark this gate passed from source order alone.
 
 
-## RV-24 — Verify PostgreSQL is healthy before migration execution
+## RV-25 — Verify PostgreSQL is healthy before migration execution
 Related finding: QA-FIND-055. Priority: Medium–High.
 
 CI run `38212158351` passed for commit `927e35eaf3af827d8b52ef93f6f883c6bfcaa667`. It verified migrations 001–004, and the CD order check requires PostgreSQL health wait, then migrations 002–004, then application-service restart. In staging, restart PostgreSQL from a cold state and verify the migration commands begin only after the database health check is successful.
@@ -277,7 +277,7 @@ CI run `38212158351` passed for commit `927e35eaf3af827d8b52ef93f6f883c6bfcaa667
 Pass evidence: CI run `38212158351` and the order check, plus staging deployment logs showing the health wait, successful migrations, and application/database health checks. CI passing alone does not close the AWS runtime gate.
 
 
-## RV-25 — Preserve budget category links when deleting categories
+## RV-26 — Preserve budget category links when deleting categories
 Related finding: QA-FIND-056. Priority: High.
 
 Source correction in PR #54 adds a route-level check for linked budgets, changes the database foreign key to `ON DELETE RESTRICT` through migration 004, updates the SQLAlchemy model, and adds API/database constraint tests. CI run `38212158351` passed for commit `927e35eaf3af827d8b52ef93f6f883c6bfcaa667`, including the route test, constraint-rule test, and database migration/order checks. AWS existing-volume and browser verification remain pending.
@@ -291,7 +291,7 @@ Pass evidence: passing CI for the exact correction commit; `fk_budgets_category`
 Run `38212158351` passed all eight jobs for commit `927e35eaf3af827d8b52ef93f6f883c6bfcaa667`; the backend suite passed 35 tests. The database job applied migrations 001–004 and verified the category-budget foreign key is RESTRICT. This is CI evidence only. Do not mark AWS staging, populated-volume migration, failure/recovery, public health, or browser journey gates as passed without their own recorded results.
 
 
-## RV-26 — Verify category create/update error handling and session recovery
+## RV-27 — Verify category create/update error handling and session recovery
 Related finding: QA-FIND-057. Priority: Medium.
 
 PR #54 now catches database commit errors in category create/update, rolls back, and returns HTTP 409 only for the named category-name unique constraint. Other integrity errors and unexpected exceptions return a generic HTTP 500. Automated tests simulate the known constraint conflict for both create and update, plus an unexpected create failure followed by a successful request.
@@ -302,7 +302,7 @@ Pass evidence: latest CI passes the category error tests; duplicate conflict ret
 Latest source CI checkpoint: run `38212554474` passed all eight jobs for commit `57c13c60386419d84594ce64d7db015351d105f5`; 37 backend tests passed. This does not close any gate that requires AWS staging, populated-volume migration, public health, or browser evidence.
 
 
-## RV-27 — Verify email uniqueness conflict handling and recovery
+## RV-28 — Verify email uniqueness conflict handling and recovery
 Related finding: QA-FIND-058. Priority: Medium.
 
 PR #54 now catches the database email unique constraint for registration and profile updates, rolls back, and returns HTTP 409 for that known conflict. Other integrity errors and unexpected failures remain generic HTTP 500 responses. CI run `38212818430` passed all eight jobs for commit `0207384272129a22c719425fee062a87fc0f29ae`; the backend suite passed 39 tests, including the new email conflict/recovery tests. AWS runtime checks remain pending.
