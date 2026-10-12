@@ -5,7 +5,7 @@ import pytest
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
-from app import app
+from app import app, validate_secret_configuration
 from extensions import db, limiter
 from routes.expenses import safe_csv_cell
 from routes.budgets import _is_budget_uniqueness_violation
@@ -871,3 +871,34 @@ def test_registration_unexpected_commit_failure_rolls_back_and_recovers(
 
     recovered = client.post("/api/auth/register", json=payload)
     assert recovered.status_code == 201
+
+
+
+@pytest.mark.parametrize(
+    ("secret_key", "jwt_secret"),
+    [
+        (None, "jwt-test-secret-that-is-long-enough-123456"),
+        ("replace-with-a-strong-random-flask-secret", "jwt-test-secret-that-is-long-enough-123456"),
+        ("flask-test-secret-that-is-long-enough-123456", None),
+        ("flask-test-secret-that-is-long-enough-123456", "replace-with-a-different-strong-random-jwt-secret"),
+        ("short", "jwt-test-secret-that-is-long-enough-123456"),
+        ("flask-test-secret-that-is-long-enough-123456", "flask-test-secret-that-is-long-enough-123456"),
+    ],
+)
+def test_production_secret_validation_rejects_unsafe_signing_keys(
+    secret_key, jwt_secret
+):
+    with pytest.raises(RuntimeError):
+        validate_secret_configuration(secret_key, jwt_secret, "production")
+
+
+def test_production_secret_validation_accepts_distinct_strong_keys():
+    validate_secret_configuration(
+        "flask-production-secret-with-enough-length-123456",
+        "jwt-production-secret-with-enough-length-654321",
+        "production",
+    )
+
+
+def test_nonproduction_secret_validation_allows_local_test_configuration():
+    validate_secret_configuration("short-local-secret", None, "testing")
