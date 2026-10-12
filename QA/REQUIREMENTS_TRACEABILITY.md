@@ -48,7 +48,7 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 
 | REQ-35 | Container build contexts exclude local secrets and host dependencies | TC-SEC-010, TC-CI-003 | PR #54 adds backend/frontend .dockerignore files and CI checks required patterns; CI run 38179504988 passed the ignore-rule check, both image builds, and sentinel inspection; the backend image excluded /app/.env and the frontend bundle excluded VITE_SECRET_SENTINEL. This proves the test sentinels were excluded, not that an actual secret was leaked |
 
-| REQ-36 | Database migrations complete before application restart | TC-CD-007 | PR #54 waits for PostgreSQL, applies migrations 002–004 before restarting application services, and checks this order in CI. Run 38212158351 passed; staging failure/recovery verification remains pending |
+| REQ-36 | Database migrations complete before application restart | TC-CD-007 | PR #54 waits for PostgreSQL, applies migrations 002–005 before restarting application services, and checks this order in CI. Run 38212158351 passed; staging failure/recovery verification remains pending |
 
 | REQ-37 | Wait for healthy PostgreSQL before migrations | TC-CD-008 | PR #54 uses Compose --wait and CI checks deployment ordering; run 38212158351 passed. Staging cold-start verification remains pending |
 
