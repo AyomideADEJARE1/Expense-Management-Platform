@@ -51,7 +51,9 @@ Action: Inspect current production/test data for duplicates before adding constr
 
 Required tests: Same user/month/category duplicate is rejected; same user/month/NULL-category duplicate is rejected; different users may create their own matching budgets; different categories in the same month are allowed if that is the intended rule; simultaneous duplicate requests result in exactly one created row; migration works against a fresh database and an existing volume containing no duplicates.
 
-Correction status update — 2026-10-11: PR #54 now adds migration 003 with duplicate-data checks and separate partial unique indexes for categorized and NULL-category budgets. CI now checks that both indexes exist, verifies duplicate general budgets return HTTP 409, and uses a separate database to prove legacy duplicate rows block the migration with a clear diagnostic. The budget route now maps IntegrityError to HTTP 409 and rolls back.\n\nPass evidence: Current CI passes the migration and regression tests; database indexes are verified; a populated existing volume is tested; concurrent requests result in exactly one row; and dashboard totals are checked against known records. Do not close this gate from source changes alone.
+Correction status update — 2026-10-11: PR #54 now adds migration 003 with duplicate-data checks and separate partial unique indexes for categorized and NULL-category budgets. CI now checks that both indexes exist, verifies duplicate general budgets return HTTP 409, and uses a separate database to prove legacy duplicate rows block the migration with a clear diagnostic. The budget route now maps IntegrityError to HTTP 409 and rolls back.
+
+Pass evidence: Current CI passes the migration and regression tests; database indexes are verified; a populated existing volume is tested; concurrent requests result in exactly one row; and dashboard totals are checked against known records. Do not close this gate from source changes alone.
 
 ### RV-05 — Verify application and database health through Nginx
 Related finding: QA-FIND-034 and deployment health-check finding QA-FIND-012. Priority: High; deployment gate.
@@ -115,7 +117,10 @@ Run these tests against the deployed candidate using two separate test accounts 
 | BR-07 | Delete a category referenced by an expense | Controlled conflict or documented safe behavior; no orphaned/broken expense | Prevents referential integrity failures |
 | BR-08 | Compare dashboard summary, category chart, budget overview, and raw records | Totals match known test fixtures | Prevents incorrect financial decisions based on UI totals |
 | BR-09 | Reload page and sign in again after restart | Persisted data remains; authentication behaves as designed | Detects frontend-only or transient state mistaken for persistence |
-| BR-10 | Open README links and follow setup/deployment steps on a clean environment | Steps work without undocumented local state | Makes the project reproducible for the assessor |\n| BR-11 | Log in, refresh, and load the current-user profile | Name/initials and signed-in state match the API profile; refresh does not break the session | Detects a mismatch between the API response envelope and frontend user state |\n| BR-12 | Search for an existing expense and select the result | Transactions view opens and the selected record is visible | Prevents search navigation from pointing to a nonexistent tab |\n| BR-13 | Edit the amount on a budget from a past month, save, and reload | The budget month remains unchanged; a newly created budget defaults to the current month | Prevents editing from silently rewriting historical budget periods |
+| BR-10 | Open README links and follow setup/deployment steps on a clean environment | Steps work without undocumented local state | Makes the project reproducible for the assessor |
+| BR-11 | Log in, refresh, and load the current-user profile | Name/initials and signed-in state match the API profile; refresh does not break the session | Detects a mismatch between the API response envelope and frontend user state |
+| BR-12 | Search for an existing expense and select the result | Transactions view opens and the selected record is visible | Prevents search navigation from pointing to a nonexistent tab |
+| BR-13 | Edit the amount on a budget from a past month, save, and reload | The budget month remains unchanged; a newly created budget defaults to the current month | Prevents editing from silently rewriting historical budget periods |
 
 For each browser test, retain: date/time, environment and deployed commit, steps, expected result, actual result, pass/fail, screenshot or sanitized response, and defect ID for failures.
 
@@ -144,7 +149,9 @@ Related finding: QA-FIND-042. Priority: Medium–High.
 
 Why it matters: the budget route currently catches all commit exceptions and returns HTTP 500. Once a database uniqueness constraint is added, an expected duplicate is a conflict, not an internal server failure. Treating all errors alike makes client behavior and monitoring inaccurate.
 
-Correction status update — 2026-10-11: PR #54 now catches SQLAlchemy IntegrityError separately for budget create/update, rolls back, and returns HTTP 409 only for the two known budget unique-index names. Other integrity violations remain generic HTTP 500 responses. Tests cover the classifier, duplicate conflict, and a simulated unexpected commit failure with rollback, sanitized output, and subsequent session recovery.\n\nAction: verify the new tests pass on the current commit and confirm no SQL, credentials, or stack traces are returned.
+Correction status update — 2026-10-11: PR #54 now catches SQLAlchemy IntegrityError separately for budget create/update, rolls back, and returns HTTP 409 only for the two known budget unique-index names. Other integrity violations remain generic HTTP 500 responses. Tests cover the classifier, duplicate conflict, and a simulated unexpected commit failure with rollback, sanitized output, and subsequent session recovery.
+
+Action: verify the new tests pass on the current commit and confirm no SQL, credentials, or stack traces are returned.
 
 Pass evidence: automated tests show duplicates return 409, simulated unexpected database errors return 500, session rollback succeeds, and no sensitive details appear in client responses.
 
