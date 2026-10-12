@@ -587,7 +587,7 @@ Run `38270979144` stopped at Flake8 because one line in the new partial-name pre
 
 **How to verify:** In the frontend test results, confirm the whole-month and category-specific tests pass. Seed or create a whole-month budget through the authenticated API in a disposable test environment, then load it in the browser with two same-month expenses in different categories and one expense from another month. Confirm the whole-month budget counts the first two only; the category budget counts only the selected category. This verifies calculation behavior, not the separate unresolved question of whether the browser should create whole-month budgets. Confirm the progress percentage and remaining amount update correctly.
 
-**CI evidence:** Run `38272803374` passed all eight jobs for commit `f58bd3fbc4e75ae224c3bb3981a704d3c3ba1c45`; all four frontend budget-spending tests passed and the backend suite passed 62 tests twice. **Still required:** A redacted browser test recording or screenshots showing the expected totals; CI does not prove the live UI or AWS deployment. AWS runtime verification is a separate release check.
+**CI evidence:** Run `38273922288` passed all eight jobs for commit `77620d6547cad3ee3774657df9dd0b9256ed9ff6`; all seven frontend tests passed (four budget-spending and three search tests) and the backend suite passed 62 tests twice. **Still required:** A redacted browser test recording or screenshots showing the expected totals; CI does not prove the live UI or AWS deployment. AWS runtime verification is a separate release check.
 
 
 ### 54. DevOps/documentation: show both environment-file setup steps
@@ -599,7 +599,7 @@ Run `38270979144` stopped at Flake8 because one line in the new partial-name pre
 
 **How to verify:** On a disposable clean checkout, remove local `.env` files, follow the guide exactly, replace placeholders, and start Compose. Confirm frontend, backend, PostgreSQL, and Nginx are healthy.
 
-**CI evidence:** Run `38272803374` passed all eight jobs for commit `f58bd3fbc4e75ae224c3bb3981a704d3c3ba1c45`. **Still required:** Follow the guide on a clean local checkout and retain the exact setup commands plus a redacted `docker compose ps` result showing all four services healthy.
+**CI evidence:** Run `38273922288` passed all eight jobs for commit `77620d6547cad3ee3774657df9dd0b9256ed9ff6`. **Still required:** Follow the guide on a clean local checkout and retain the exact setup commands plus a redacted `docker compose ps` result showing all four services healthy.
 
 
 ### 55. Frontend/QA: show only budgets that match global search
@@ -611,7 +611,7 @@ Run `38270979144` stopped at Flake8 because one line in the new partial-name pre
 
 **How QA will verify:** Search by category name, month, and unrelated text. Confirm only matching budgets appear and the whole-month budget has a clear title. Confirm expense and category results still work.
 
-**Evidence to close:** Passing current-head CI with the frontend search tests, plus browser evidence for matching and non-matching searches.
+**CI evidence:** Run `38273922288` passed all eight jobs for commit `77620d6547cad3ee3774657df9dd0b9256ed9ff6`; all three budget-search tests passed. **Still required:** Browser evidence for matching and non-matching searches.
 
 
 ### 56. Team lead/product owner: decide whether whole-month budgets are in scope
@@ -624,3 +624,7 @@ Run `38270979144` stopped at Flake8 because one line in the new partial-name pre
 **How to verify:** Record the decision in the requirements/PR discussion. If option A is selected, verify create, duplicate conflict (HTTP 409), edit, reload, delete, and whole-month spending totals. If option B is selected, verify the UI and documentation say category-only and review the API/schema disposition.
 
 **Evidence required:** A written team decision and, for the selected option, passing CI plus API/browser evidence. Do not close QA-FIND-061 solely because the calculation helper passes.
+
+
+## Latest CI checkpoint — 2026-10-12
+Run `38273922288` passed all eight jobs for correction commit `77620d6547cad3ee3774657df9dd0b9256ed9ff6`. Backend lint passed and 62 backend tests passed twice. Frontend lint/build passed and all seven Node tests passed: four budget-spending tests and three budget-search tests. Database migrations 001–005, budget-category RESTRICT, the phone column, migration ordering, secret scan, both Docker builds, and aggregate CI passed. npm audit reported zero vulnerabilities. Flask-Limiter still uses in-memory storage, and AWS runtime, populated-volume migration, public health, browser journeys, reboot recovery, and backup restore evidence remain open.
