@@ -828,9 +828,9 @@ The CI workflow currently includes checks for areas such as:
 
 ### Important
 
-A successful Docker build does not by itself mean that the application has been deployed to Azure.
+A successful Docker build does not by itself mean that the application has been deployed to AWS.
 
-The current CD workflow supports GHCR image publishing and configurable Azure deployment, but production deployment should be verified separately.
+The current CD workflow supports GHCR image publishing and configurable AWS EC2 deployment, but production deployment should be verified separately.
 
 ### Lesson Learned
 
@@ -921,9 +921,9 @@ Production deployments should use an appropriate shared/persistent backend where
 
 ### Production Deployment
 
-Azure deployment is documented as part of the project's planned/configurable deployment workflow.
+AWS EC2 deployment is supported by the configurable deployment workflow, but the live deployment must be verified separately.
 
-Do not assume that a successful local Docker Compose deployment means the Azure production environment is active.
+Do not assume that a successful local Docker Compose deployment means the AWS production environment is active.
 
 ### API Health Path
 
