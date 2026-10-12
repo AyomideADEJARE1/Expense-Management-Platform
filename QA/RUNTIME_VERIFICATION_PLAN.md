@@ -311,3 +311,6 @@ Pass evidence: current CI passes the new tests; registration/profile email confl
 
 
 Latest correction CI checkpoint: run `38212818430` passed all eight jobs for commit `0207384272129a22c719425fee062a87fc0f29ae`; 39 backend tests passed. This does not close AWS runtime, populated-volume migration, public health, or browser journey gates.
+
+
+Latest code CI checkpoint: run `38213095648` passed all eight jobs for commit `2c7d244067d7ca3727f4c346995380dbc4a95fea`. This confirms CI for the current correction source, including the README update; it does not close AWS staging, populated-volume migration, live health, or browser verification gates.
