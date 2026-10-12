@@ -650,3 +650,18 @@ Closure evidence: Passing CI for the latest correction commit, verified `fk_budg
 CI run [38212158351](https://github.com/AyomideADEJARE1/Expense-Management-Platform/actions/runs/38212158351) passed all eight jobs for correction commit `927e35eaf3af827d8b52ef93f6f883c6bfcaa667`. The database job applied migrations 001–004, confirmed the budget-category foreign key uses `RESTRICT`, checked the CD migration order, and exercised the legacy duplicate-budget migration guard. The backend suite passed 35 tests; frontend lint/build, secret scan, both Docker builds, and the aggregate CI check passed.
 
 This result supersedes the older CI checkpoint recorded earlier in this file for the current correction branch. It does **not** prove that migrations 002–004 succeeded on a populated AWS volume, that a migration-failure deployment preserves the old running app, that the latest image is live on AWS, or that browser end-to-end journeys pass. The frontend test command is still optional and the frontend package has no test script, so frontend functional test coverage remains open.
+
+
+## QA-FIND-057 — Category create/update do not handle database commit failures
+
+Classification: API error handling and data consistency. Status: Correction proposed in PR #54; current CI/runtime retest pending. Priority: Medium.
+
+Evidence: In the reviewed category API, create and update check whether the category name already exists, but the database commit was previously outside a guarded error handler. The database also enforces a unique category name. If two requests race after the pre-check, or the database rejects the commit for another reason, the route can raise an unhandled exception rather than return the documented conflict/server response. The failed SQLAlchemy transaction also requires rollback before the session can be used again.
+
+Impact: A duplicate-name race can become a generic 500 rather than HTTP 409. Unexpected database failures can produce inconsistent API behavior and make recovery harder to diagnose.
+
+Correction proposed in PR #54: Create and update now catch SQLAlchemy IntegrityError, roll back, and return HTTP 409 only when the database identifies the `uq_expense_category_name` constraint. Other integrity errors and unexpected exceptions return a generic HTTP 500 after rollback. Tests simulate the known unique-constraint race for both create and update, and a separate test verifies that an unexpected create failure returns a sanitized 500 and a later valid create succeeds.
+
+Required retest: Confirm the tests pass on the latest correction commit. Verify duplicate-name requests return 409; unrelated integrity/database failures return 500; no SQL or internal exception text is returned; and a valid request succeeds after rollback.
+
+Closure evidence: Passing current CI run, tested commit SHA, API results for duplicate and unexpected-failure paths, and proof that the stored category remains unchanged after a failed update.
