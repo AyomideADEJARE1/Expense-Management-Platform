@@ -12,6 +12,10 @@ import { ToastProvider, useToast } from './context/ToastContext';
 import { api } from './services/api';
 import { formatCurrency } from './utils/currency';
 import { calculateBudgetSpent } from './utils/budgetSpending';
+import {
+  createBudgetSearchResult,
+  matchesBudgetSearch,
+} from './utils/budgetSearch';
 
 function MainAppContent() {
   const { user, loading: authLoading } = useAuth();
@@ -112,14 +116,14 @@ function MainAppContent() {
       }
     });
 
-    budgets.forEach((b) => {
-      results.push({
-        sourceType: 'Budget',
-        tab: 'budgets',
-        title: `Category #${b.category_id} Budget`,
-        subtitle: `Month: ${b.month} • Limit: ${formatCurrency(b.amount, user?.currency || 'NGN (₦)')}`,
-        amount: b.amount,
-      });
+    budgets.forEach((budget) => {
+      const result = createBudgetSearchResult(
+        budget,
+        categories,
+        user?.currency || 'NGN (₦)',
+        formatCurrency,
+      );
+      if (matchesBudgetSearch(result, query)) results.push(result);
     });
 
     categories.forEach((c) => {
