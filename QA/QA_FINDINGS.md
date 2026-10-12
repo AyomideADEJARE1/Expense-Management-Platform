@@ -841,3 +841,18 @@ Classification: Input validation / date consistency. Status: Source correction a
 **Required retest:** Run CI for the latest commit. Confirm valid `YYYY-MM-DD` values still work; compact and week-date inputs return 400 on create/update; and a rejected update leaves the stored date unchanged. Also verify that date-range filters use the same strict format.
 
 **Closure evidence:** Passing CI for the exact commit, recorded API responses for accepted/rejected date forms, and a read-back proving the stored date did not change after a rejected update.
+
+
+## QA-FIND-066 — Saved currency preference is not applied consistently across financial screens
+
+Classification: Functional correctness / user preference consistency. Status: Correction proposed in PR #54; current CI retest pending. Priority: Medium.
+
+Evidence: The profile API and Settings UI support NGN, USD, EUR, and GBP. Before the latest correction, several financial screens hardcoded the naira symbol: budget cards/forms, transaction amounts, report totals/category amounts, the dashboard budget overview, the category donut summary, and the budget search-result subtitle. The dashboard chart tooltip also called `formatCurrency(value)` without passing the user's selected currency.
+
+Impact: A user who selects USD, EUR, or GBP can see some screens labelled in that currency while other screens still show ₦. This misrepresents the user's display preference and can cause confusion when comparing totals.
+
+Correction proposed in PR #54: The shared currency utility now exposes `getCurrencySymbol`; App passes the saved currency to Budgets, Transactions, Reports, and Dashboard; financial components use `formatCurrency(amount, currency)` instead of hardcoded naira formatting; the dashboard chart tooltip receives the selected currency.
+
+Required retest: Save each supported currency, revisit Dashboard, Transactions, Budgets, Reports, and search results, and verify all amount labels use the same selected symbol. Switch back to NGN and verify it updates consistently. Also verify totals and values do not change numerically when only the display currency preference changes.
+
+Closure evidence: Passing frontend lint/build for the exact commit and browser screenshots for each supported currency across the named screens, including the dashboard chart tooltip and budget search result.
