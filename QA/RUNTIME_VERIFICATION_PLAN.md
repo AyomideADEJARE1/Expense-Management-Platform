@@ -399,3 +399,14 @@ Latest correction CI result: run `38213904072` passed all eight jobs for commit 
 **Current source correction:** The dashboard now derives the current month from local year/month fields; Transactions uses a local-date helper; Reports parses date-only values as local midnight. Frontend automated tests are not configured, so browser verification remains necessary.
 
 **Pass evidence:** Passing frontend lint/build for the exact commit, recorded timezone/local date, dashboard request month, new-expense default date, and report grouping for a known date-only transaction.
+
+
+## RV-36 — Enforce canonical expense dates on create and update
+
+**Related finding:** QA-FIND-066.
+
+**Check:** Submit an expense using a valid `YYYY-MM-DD` date and confirm it succeeds. Try compact date `20261001` and week date `2026-W40-4` on create; both must return HTTP 400. For an existing expense, try to update its date to `20261011`; the API must return HTTP 400 and a read-back must show the original date remains unchanged. Confirm date-range query parameters use the same `YYYY-MM-DD` rule.
+
+**Current source correction:** PR #54 now checks that Python's parsed date serializes back to exactly the submitted value on create and update. Regression tests for the noncanonical forms have been added; CI for that test commit is pending.
+
+**Pass evidence:** Passing CI for the exact commit, recorded request/response results for accepted and rejected formats, and the unchanged stored date after a rejected update. This is an API test; it does not replace browser verification of date defaults and report grouping.
