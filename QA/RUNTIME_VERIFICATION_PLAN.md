@@ -363,6 +363,6 @@ Latest correction CI result: run `38213904072` passed all eight jobs for commit 
 
 **Check:** With a user who has known October 2026 expenses, confirm `/api/expenses?month=2026-10`, `/api/summaries/monthly?month=2026-10`, and `/api/summaries/category?month=2026-10` return expected data/totals. Send `month=2026-1` and `month=2026-010` to all three endpoints; each must return HTTP 400.
 
-**Current source correction:** The three endpoints now validate the exact `YYYY-MM` format before converting year/month components. Regression tests cover invalid formats and verify monthly/category totals against a known expense. CI is pending for the newest change.
+**Current source correction:** The three endpoints now validate the exact `YYYY-MM` format before converting year/month components. Regression tests cover invalid formats and verify monthly/category totals against a known expense. The backend job in CI run `38216409164` passed Flake8 and all 48 backend tests, including the month-query/summary regression test; Docker builds and aggregate CI were still running at the last check.
 
 **Pass evidence:** Passing CI for the exact commit, recorded responses for valid and invalid values, and expected-vs-actual summary totals. If the live deployment does not match the tested commit, repeat the API checks against the deployed version before release.
