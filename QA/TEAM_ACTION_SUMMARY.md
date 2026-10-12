@@ -573,3 +573,16 @@ Run `38270979144` stopped at Flake8 because one line in the new partial-name pre
 **How to verify:** Run the category delete regression test. Confirm a budget foreign-key conflict returns 409 and the category still exists; confirm an unrelated database error returns 500.
 
 **Evidence required:** Passing CI for the latest commit, API response and read-back from the regression test, and staging evidence if the race can be tested safely.
+
+
+
+### 53. Frontend: calculate whole-month budget spending correctly and test it
+**What happens:** The previous dashboard calculation compares numeric category IDs. For a whole-month budget, its category is `null`, which becomes `0`; normal expenses have positive category IDs, so the displayed spending can remain zero.
+
+**Why it matters:** The overall budget card can under-report spending and show a false on-track status even after the user has entered expenses.
+
+**Required correction:** PR #54 now uses a shared calculation helper: a budget with no category includes all expenses in its month; a category budget includes only expenses in that category and month. Tests cover both cases and invalid amounts. The frontend now has a test script so CI executes these tests.
+
+**How to verify:** In the frontend test results, confirm the whole-month and category-specific tests pass. In a browser, add two same-month expenses in different categories and one expense from another month. Confirm the whole-month budget counts the first two only; the category budget counts only the selected category. Confirm the progress percentage and remaining amount update correctly.
+
+**Evidence required:** Passing current-head CI, test output, and a redacted browser test recording or screenshots showing the expected totals. AWS runtime verification is a separate release check.
