@@ -207,3 +207,8 @@ The UI still requires a category; the attempted UI expansion was reverted becaus
 ## QA-FIND-081 trace — Global budget search relevance
 
 PR #54 now filters budget results by title/subtitle and adds Node tests for category, month, unrelated, whole-month, and blank-query cases. Confirm current-head CI runs the tests and verify the rendered search results in a browser before closure.
+
+
+## Latest correction CI checkpoint — 2026-10-12
+
+Run 38273922288 passed all eight jobs for correction commit 77620d6547cad3ee3774657df9dd0b9256ed9ff6. The backend suite passed 62 tests twice and all seven frontend Node tests passed, including global budget-search relevance. This verifies CI only; browser and AWS runtime evidence remains pending. The in-memory rate-limit storage warning remains open under QA-FIND-073.
