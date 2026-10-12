@@ -19,5 +19,8 @@ export function calculateBudgetSpent(budget, expenses) {
 
       return sameMonth && sameCategory;
     })
-    .reduce((total, expense) => total + Number(expense.amount || 0), 0);
+    .reduce((total, expense) => {
+      const amount = Number(expense.amount || 0);
+      return total + (Number.isFinite(amount) ? amount : 0);
+    }, 0);
 }
