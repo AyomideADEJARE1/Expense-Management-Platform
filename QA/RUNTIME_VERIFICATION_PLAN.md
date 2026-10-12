@@ -409,3 +409,14 @@ Latest correction CI result: run `38213904072` passed all eight jobs for commit 
 **Current source correction:** PR #54 adds a shared currency-symbol helper, passes the saved user currency to financial pages, and replaces hardcoded naira formatting with the shared formatter. Frontend lint/build is pending for the latest commit; automated frontend tests are not configured.
 
 **Pass evidence:** Passing frontend lint/build for the exact commit and browser screenshots for all supported currencies across the named screens. Keep this gate open until browser evidence is recorded.
+
+
+## RV-37 — Verify Settings phone-number persistence
+
+**Related finding:** QA-FIND-067.
+
+**Check:** On a clean database, confirm migration 005 creates nullable `users.phone`. On an existing database with a test user, apply migration 005 and confirm the user's other profile and expense data remain unchanged. Through the profile API and browser Settings page, save `+234 803 123 4567`, reload the page, and confirm it persists. Verify blank input clears the field; non-string, over-30-character, and control-character values return HTTP 400 and do not overwrite the stored number.
+
+**Current source correction:** PR #54 adds migration 005, the model field, API validation/response data, frontend request payload, and a backend regression test. CI also checks that the column exists and that CD applies migration 005 after migration 004 but before restarting app services. Latest CI for this change is pending.
+
+**Pass evidence:** Passing CI for the exact commit, clean/existing-database migration evidence, API read-back, and AWS staging/browser verification after deployment.
