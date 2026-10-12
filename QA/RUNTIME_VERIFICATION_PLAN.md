@@ -446,3 +446,14 @@ Run `38219803561` passed all eight jobs for commit `92eefc22555c7c98df2400147210
 **Current source evidence:** The user model stores a single currency preference; expense and budget records do not store currency. The frontend formats existing numeric values with the selected currency symbol. A written product decision is required before QA can call this behavior correct.
 
 **Pass evidence:** Written currency semantics, passing tests for the approved behavior, and browser evidence across all financial screens. Do not infer conversion from a changed currency symbol.
+
+
+## RV-40 — Verify the configured budget alert threshold
+
+**Related finding:** QA-FIND-070.
+
+**Check:** Confirm the intended threshold behavior with the product team. If alerts are required, set thresholds to 50%, 80%, and 100%; add expenses that put spending just below, exactly at, and just above each threshold. Verify when the alert appears, that it is not duplicated for the same budget/period, that notification preferences are honored, and that different users/budgets remain isolated. Test a spending decrease and later threshold crossing. If alerts are out of scope, verify the setting is removed or clearly described as inactive.
+
+**Current source evidence:** The API persists the budget_threshold field, but the reviewed budget/dashboard components do not read it. Budget status currently uses the 100% limit boundary. App also passes an empty notification list to the notification UI. A product decision is needed before expected behavior can be finalized.
+
+**Pass evidence:** Written threshold rules, automated boundary and duplicate-prevention tests if implemented, and browser evidence showing the agreed alert behavior or revised UI wording.
