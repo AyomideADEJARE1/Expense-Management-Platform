@@ -44,12 +44,12 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 
 | REQ-33 | Prevent API tests from targeting non-test databases | TC-DB-007 | PR #54 adds an autouse guard that refuses a configured database name without a test/testing marker; CI run 38179504988 passed the guard with expense_management_test, while negative non-test configuration and cleanup verification remain pending |
 
-| REQ-34 | Category deletion reports accurate conflict/server errors | TC-CAT-006–007 | PR #54 prechecks category references, uses passive database deletes, and distinguishes the known expense foreign-key conflict (409) from unexpected failures (500); CI run 38179504988 passed both regression tests, while live runtime verification remains pending |
+| REQ-34 | Category deletion reports accurate conflict/server errors | TC-CAT-006–007 | PR #54 prechecks expense references, distinguishes the known expense foreign-key conflict (409) from unexpected failures (500), and adds a budget-reference guard. CI run 38212158351 passed all 35 backend tests including category-delete regression; AWS live runtime verification remains pending |
 
 | REQ-35 | Container build contexts exclude local secrets and host dependencies | TC-SEC-010, TC-CI-003 | PR #54 adds backend/frontend .dockerignore files and CI checks required patterns; CI run 38179504988 passed the ignore-rule check, both image builds, and sentinel inspection; the backend image excluded /app/.env and the frontend bundle excluded VITE_SECRET_SENTINEL. This proves the test sentinels were excluded, not that an actual secret was leaked |
 
-| REQ-36 | Database migrations complete before application restart | TC-CD-007 | PR #54 reorders deployment and adds a CI source-order check; CI run 38179822312 passed. Staging failure/recovery verification remains pending |
+| REQ-36 | Database migrations complete before application restart | TC-CD-007 | PR #54 waits for PostgreSQL, applies migrations 002–004 before restarting application services, and checks this order in CI. Run 38212158351 passed; staging failure/recovery verification remains pending |
 
-| REQ-37 | Wait for healthy PostgreSQL before migrations | TC-CD-008 | PR #54 uses Compose --wait and CI checks deployment ordering; CI run 38179822312 passed. Staging cold-start verification remains pending |
+| REQ-37 | Wait for healthy PostgreSQL before migrations | TC-CD-008 | PR #54 uses Compose --wait and CI checks deployment ordering; run 38212158351 passed. Staging cold-start verification remains pending |
 
-| REQ-38 | Category deletion preserves budget meaning | TC-CAT-008–009, RV-25 | PR #54 adds a linked-budget pre-check and migration 004 with `ON DELETE RESTRICT`; latest CI and fresh/existing AWS volume verification are pending |
+| REQ-38 | Category deletion preserves budget meaning | TC-CAT-008–009, RV-25 | PR #54 adds a linked-budget pre-check and migration 004 with `ON DELETE RESTRICT`; run 38212158351 passed the migration, constraint, and API tests. Fresh/existing AWS volume verification is pending |
