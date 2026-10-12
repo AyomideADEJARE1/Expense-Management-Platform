@@ -677,3 +677,13 @@ CI run 38273922288 passed all eight jobs for correction commit 77620d6547cad3ee3
 **CI status:** Run `38277037377` passed all eight jobs for commit `8151bb56e730c6f6eb0205691b334a121abc934e`; the backend suite passed 69 tests, including the parameterized debug-mode cases.
 
 **Evidence:** CI run ID, commit SHA, parameterized test result, and reviewed Docker entry point. Do not claim a live AWS debugger check unless the deployed environment was actually inspected.
+
+
+## RV-55 — Verify UTF-8 text in Reports CSV downloads
+**Owner:** Frontend/QA. **Environment:** Browser and supported spreadsheet application.
+
+**Steps:** Create disposable report data containing non-ASCII characters in a category name or description. Export the report and confirm the Blob begins with a UTF-8 BOM and the downloaded file preserves the characters when opened/imported.
+
+**Pass criteria:** The exported report contains the expected Unicode text and opens without encoding corruption in the supported spreadsheet workflow.
+
+**Evidence:** Browser/application versions, test value, downloaded file inspection, and successful display/import result. Do not include real user financial data in evidence.
