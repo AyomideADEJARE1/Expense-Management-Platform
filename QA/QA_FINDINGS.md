@@ -940,3 +940,18 @@ CI run [38221334646](https://github.com/AyomideADEJARE1/Expense-Management-Platf
 ## Latest source-branch CI checkpoint — 2026-10-12
 
 CI run [38221595123](https://github.com/AyomideADEJARE1/Expense-Management-Platform/actions/runs/38221595123) passed all eight jobs for source-branch head `72ff22992e8561b5c85422f664854a7bce964ff7`. The backend suite passed 58 tests twice. CI verified migrations 001–005, the `users.phone` column, the category-budget `RESTRICT` rule, and restart policies for all four Compose services. Frontend lint/build, secret scan, both Docker builds, and aggregate CI passed. CI still emits a Flask-Limiter warning for in-memory storage; production shared storage and Nginx client-IP behavior remain open. Actual AWS populated-volume migration, live deployment/health, browser workflows, reboot recovery, currency semantics, and notification/threshold behavior are not closed by CI.
+
+
+## QA-FIND-072 — Automated database backup and restore evidence is missing from the repository
+
+Classification: Data protection / disaster recovery. Status: Evidence required from DevOps; no repository-defined backup/restore workflow was found in the reviewed tree. Priority: High for a financial-record application.
+
+**What happens:** PostgreSQL data is stored in a named Compose volume on the AWS VM. The reviewed repository does not define a scheduled database backup job, encrypted off-host backup destination, retention policy, or tested restore procedure. The deployment workflow also does not create a recoverable backup before applying schema migrations. AWS snapshots or other backups may exist outside the repository, but their existence and recoverability are not evidenced here.
+
+**Why it matters:** If the VM or volume is lost, or a migration changes data incorrectly, the team may not be able to recover expenses, budgets, categories, and user settings. A backup that has never been restored is not proven usable.
+
+**Required correction:** DevOps must document the actual backup system. Use an approved off-host encrypted backup or managed snapshot approach, define frequency/retention/access control, and take a recoverable backup before production migrations. Do not store database dumps in the source repository or on the same volume as the only copy.
+
+**Required retest:** Restore a recent backup into an isolated database, run migrations only in the test environment, and compare expected user/expense/budget counts and representative totals. Record the recovery point and elapsed recovery time. Confirm credentials are not exposed in logs.
+
+**Closure evidence:** Backup schedule/configuration, retention and access policy, a redacted successful restore log, integrity checks against known test records, and evidence that a pre-migration backup can be recovered.
