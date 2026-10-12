@@ -114,3 +114,8 @@ Settings previously displayed an editable phone number without a matching databa
 ## QA-FIND-068 trace — notification delivery scope
 
 The profile API stores notification preference flags, but the reviewed source tree did not reveal an email sender, notification scheduler/worker, or browser-push delivery path. The team must decide whether real delivery is in scope. Close only with a written scope decision and either tested staging delivery or clearly revised UI wording that does not promise active alerts.
+
+
+## QA-FIND-069 trace — account currency semantics
+
+The profile has one preferred currency, while expenses and budgets store numeric amounts without per-record currency. The frontend applies the selected symbol but does not convert saved values. The team must decide whether currency is display-only or supports conversion/mixed currencies. Closure requires written semantics, tests, and browser evidence that changing the preference cannot silently misrepresent historical amounts.
