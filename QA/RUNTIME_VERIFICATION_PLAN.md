@@ -472,3 +472,14 @@ Run `38219803561` passed all eight jobs for commit `92eefc22555c7c98df2400147210
 
 ## Latest code CI checkpoint — 2026-10-12
 Run `38221595123` passed all eight jobs for source-branch head `72ff22992e8561b5c85422f664854a7bce964ff7`; 58 backend tests passed twice. CI verified migrations 001–005, the users.phone column, the budget-category RESTRICT rule, and restart policies for all four Compose services. Actual AWS reboot recovery, populated-volume migration, live deployment/health, browser journeys, production rate-limit storage/proxy handling, CSP/HSTS, currency semantics, and notification delivery remain open.
+
+
+## RV-42 — Restore an off-host database backup and verify data integrity
+
+**Related finding:** QA-FIND-072.
+
+**Check:** Obtain the approved AWS backup/snapshot configuration and restore a recent backup into an isolated database. Do not overwrite production. Compare expected users, expenses, categories, budgets, and representative monthly totals against the source backup metadata or a known test dataset. Record the backup timestamp/recovery point and time taken to restore. Verify a pre-migration backup can be restored before any destructive schema/data change.
+
+**Current source evidence:** PostgreSQL uses a named Compose volume on the VM. The reviewed repository does not define a scheduled off-host backup or a tested restore workflow; an external AWS backup may exist but requires evidence.
+
+**Pass evidence:** Backup schedule/retention and access policy, redacted successful restore logs, data-integrity results, and documented recovery point/recovery time. Do not close based only on a claim that snapshots are enabled.
