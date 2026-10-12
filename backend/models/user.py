@@ -40,7 +40,8 @@ class User(db.Model):
     updated_at = db.Column(
         db.DateTime,
         nullable=False,
-        server_default=db.func.current_timestamp()
+        server_default=db.func.current_timestamp(),
+        onupdate=db.func.current_timestamp()
     )
 
     currency = db.Column(
