@@ -1075,3 +1075,18 @@ CI run `38272033341` passed all eight jobs for correction commit `ea775178ea545b
 ## Latest correction CI checkpoint — 2026-10-12 (current source head)
 
 Run `38272803374` passed all eight jobs for correction commit `f58bd3fbc4e75ae224c3bb3981a704d3c3ba1c45`. Backend lint passed and the suite passed 62 tests twice. Frontend lint/build passed, and the new `npm test` command executed all four budget-spending tests (4 passed, 0 failed). Database migrations 001–005 and the foreign-key checks, secret scan, both Docker builds, and aggregate CI passed. This is CI evidence only: AWS deployment, populated-volume migrations, browser end-to-end journeys, reboot recovery, backup restore, and shared rate-limit storage remain open. The frontend whole-month budget behavior still requires a browser-level check.
+
+
+## QA-FIND-081 — Global search returns every budget for unrelated queries
+
+**Classification:** Frontend functional defect / search relevance. **Priority:** Medium. **Status:** Correction proposed in PR #54; current-head CI and browser retest pending.
+
+**Evidence:** In the earlier frontend/src/App.jsx search logic, expenses and categories were conditionally added when their text matched the search query, but the budgets loop added every budget unconditionally whenever the global search query was non-empty. A search for an unrelated word could therefore display all budgets as matches.
+
+**Impact:** Search results contain irrelevant items and users may assume every budget matches their query. This makes global search less useful and can hide the relevant result in a longer list.
+
+**Correction proposed in PR #54:** The budget search logic now creates a result title and subtitle, then includes it only when the query matches the category/overall-budget title or the month/limit subtitle. Whole-month budgets use a clear “Overall Monthly Budget” title. New Node tests cover category-name matching, month matching, unrelated queries, whole-month budget titles, and blank queries.
+
+**Required retest:** Confirm the current CI run executes and passes the new frontend search tests. In the browser, search for a category name, a budget month, and an unrelated word. Confirm only matching budgets appear, while matching expenses/categories still appear correctly. Confirm a whole-month budget uses a meaningful title.
+
+**Closure evidence:** Passing current-head CI, output from the budget-search tests, and browser search results for matching and non-matching queries. CI alone does not prove the rendered result list is correct.
