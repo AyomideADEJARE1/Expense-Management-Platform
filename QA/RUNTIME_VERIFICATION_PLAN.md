@@ -648,6 +648,8 @@ CI run 38273922288 passed all eight jobs for correction commit 77620d6547cad3ee3
 
 **Steps:** Confirm `Transactions.jsx` and `Reports.jsx` import and use the shared `escapeCsvCell` helper for every exported cell. Run the frontend Node tests and lint/build. In a browser, create or use a disposable test expense with description `=1+1`, export it from both Transactions and Reports, and inspect the downloaded CSV.
 
-**Pass criteria:** Formula-leading values are prefixed so spreadsheet software treats them as text; embedded quotes remain valid CSV; ordinary date and amount cells remain correctly quoted; both export paths behave consistently.
+**CI status:** Passed in run `38275606391` for commit `11d1756f083f51e6e18d51651f76bcb5d74a9af2`; all nine frontend Node tests and frontend lint/build passed.
+
+**Pass criteria:** Formula-leading values are prefixed so spreadsheet software treats them as text; embedded quotes remain valid CSV; ordinary date and amount cells remain correctly quoted; both export paths behave consistently. Browser-download verification is still open.
 
 **Evidence:** CI run ID, exact commit SHA, test output, and sanitized sample rows from both downloads. Do not open a deliberately unsafe test export in a spreadsheet application; inspect the CSV as text.
