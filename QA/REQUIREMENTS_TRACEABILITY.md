@@ -169,7 +169,7 @@ Run 38271222415 passed all eight jobs for correction commit 2316a358ca37495ecc41
 
 
 ## QA-FIND-078 — Concurrent budget-reference conflict during category deletion
-PR #54 now maps both expense and budget foreign-key violations to HTTP 409. A regression test simulates a budget reference being created between the route pre-check and database commit, and confirms the category remains present. CI retest for the latest correction commit is pending; AWS concurrency testing remains optional and must use disposable staging data.
+PR #54 now maps both expense and budget foreign-key violations to HTTP 409. A regression test simulates a budget reference being created between the route pre-check and database commit, and confirms the category remains present. CI run `38272033341` passed all eight jobs for commit `ea775178ea545b48bfea9cdaadd77b7b0965d4b8`, including 61 backend tests. AWS concurrency testing remains optional and must use disposable staging data.
 
 
 ## QA-FIND-078 trace — Concurrent category delete and budget reference
