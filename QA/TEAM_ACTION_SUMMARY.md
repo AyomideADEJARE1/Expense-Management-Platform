@@ -480,7 +480,7 @@ Do not mark a check as passed until evidence is attached.
 - [ ] Production database and JWT secrets are required and are not sample values.
 - [ ] Tests use an isolated database and pass repeatedly.
 - [ ] CI is green for the exact release commit, backend tests are collected, and frontend tests execute rather than being silently skipped.
-- [ ] Migrations 002–004 succeed on fresh and existing databases; migration 004 enforces `ON DELETE RESTRICT` for category-linked budgets.
+- [ ] Migrations 002–005 succeed on fresh and existing databases; migration 004 enforces `ON DELETE RESTRICT` for category-linked budgets, and migration 005 creates `users.phone`.
 - [ ] Deployment applies migrations before restarting backend/frontend/Nginx.
 - [ ] AWS is the documented and approved deployment target, and the deployed AWS VM is evidenced.
 - [ ] The running image matches the tested commit.
