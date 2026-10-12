@@ -1015,4 +1015,8 @@ Classification: Account lifecycle / recoverability. Status: Open; product/securi
 
 
 ## Latest correction retest note — 2026-10-12
-Run `38270979144` failed at Flake8 before pytest ran because `backend/routes/auth.py:258` exceeded the configured line length by one character. The offending line was wrapped in correction commit `2316a358ca37495ecc41eff8aaf48f888654e5b8`. A new CI result is required; do not count the new partial-name regression test as passed until that run completes.
+Run `38270979144` failed at Flake8 before pytest ran because `backend/routes/auth.py:258` exceeded the configured line length by one character. The offending line was wrapped in correction commit `2316a358ca37495ecc41eff8aaf48f888654e5b8`. CI run `38271222415` passed all eight jobs for commit `2316a358ca37495ecc41eff8aaf48f888654e5b8`; Flake8 passed and the backend suite passed 60 tests, including the new partial-name regression. The source/CI check is now green, but browser/AWS runtime verification remains pending.
+
+
+## Latest correction CI checkpoint — 2026-10-12
+Run `38271222415` passed all eight CI jobs for commit `2316a358ca37495ecc41eff8aaf48f888654e5b8`. Flake8 passed; backend tests reported 60 passed, including the partial profile-name update regression. Frontend lint/build, database migration checks, secret scan, both Docker builds, and aggregate CI passed. CI still warns that Flask-Limiter uses in-memory storage. This does not close AWS deployment, populated-volume migration, browser, reboot recovery, backup restore, or shared production rate-limit gates.
