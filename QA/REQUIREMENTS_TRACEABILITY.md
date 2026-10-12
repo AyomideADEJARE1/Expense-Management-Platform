@@ -240,3 +240,7 @@ The direct-execution block previously used `app.run(debug=True)` regardless of c
 
 ## Latest source CI evidence — QA-FIND-084
 Run `38277037377` passed all eight jobs for code commit `8151bb56e730c6f6eb0205691b334a121abc934e`. Backend lint and 69 tests passed, frontend lint/build and nine Node tests passed, and database migrations, secret scan, both Docker builds, and aggregate CI passed. This closes the CI portion of QA-FIND-084. It does not prove the AWS environment is running this commit.
+
+
+## QA-FIND-085 trace — UTF-8 BOM in Reports CSV
+Transactions export already included a UTF-8 BOM, but Reports export did not. PR #54 now prepends the BOM to report downloads. Browser/spreadsheet compatibility verification remains pending; closure requires a non-ASCII test value to display correctly.
