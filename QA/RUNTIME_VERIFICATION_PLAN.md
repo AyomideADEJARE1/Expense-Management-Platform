@@ -328,7 +328,7 @@ Latest correction CI result: run `38213904072` passed all eight jobs for commit 
 
 **Check:** Submit a canonical `YYYY-MM-DD` date and confirm create/update succeed. Try compact date `20261001` and week date `2026-W40-4` on create; both must return HTTP 400. For an existing expense, try updating with `20261011`; expect HTTP 400 and verify the saved date remains unchanged. Confirm date-range query parameters enforce the same hyphenated format.
 
-**Current source correction:** PR #54 checks that parsing and re-serializing the submitted date returns exactly the same string. CI run `38217288387` passed all eight jobs for commit `52438ec387ed2c9bfaff56081930e6df317604dd`; both pytest runs passed all 57 tests, including compact/week-date rejection.
+**Current source correction:** PR #54 checks that parsing and re-serializing the submitted date returns exactly the same string. CI run `38219803561` passed all eight jobs for commit `92eefc22555c7c98df240014721084e2f41698f8`; both pytest runs passed all 58 tests, including compact/week-date rejection and the rejected-update preservation check.
 
 **Pass evidence:** Passing CI for the exact code commit, request/response results for accepted/rejected formats, and the unchanged stored date after a rejected update. This API test does not replace browser verification of date defaults and report grouping.
  
