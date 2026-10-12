@@ -202,3 +202,8 @@ CI run `38272803374` passed all eight jobs for correction commit `f58bd3fbc4e75a
 
 ## QA-FIND-061 trace — Whole-month budget UI scope decision
 The UI still requires a category; the attempted UI expansion was reverted because the scope decision is not recorded. The separate spending calculation helper is corrected and its Node tests passed in CI. The team must confirm whether overall monthly budgets are required before the UI is changed. If required, implement and test the form option; if not, document category-only behavior and decide the disposition of the API/schema support.
+
+
+## QA-FIND-081 trace — Global budget search relevance
+
+PR #54 now filters budget results by title/subtitle and adds Node tests for category, month, unrelated, whole-month, and blank-query cases. Confirm current-head CI runs the tests and verify the rendered search results in a browser before closure.
