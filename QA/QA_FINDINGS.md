@@ -1116,3 +1116,18 @@ QA-FIND-082's code-level correction is therefore verified in CI. Browser downloa
 
 ## Latest code CI checkpoint — 2026-10-12
 CI run `38275606391` passed all eight jobs for code commit `11d1756f083f51e6e18d51651f76bcb5d74a9af2`. Backend lint passed and 62 backend tests passed twice. Frontend lint/build passed and all nine Node tests passed: budget-spending tests, budget-search tests, and CSV formula/quoting tests. Database migrations 001–005, secret scan, both Docker builds, and aggregate CI passed. npm audit reported zero vulnerabilities. This is CI evidence only. AWS populated-volume migrations, live deployment/version, public health checks, browser flows, reboot recovery, backup restore, and shared rate-limit storage remain open.
+
+
+## QA-FIND-083 — Reports export revokes its download URL immediately
+
+**Classification:** Frontend download reliability. **Priority:** Low. **Status:** Correction proposed in PR #54; browser retest pending.
+
+**Evidence:** The report CSV export created a Blob URL, triggered a click on a temporary download link, removed the link, and immediately called `URL.revokeObjectURL(url)`. The Transactions export already delayed revocation by one second.
+
+**Why it matters:** Some browsers may still be consuming the Blob URL when it is revoked. Immediate cleanup can cause a report download to fail or produce an incomplete file, depending on browser timing.
+
+**Correction in PR #54:** The Reports export now delays URL revocation by one second, matching the Transactions export cleanup pattern.
+
+**Required retest:** In supported browsers, export a small report and a larger report. Confirm both downloads complete and contain the expected rows. Check the browser console for errors and confirm repeated exports still work.
+
+**Closure evidence:** Passing current-head CI plus browser evidence that the report CSV downloads successfully on the supported browser(s). CI alone cannot prove browser download timing.
