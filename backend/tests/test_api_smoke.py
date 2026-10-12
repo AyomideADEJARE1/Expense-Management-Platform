@@ -9,6 +9,7 @@ from app import app, validate_secret_configuration
 from extensions import db, limiter
 from routes.expenses import safe_csv_cell
 from routes.budgets import _is_budget_uniqueness_violation
+from conftest import is_test_database
 
 
 @pytest.fixture()
@@ -17,6 +18,35 @@ def client():
     limiter.reset()
     with app.test_client() as test_client:
         yield test_client
+
+    # API tests commit through the real session; clear state before the next test.
+    with app.app_context():
+        db.session.rollback()
+        db.session.execute(
+            db.text(
+                "TRUNCATE TABLE monthly_expense_summary, budgets, expenses, "
+                "expense_categories, users RESTART IDENTITY CASCADE"
+            )
+        )
+        db.session.commit()
+
+
+@pytest.mark.parametrize(
+    ("database_name", "expected"),
+    [
+        ("expense_management_test", True),
+        ("test_expense_db", True),
+        ("testing", True),
+        ("expense_management", False),
+        ("contest", False),
+        ("production_test", False),
+        ("live_expense_test", False),
+    ],
+)
+def test_test_database_guard_requires_explicit_nonproduction_test_name(
+    database_name, expected
+):
+    assert is_test_database(database_name) is expected
 
 
 def test_health_endpoint_returns_ok(client):
