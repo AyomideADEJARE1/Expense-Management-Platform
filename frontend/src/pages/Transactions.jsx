@@ -3,13 +3,19 @@ import { useState, useEffect, useMemo } from 'react';
 import { Search, Filter, ArrowUpRight, Trash2, Plus, Edit3, Download } from 'lucide-react';
 import ConfirmationModal from '../Components/ConfirmationModal';
 import { useToast } from '../context/ToastContext';
+import { formatCurrency, getCurrencySymbol } from '../utils/currency';
 
 const getLocalDateString = () => {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 };
 
-export default function Transactions({ categories = [], onTransactionChange, isDarkMode = false }) {
+export default function Transactions({
+  categories = [],
+  currency = 'NGN (₦)',
+  onTransactionChange,
+  isDarkMode = false,
+}) {
 
   const modalBackground = isDarkMode
     ? 'bg-slate-800 text-white'
@@ -446,7 +452,7 @@ export default function Transactions({ categories = [], onTransactionChange, isD
                       </td>
 
                       <td className="py-4 px-6 text-right font-bold whitespace-nowrap text-rose-600">
-                        -₦{Number(tx.amount || 0).toLocaleString()}
+                        -{formatCurrency(tx.amount, currency)}
                       </td>
 
                       <td className="py-4 px-6 text-right whitespace-nowrap">
@@ -554,7 +560,7 @@ export default function Transactions({ categories = [], onTransactionChange, isD
 
                 <div>
                   <label className={`block text-xs font-semibold ${modalLabel} mb-1`}>
-                    Amount (₦)
+                    Amount ({getCurrencySymbol(currency)})
                   </label>
 
                   <input
