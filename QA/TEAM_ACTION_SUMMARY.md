@@ -600,3 +600,15 @@ Run `38270979144` stopped at Flake8 because one line in the new partial-name pre
 **How to verify:** On a disposable clean checkout, remove local `.env` files, follow the guide exactly, replace placeholders, and start Compose. Confirm frontend, backend, PostgreSQL, and Nginx are healthy.
 
 **CI evidence:** Run `38272803374` passed all eight jobs for commit `f58bd3fbc4e75ae224c3bb3981a704d3c3ba1c45`. **Still required:** Follow the guide on a clean local checkout and retain the exact setup commands plus a redacted `docker compose ps` result showing all four services healthy.
+
+
+### 55. Frontend/QA: show only budgets that match global search
+**What happens:** The earlier global search added every budget whenever any search text was entered, even if the budget title, category, month, and limit did not match the query.
+
+**Why it matters:** Irrelevant budgets appear in results and can make it harder to find the item the user actually searched for.
+
+**Required correction:** PR #54 now filters budget results by the displayed title and subtitle, including category/overall-budget title and month/limit. It also adds executable Node tests for matching and non-matching queries.
+
+**How QA will verify:** Search by category name, month, and unrelated text. Confirm only matching budgets appear and the whole-month budget has a clear title. Confirm expense and category results still work.
+
+**Evidence to close:** Passing current-head CI with the frontend search tests, plus browser evidence for matching and non-matching searches.
