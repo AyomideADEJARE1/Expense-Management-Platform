@@ -124,3 +124,8 @@ The profile has one preferred currency, while expenses and budgets store numeric
 ## QA-FIND-070 trace — budget alert threshold
 
 Settings stores the budget_threshold preference, but the reviewed budget/dashboard components do not use it to trigger a warning; current budget status is based on the 100% limit. The team must confirm whether threshold alerts are required. Closure needs written rules and boundary/duplicate-prevention tests, or approved UI wording that makes clear the setting is inactive.
+
+
+## QA-FIND-071 trace — AWS reboot recovery
+
+Compose currently has no explicit restart policies, and the reviewed CD workflow does not install a systemd unit for boot recovery. The correction must define how the stack starts after EC2/Docker restarts without bypassing migration ordering. Closure requires an AWS staging reboot test, container/image evidence, public health checks, and proof that persisted database records survive.
