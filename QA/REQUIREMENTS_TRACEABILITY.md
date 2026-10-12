@@ -68,7 +68,7 @@ The expense create/update routes now reject noncanonical ISO date strings by req
 
 ## QA-FIND-060 trace — budget month format
 
-Budget create/update now require the submitted month to parse as a date, be the first day of a month, and round-trip to the exact submitted `YYYY-MM-DD` value. Regression tests check that compact `YYYYMMDD` values return HTTP 400 for both create and update and that a rejected update preserves the stored month. Current CI for the newest correction is pending; do not mark this trace passed until that run completes.
+Budget create/update now require the submitted month to parse as a date, be the first day of a month, and round-trip to the exact submitted `YYYY-MM-DD` value. Regression tests check that compact `YYYYMMDD` values return HTTP 400 for both create and update and that a rejected update preserves the stored month. CI run `38215898127` passed all eight jobs for commit `9b00f76863b48686bb5fe232926e20ee1d383eb0`, including budget compact-date rejection assertions. Live runtime/browser checks remain separate.
 
 
 ## QA-FIND-061 trace — whole-month budget UI scope
