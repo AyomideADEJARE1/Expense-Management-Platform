@@ -1120,7 +1120,7 @@ CI run `38275606391` passed all eight jobs for code commit `11d1756f083f51e6e18d
 
 ## QA-FIND-083 — Reports export revokes its download URL immediately
 
-**Classification:** Frontend download reliability. **Priority:** Low. **Status:** Correction proposed in PR #54; browser retest pending.
+**Classification:** Frontend download reliability. **Priority:** Low. **Status:** Correction committed in PR #54; CI passed for commit `97e6515f00c15e240532da653235421a2c6fb055`; browser retest pending.
 
 **Evidence:** The report CSV export created a Blob URL, triggered a click on a temporary download link, removed the link, and immediately called `URL.revokeObjectURL(url)`. The Transactions export already delayed revocation by one second.
 
@@ -1138,3 +1138,7 @@ CI run `38275606391` passed all eight jobs for code commit `11d1756f083f51e6e18d
 CI run [38276034129](https://github.com/AyomideADEJARE1/Expense-Management-Platform/actions/runs/38276034129) passed all eight jobs for code commit `97e6515f00c15e240532da653235421a2c6fb055`. Backend lint and 62 backend tests passed. Frontend lint/build and all nine Node tests passed, including the shared CSV formula-neutralization helper. Database migration checks, secret scan, both Docker builds, and aggregate CI passed.
 
 QA-FIND-082 and QA-FIND-083 are verified at the source/CI level. The browser download checks for both export paths, AWS live deployment, populated-volume migrations, public health checks, reboot recovery, backup restore, and shared production rate-limit storage remain open.
+
+
+## Latest code CI checkpoint — 2026-10-12
+CI run `38276034129` passed all eight jobs for code commit `97e6515f00c15e240532da653235421a2c6fb055`. Backend lint passed and 62 backend tests passed twice. Frontend lint/build passed and all nine Node tests passed, including budget-spending, global-search, CSV formula neutralization, and CSV quoting. Database migrations 001–005, secret scan, both Docker builds, and aggregate CI passed. Browser verification for CSV downloads, search results, budget totals, and the main expense/budget/report journeys remains open. AWS populated-volume migrations, deployed commit/image verification, public health, reboot recovery, backup restore, and shared rate-limit storage remain open.
