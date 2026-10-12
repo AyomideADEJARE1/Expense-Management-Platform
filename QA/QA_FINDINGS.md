@@ -862,7 +862,7 @@ Classification: Profile data integrity / UI-to-API mismatch. Status: CI verified
 
 Classification: Feature completeness / misleading preference controls. Status: Requires product/team decision and implementation or clearer UI wording. Priority: Medium if notifications are a stated capstone requirement.
 
-**What happens:** Settings offers “In-App Push Notifications” and “Weekly Summary Email Alerts”. The profile API stores the two boolean preferences, but the reviewed backend source has no email-sending library/service, notification worker/scheduler, or browser push delivery implementation. Saving the checkboxes therefore saves preferences; it does not demonstrate that alerts are actually delivered.
+**What happens:** Settings offers “In-App Push Notifications” and “Weekly Summary Email Alerts”. The profile API stores the two boolean preferences, but the reviewed backend source has no email-sending library/service, notification worker/scheduler, or browser push delivery implementation. In addition, App passes an empty notification list and a no-op clear handler to the notification UI. Saving the checkboxes therefore saves preferences; it does not demonstrate that alerts are actually delivered or that the in-app notification panel is connected to an event source.
 
 **Why it matters:** Users may believe alerts are active because the controls are available and the page confirms that settings were saved. If no delivery service consumes these values, the preferences have no user-visible effect.
 
@@ -900,3 +900,18 @@ Classification: Financial data interpretation / product-scope decision. Status: 
 **Required retest:** Record an expense and budget under NGN, change the preference to USD, and observe the same records in transactions, budgets, dashboard, and reports. Verify the behavior matches the documented product decision. If conversion is implemented, verify known exchange-rate examples, rounding, historical-rate handling, and consistent totals.
 
 **Closure evidence:** Written currency behavior decision, approved UI warning or data-model/design change, tests for existing records after a currency change, and browser evidence showing consistent amounts across all financial screens.
+
+
+## QA-FIND-070 — Budget alert threshold is saved but does not affect budget behavior
+
+Classification: Functional gap / misleading settings. Status: Requires product confirmation and implementation or clearer wording. Priority: Medium if threshold alerts are required.
+
+**What happens:** Settings exposes “Budget Alert Threshold (%)” and the API saves the value as `budget_threshold`. In the reviewed frontend, the threshold is only read and written by Settings/Auth; the budget/dashboard components do not use it to trigger a warning or notification. Budget cards show on-track/exceeded states based on whether spending is above 100% of the limit, not the user's configured threshold.
+
+**Why it matters:** A user who sets a threshold of 80% may expect an alert when spending reaches 80%, but no behavior uses that setting. The saved value can create a false expectation that early warnings are active.
+
+**Required decision/correction:** Confirm whether the threshold is meant to trigger a warning. If yes, implement a clear rule for when it fires, avoid repeated alerts for the same budget/period, honor notification preferences, and define what happens when spending falls below and later crosses the threshold again. If no, remove or relabel the setting so it does not promise an active alert.
+
+**Required retest:** Set thresholds such as 50%, 80%, and 100%; add expenses that place spending just below, exactly at, and just above each threshold; verify the agreed warning behavior and no duplicate alerts. Confirm separate users and budgets do not share alert state.
+
+**Closure evidence:** Written threshold semantics, passing boundary/duplicate-prevention tests, and browser evidence showing the warning or the revised settings wording.
