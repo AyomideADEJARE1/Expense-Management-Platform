@@ -572,7 +572,7 @@ CI run 38271222415 passed all eight jobs for correction commit 2316a358ca37495ec
 
 **Procedure:** CI simulates the race by allowing the pre-check to pass and then raising a PostgreSQL-style `fk_budgets_category` integrity error at commit. Verify HTTP 409, a clear reference-conflict message, and that the category still exists. Also verify unexpected database errors still return HTTP 500. On AWS staging, attempt a safe concurrent create/delete test only if a disposable category and budget can be used.
 
-**Current correction:** PR #54 now recognizes both `fk_expenses_category` and `fk_budgets_category` as expected reference conflicts. The regression test was added in commit `ea775178ea545b48bfea9cdaadd77b7b0965d4b8`; current CI is pending.
+**Current correction:** PR #54 now recognizes both `fk_expenses_category` and `fk_budgets_category` as expected reference conflicts. The regression test was added in commit `ea775178ea545b48bfea9cdaadd77b7b0965d4b8`; CI run `38272033341` passed all eight jobs, including 61 backend tests. AWS concurrency verification remains pending.
 
 **Pass evidence:** Passing CI for the exact commit, regression output, HTTP status/body, and category read-back. Do not mark AWS concurrency verification complete without staging evidence.
 
