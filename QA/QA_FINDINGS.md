@@ -915,3 +915,18 @@ Classification: Functional gap / misleading settings. Status: Requires product c
 **Required retest:** Set thresholds such as 50%, 80%, and 100%; add expenses that place spending just below, exactly at, and just above each threshold; verify the agreed warning behavior and no duplicate alerts. Confirm separate users and budgets do not share alert state.
 
 **Closure evidence:** Written threshold semantics, passing boundary/duplicate-prevention tests, and browser evidence showing the warning or the revised settings wording.
+
+
+## QA-FIND-071 — Compose does not define automatic service restart after a VM/daemon reboot
+
+Classification: Deployment availability / recovery. Status: Correction required; AWS runtime verification pending. Priority: High for a single-VM deployment.
+
+**What happens:** The reviewed Compose services do not define a Docker restart policy, and the reviewed CD workflow does not install a systemd unit that brings the stack back after the EC2 host or Docker daemon restarts. A successful deployment can therefore stop serving traffic after a host reboot until someone manually starts the stack.
+
+**Why it matters:** A routine VM reboot, host maintenance, or Docker daemon restart can leave the expense tracker unavailable even though the EC2 instance itself is healthy.
+
+**Required correction:** Choose and document a boot-recovery method. Prefer explicit restart policies for the database, backend, frontend, and Nginx, with appropriate health checks; if startup ordering requires it, add a systemd unit that runs the Compose startup and waits for database/application health. Ensure this does not bypass the migration-before-app deployment order.
+
+**Required retest:** In AWS staging, deploy the intended commit, record all container states, reboot the VM or restart Docker, and verify the complete stack returns without manual SSH commands. Confirm the database volume and user records persist, both public health endpoints recover, and the running image remains the expected commit.
+
+**Closure evidence:** Reviewed Compose/systemd configuration, a timestamped reboot/recovery log, before/after container and image version evidence, successful public health checks, and a data-persistence check using non-sensitive test records.
