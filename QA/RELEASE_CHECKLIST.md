@@ -52,3 +52,5 @@ Evidence:
 
 - [ ] Category deletion is blocked with HTTP 409 when any budget references that category; no budget category link or amount changes.
 - [ ] Migration 004 enforces `ON DELETE RESTRICT` on fresh and existing databases.
+
+- [ ] Category create/update return HTTP 409 only for the category-name unique constraint, return generic 500 for unexpected commit failures, roll back, and recover for the next valid request.
