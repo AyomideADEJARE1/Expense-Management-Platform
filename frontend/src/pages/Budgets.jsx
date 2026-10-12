@@ -171,6 +171,7 @@ export default function Budgets({
 
         const created = {
           ...response?.data,
+          category: response?.data?.category ?? (response?.data?.category_id == null ? ALL_CATEGORIES_LABEL : 'Uncategorized'),
           limit: Number(response?.data?.amount || 0),
           spent: 0,
         };
