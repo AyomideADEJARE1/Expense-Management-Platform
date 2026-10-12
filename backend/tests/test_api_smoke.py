@@ -858,6 +858,34 @@ def test_budget_category_foreign_key_restricts_deletion():
     assert constraint == "RESTRICT"
 
 
+def test_category_name_length_is_validated_for_create_and_update(client):
+    too_long_create = client.post(
+        "/api/categories",
+        json={"name": "C" * 101},
+    )
+    assert too_long_create.status_code == 400
+    assert "100 characters" in too_long_create.get_json()["message"]
+
+    original_name = f"QA category length {uuid.uuid4().hex}"
+    created = client.post(
+        "/api/categories",
+        json={"name": original_name},
+    )
+    assert created.status_code == 201
+    category_id = created.get_json()["data"]["id"]
+
+    too_long_update = client.put(
+        f"/api/categories/{category_id}",
+        json={"name": "U" * 101},
+    )
+    assert too_long_update.status_code == 400
+    assert "100 characters" in too_long_update.get_json()["message"]
+
+    unchanged = client.get(f"/api/categories/{category_id}")
+    assert unchanged.status_code == 200
+    assert unchanged.get_json()["data"]["name"] == original_name
+
+
 def test_category_name_constraint_conflict_returns_409_for_create_and_update(
     client, monkeypatch
 ):
