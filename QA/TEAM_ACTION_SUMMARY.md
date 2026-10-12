@@ -586,3 +586,15 @@ Run `38270979144` stopped at Flake8 because one line in the new partial-name pre
 **How to verify:** In the frontend test results, confirm the whole-month and category-specific tests pass. In a browser, add two same-month expenses in different categories and one expense from another month. Confirm the whole-month budget counts the first two only; the category budget counts only the selected category. Confirm the progress percentage and remaining amount update correctly.
 
 **Evidence required:** Passing current-head CI, test output, and a redacted browser test recording or screenshots showing the expected totals. AWS runtime verification is a separate release check.
+
+
+### 53. DevOps/documentation: show both environment-file setup steps
+**What happens:** Compose requires both the root `.env` for PostgreSQL variables and `backend/.env` for the backend's application secrets. The Docker guide previously told readers to create only the root file.
+
+**Why it matters:** A clean setup following that guide alone can fail before the backend starts.
+
+**Required correction:** PR #54 updates `docs/docker.md` to copy both example files and explains which values to replace in each. The Flask and JWT signing secrets must be separate strong random values.
+
+**How to verify:** On a disposable clean checkout, remove local `.env` files, follow the guide exactly, replace placeholders, and start Compose. Confirm frontend, backend, PostgreSQL, and Nginx are healthy.
+
+**Evidence required:** CI for the current head, the exact setup commands, and a redacted `docker compose ps` result showing all four services healthy.
