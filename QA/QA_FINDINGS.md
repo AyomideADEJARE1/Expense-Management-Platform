@@ -435,7 +435,7 @@ Closure evidence: implementation commit, targeted tests for both expected and un
 Correction status update — 2026-10-11: PR #54 now catches SQLAlchemy IntegrityError separately in both budget creation and update, rolls back the session, and returns HTTP 409 only when the database reports one of the two known budget unique-index names. Other integrity violations and unexpected exceptions return a generic HTTP 500. Tests cover the known-index classifier, duplicate general budget response, and simulated unexpected commit failure with rollback/session recovery. The current CI run must pass before this finding is closed.
 
 ## QA-FIND-043 — API tests do not establish database isolation between test cases
-Classification: Test reliability / reproducibility. Priority: Medium. Status: An autouse guard rejects non-test database names; CI tests pass. Reliable cleanup/repeatability and negative non-test-database verification remain pending.
+Classification: Test reliability / reproducibility. Priority: Medium. Status: Correction proposed in PR #54; repeat-run CI verification pending.
 
 Evidence reviewed in `backend/tests/test_api_smoke.py` on `stephen/qa-transaction-fixes`: the client fixture toggles Flask testing and rate-limit settings and resets the limiter, but it does not itself create an isolated test database, wrap each test in a transaction that is rolled back, or remove created user/category records. Several tests register users and create globally named categories through the application's configured database.
 
@@ -443,11 +443,11 @@ Why it matters: test cases can leave records behind, collide on category names, 
 
 Required correction: prove CI always points to a dedicated disposable test database. Prefer fixtures that create/drop schema or use per-test transactions and rollback; generate unique names where records are expected to persist for the test; clean up state reliably. Add a startup guard that refuses to run destructive test setup if the configured database is not explicitly identified as a test database.
 
-Correction status update — 2026-10-11: PR #54 adds an autouse pytest session guard in backend/tests/conftest.py that refuses to run tests unless the configured database name contains a test/testing marker. CI run 38178811441 passed for the guard commit and collected/passed 31 backend tests against expense_management_test. This reduces the risk of accidentally targeting a normal database, but does not provide per-test transaction isolation or cleanup. The negative non-test-database case and repeated-run/cleanup behavior remain open.
+Correction status update — 2026-10-12: PR #54 now tightens the test database-name guard to accept explicit test-style names while rejecting names containing production/staging/live markers. The API test fixture truncates the test tables and resets identities after each test. New guard tests cover accepted/rejected database names, and CI now runs the backend suite twice consecutively to test repeatability. The newest CI run must pass before this correction is verified; live/protected database safety remains a configuration responsibility.
 
 Required tests: run the suite twice consecutively; run relevant tests in a different order or with parallelization where supported; confirm no leftover users/categories after teardown; intentionally point the test configuration at a non-test database and confirm the guard refuses to run.
 
-Closure evidence: CI database service/configuration, isolated fixture implementation, repeated-run output, and proof that tests cannot target the production database accidentally.
+Closure evidence: Passing CI for the exact current commit showing both full pytest runs pass, test-database guard boundary results, fixture cleanup implementation, and proof that production/staging/live database names are rejected.
 
 
 
