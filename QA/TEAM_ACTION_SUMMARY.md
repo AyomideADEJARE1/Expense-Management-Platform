@@ -672,3 +672,15 @@ Run `38276034129` passed all eight jobs for code commit `97e6515f00c15e240532da6
 **CI status:** Run `38277037377` passed all eight jobs for commit `8151bb56e730c6f6eb0205691b334a121abc934e`; backend lint and 69 backend tests passed, including the new mode-selection cases.
 
 **Evidence to close:** Passing CI, tested commit SHA, test output, and production entry-point confirmation.
+
+
+### 60. Frontend: preserve UTF-8 text in report CSV downloads
+**What happens:** Transactions exports include a UTF-8 BOM, but Reports exports previously did not.
+
+**Why it matters:** Some spreadsheet software may misread non-ASCII descriptions or category names in a CSV without a BOM.
+
+**Required correction:** PR #54 now prepends a UTF-8 BOM to the Reports CSV Blob, matching Transactions.
+
+**How to verify:** Export a report with non-ASCII text and open/import it in the supported spreadsheet workflow. Confirm the characters are intact.
+
+**Evidence to close:** Passing CI, tested commit SHA, and a sanitized report sample showing the characters correctly.
