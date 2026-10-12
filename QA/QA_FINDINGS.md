@@ -2,7 +2,7 @@
 
 Findings are evidence-based. QA is not judged by defect count.
 
-Latest fully green correction checkpoint: CI run 38277037377 passed all eight jobs for code commit 8151bb56e730c6f6eb0205691b334a121abc934e. Backend lint passed and the backend suite passed 69 tests, including the new explicit debug-mode selection cases, trusted-proxy, partial-profile-name, and category-delete race tests. The frontend suite passed lint/build and all nine Node tests, including CSV formula-neutralization and quote-escaping tests. CI verified migrations 001–005, the budget-category RESTRICT rule, the users.phone column, and migration order; secret scanning, both Docker builds, and aggregate CI passed. Flask-Limiter still warns that rate-limit counters use in-memory storage. This is CI evidence only; AWS live deployment, populated-volume migration, browser workflows, reboot recovery, backup restore, and shared production rate-limit storage remain unverified.
+Latest fully green correction checkpoint: CI run 38277483412 passed all eight jobs for code commit 2cc775b4ddc514e8dea5c6c1d80d633d47991ff1. Backend lint passed and the backend suite passed 69 tests, including debug-mode selection, trusted-proxy, partial-profile-name, and category-delete race tests. The frontend suite passed lint/build and all nine Node tests, including CSV formula-neutralization and quote-escaping tests. CI verified migrations 001–005, the budget-category RESTRICT rule, the users.phone column, and migration order; secret scanning, both Docker builds, and aggregate CI passed. Flask-Limiter still warns that rate-limit counters use in-memory storage. This is CI evidence only; AWS live deployment, populated-volume migration, browser workflows, reboot recovery, backup restore, and shared production rate-limit storage remain unverified.
 
 ## QA-FIND-001 — Duplicate frontend source structures
 Classification: Observation. Status: Open.
@@ -1179,3 +1179,10 @@ QA-FIND-084 is verified at the source/CI level. The production container still u
 **Required retest:** Export a report containing non-ASCII test text (for example, a category or description with `₦`, `é`, or `漢`) and confirm the downloaded file opens with those characters intact in the supported spreadsheet/browser workflow.
 
 **Closure evidence:** Passing current-head CI, exact commit SHA, and a sanitized report download/import check showing non-ASCII characters remain intact. This is a compatibility check, not a data-integrity guarantee for every spreadsheet application.
+
+
+## Latest correction CI checkpoint — 2026-10-12 (QA-FIND-085)
+
+CI run [38277483412](https://github.com/AyomideADEJARE1/Expense-Management-Platform/actions/runs/38277483412) passed all eight jobs for code commit `2cc775b4ddc514e8dea5c6c1d80d633d47991ff1`. Backend lint and 69 backend tests passed. Frontend lint/build and all nine Node tests passed. Database migration checks, secret scan, both Docker builds, and aggregate CI passed.
+
+QA-FIND-082 through QA-FIND-085 now have source-level corrections covered by CI. Browser export/download and spreadsheet-encoding checks remain open. CI still reports the Flask-Limiter in-memory-storage warning. AWS deployment/version proof, populated-volume migration, public health, reboot recovery, backup restore, and shared production rate-limit storage remain unverified.
