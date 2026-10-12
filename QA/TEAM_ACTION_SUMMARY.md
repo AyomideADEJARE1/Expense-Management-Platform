@@ -491,8 +491,7 @@ Do not mark a check as passed until evidence is attached.
 - [ ] Public HTTPS security headers are checked and the approved CSP is tested.
 - [ ] Screenshots, workflow run links, commit SHA, and test results are attached.
 
-**Current overall status:** CI run `38217288387` passed all eight jobs for correction commit `52438ec387ed2c9bfaff56081930e6df317604dd`. The backend job ran the full pytest suite twice; both runs passed all 57 tests, including database-name guard cases, per-test cleanup, date/month validation, summary totals, category name boundaries, and ownership checks. Both Docker builds, frontend lint/build, secret scan, database migrations, and aggregate CI passed. This is CI evidence only. AWS deployment, populated-volume migrations, staging failure/recovery, public health checks, and browser end-to-end verification remain pending. The findings register contains 68 findings and this summary contains 42 team actions. The frontend package still has no test script, so frontend functional tests can be skipped by the optional CI command.
-
+**Current overall status:** CI run `38219570139` passed all eight jobs for correction commit `8c8c05b8a25cba190746aa3c5b33a7933ec76013`. The backend suite ran twice and both runs passed all 58 tests. The database job applied migrations 001–005 and verified the budget-category restriction and `users.phone` column; frontend lint/build, secret scan, both Docker builds, and the aggregate check passed. Documentation-only commits followed this green code checkpoint; CI for the newest branch head was running at the last check. This is CI evidence only. AWS populated-volume migration, live deployment/health, browser end-to-end flows, and notification delivery remain unverified. The frontend package still has no test script, so frontend functional tests can be skipped by the optional CI command.
 
 **Latest date-validation addition:** Action 40 expands the verification for existing finding QA-FIND-059. Regression tests were added to the correction branch; the next CI result must include those tests before this item can be considered verified.
 
@@ -501,3 +500,6 @@ Do not mark a check as passed until evidence is attached.
 
 
 **Notification status:** QA-FIND-068 is open pending a product decision. Stored preference flags are not proof of actual alert delivery.
+
+
+**Latest CI note:** Run `38219570139` verified migration 005 and phone persistence tests in CI. The subsequent docs-only branch head is being rechecked; use the exact tested commit in the release record.
