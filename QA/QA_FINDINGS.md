@@ -638,8 +638,15 @@ Evidence: `database/migrations/001_initial_schema.sql` defines `fk_budgets_categ
 
 Impact: Users can lose the intended category link for a budget. Reports and budget warnings may then compare expenses against the wrong budget scope. If a uniqueness conflict occurs, the category deletion may fail with a generic server error instead of explaining the actual conflict.
 
-Correction proposed in PR #54: The category-delete route checks for linked budgets and returns HTTP 409 with a clear message. Migration 004 changes the database foreign key to `ON DELETE RESTRICT`, protecting against concurrent deletes and preserving the relationship even if a request bypasses the pre-check. The SQLAlchemy model now uses `ondelete="RESTRICT"`. CI verifies the constraint rule and deployment order; API tests check that a category with a budget cannot be deleted and that the budget retains its category ID.
+Correction proposed in PR #54: The category-delete route checks for linked budgets and returns HTTP 409 with a clear message. Migration 004 changes the database foreign key to `ON DELETE RESTRICT`, protecting against concurrent deletes and preserving the relationship even if a request bypasses the pre-check. The SQLAlchemy model now uses `ondelete="RESTRICT"`. CI run `38212158351` passed for code commit `927e35eaf3af827d8b52ef93f6f883c6bfcaa667`: all eight jobs passed, migration 004 was applied, the database job verified the `RESTRICT` rule and deployment migration order, and the backend suite passed 35 tests including the new category-budget regression.
 
 Required retest: Run the new tests on the current correction commit. Test a category linked to a budget when no whole-month budget exists and when a whole-month budget already exists for the same user/month. In both cases, deletion must return 409 and the budget's category ID and amount must remain unchanged. Confirm migration 004 works on both a fresh database and a populated existing volume before deploying to AWS.
 
 Closure evidence: Passing CI for the latest correction commit, verified `fk_budgets_category` rule is RESTRICT, API response and post-request database/API evidence, successful fresh/existing-volume migration logs, and AWS staging evidence showing the deployed commit. Source changes alone do not close the finding.
+
+
+## Current CI status update — 2026-10-12
+
+CI run [38212158351](https://github.com/AyomideADEJARE1/Expense-Management-Platform/actions/runs/38212158351) passed all eight jobs for correction commit `927e35eaf3af827d8b52ef93f6f883c6bfcaa667`. The database job applied migrations 001–004, confirmed the budget-category foreign key uses `RESTRICT`, checked the CD migration order, and exercised the legacy duplicate-budget migration guard. The backend suite passed 35 tests; frontend lint/build, secret scan, both Docker builds, and the aggregate CI check passed.
+
+This result supersedes the older CI checkpoint recorded earlier in this file for the current correction branch. It does **not** prove that migrations 002–004 succeeded on a populated AWS volume, that a migration-failure deployment preserves the old running app, that the latest image is live on AWS, or that browser end-to-end journeys pass. The frontend test command is still optional and the frontend package has no test script, so frontend functional test coverage remains open.
