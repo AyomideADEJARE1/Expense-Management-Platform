@@ -126,7 +126,7 @@ export default function Budgets({
     const month = editingBudget?.month || currentMonth;
 
     const payload = {
-      category_id: selectedCategory.id,
+      category_id: categoryId,
       amount,
       month,
     };
@@ -154,13 +154,13 @@ export default function Budgets({
       } else {
         const exists = budgets.find(
           (budget) =>
-            budget.category_id === selectedCategory.id &&
+            (budget.category_id ?? null) === categoryId &&
             budget.month === month
         );
 
         if (exists) {
           showToast(
-            `A budget for ${formData.category} already exists this month!`,
+            `A budget for ${categoryLabel} already exists this month!`,
             'error'
           );
           return;
