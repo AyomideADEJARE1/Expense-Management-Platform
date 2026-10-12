@@ -577,23 +577,6 @@ CI run 38271222415 passed all eight jobs for correction commit 2316a358ca37495ec
 **Pass evidence:** Passing CI for the exact commit, regression output, HTTP status/body, and category read-back. Do not mark AWS concurrency verification complete without staging evidence.
 
 
-## RV-48 — Verify category deletion handles budget-reference races
-
-**Finding:** QA-FIND-078. **Owner:** Backend + QA. **Status:** Open pending current-head CI and runtime retest.
-
-**Procedure:**
-1. Create a test category with no initial expense or budget reference.
-2. Exercise the regression test that simulates PostgreSQL rejecting the delete through constraint `fk_budgets_category` after the pre-check.
-3. Verify the API returns HTTP 409 with a message that identifies the category as referenced by an expense or budget.
-4. Read the category back and confirm it still exists.
-5. Re-run the unexpected database commit-failure test and confirm it returns HTTP 500, rolls back, and does not poison the next request.
-6. Confirm the expense foreign-key conflict still returns HTTP 409.
-
-**Pass evidence:** Passing current-head CI, test results for both foreign-key constraint names, API status/body, category read-back, and the unexpected-failure/session-recovery result. If a safe AWS staging race can be arranged, retain redacted request/response evidence.
-
-**Fail conditions:** The budget FK conflict returns 500, unrelated errors return 409, the category disappears despite a rejected delete, or the session cannot recover.
-
-
 ## Latest code CI checkpoint — 2026-10-12
 
 CI run 38272033341 passed all eight jobs for correction commit ea775178ea545b48bfea9cdaadd77b7b0965d4b8. Backend lint passed and 61 tests passed twice, including the budget foreign-key race regression. Migrations 001–005, budget-category RESTRICT, the phone column, and migration order passed CI; frontend lint/build, secret scan, both Docker builds, and aggregate CI passed. Flask-Limiter still warns that storage is in-memory. This does not close AWS populated-volume migration, live deployment, public health, browser, reboot recovery, backup restore, or shared rate-limit storage gates.
