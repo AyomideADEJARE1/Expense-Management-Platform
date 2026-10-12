@@ -885,3 +885,18 @@ The current correction branch has subsequent documentation-only commits; CI for 
 CI run [38219803561](https://github.com/AyomideADEJARE1/Expense-Management-Platform/actions/runs/38219803561) passed all eight jobs for branch-head commit `92eefc22555c7c98df240014721084e2f41698f8`. The backend suite ran twice and passed all 58 tests on both runs. The database job applied migrations 001–005, verified the budget-category `RESTRICT` rule and `users.phone`, and checked that deployment applies migrations before restarting application services. Frontend lint/build, secret scan, both Docker builds, and the aggregate check passed.
 
 Still not proven: applying migration 005 to an existing populated AWS volume, the live AWS deployment and public health endpoints, browser profile save/reload, and actual notification delivery. CI also reports Flask-Limiter's in-memory storage warning; production shared rate-limit storage and client-IP behavior through Nginx remain open.
+
+
+## QA-FIND-069 — Changing the preferred currency can relabel old amounts without conversion
+
+Classification: Financial data interpretation / product-scope decision. Status: Requires product decision. Priority: Medium–High because the same numeric amount can be interpreted as a different currency.
+
+**What happens:** The user profile stores one preferred currency, and the frontend formats expenses, budgets, and reports using that setting. Expense and budget records do not store their own currency, and the reviewed code changes the displayed symbol without converting the saved numeric amount or retaining an exchange rate.
+
+**Why it matters:** If a user records 10,000 while using NGN and later changes the preference to USD, the same saved numeric value may be displayed as $10,000. The application has not converted the value; it has changed how the number is labelled. Historical reports and budget comparisons can therefore be materially misleading.
+
+**Required decision/correction:** The product/team lead must define what “Preferred Currency” means. If it is only a display label for one account-wide currency, warn before changing it and explain that existing values are not converted; ideally lock the account currency after the first financial record or provide an explicit migration workflow. If the product promises currency conversion or mixed-currency tracking, store the currency per expense/budget, define an approved exchange-rate source and timestamp policy, and design a reviewed migration for existing records. Do not silently change currency semantics.
+
+**Required retest:** Record an expense and budget under NGN, change the preference to USD, and observe the same records in transactions, budgets, dashboard, and reports. Verify the behavior matches the documented product decision. If conversion is implemented, verify known exchange-rate examples, rounding, historical-rate handling, and consistent totals.
+
+**Closure evidence:** Written currency behavior decision, approved UI warning or data-model/design change, tests for existing records after a currency change, and browser evidence showing consistent amounts across all financial screens.
