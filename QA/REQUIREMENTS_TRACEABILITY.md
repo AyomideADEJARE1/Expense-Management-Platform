@@ -134,3 +134,7 @@ PR #54 now adds `restart: unless-stopped` to all four Compose services. CI run `
 ## QA-FIND-072 trace — database backup and restore
 
 The reviewed repository does not define a scheduled off-host backup or tested restore workflow for the PostgreSQL volume. AWS backups may be configured outside the repository, but evidence is required. Closure requires backup/retention configuration, a successful isolated restore, data-integrity checks, and proof that a pre-migration backup can be recovered.
+
+
+## QA-FIND-073 trace — Proxy-aware rate limiting
+Flask-Limiter currently keys requests by `get_remote_address`, while Flask is behind Nginx and has no trusted-proxy middleware; no shared rate-limit storage URI is configured. PR #54 needs a reviewed trusted-proxy boundary and approved shared store for production. Verify independent client quotas, spoofed-header resistance, restart behavior, and shared counters through the public AWS endpoint. CI/source inspection is not a substitute for the staging network test.
