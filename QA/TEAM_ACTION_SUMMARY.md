@@ -658,3 +658,15 @@ Run `38273922288` passed all eight jobs for correction commit `77620d6547cad3ee3
 
 ## Latest CI checkpoint — 2026-10-12
 Run `38276034129` passed all eight jobs for code commit `97e6515f00c15e240532da653235421a2c6fb055`. Backend lint passed and 62 backend tests passed twice. Frontend lint/build passed and all nine Node tests passed, including budget spending, budget search, and CSV formula/quoting checks. Database migrations 001–005, secret scan, both Docker builds, and aggregate CI passed. AWS and browser runtime evidence remains open.
+
+
+### 59. Backend/security: disable the debugger outside explicit development modes
+**What happens:** Running `python app.py` previously enabled Flask debug mode unconditionally, even though the application defaults to production mode and the Docker image uses Gunicorn.
+
+**Why it matters:** Direct execution with production settings could expose development-only debugger behavior.
+
+**Required correction:** PR #54 adds a mode check so debug is enabled only for explicit development/test environments and adds parameterized tests.
+
+**How to verify:** Wait for current-head CI and confirm the debug-mode tests pass. Confirm the production Docker entry point still uses Gunicorn and debug remains disabled.
+
+**Evidence to close:** Passing CI, tested commit SHA, test output, and production entry-point confirmation.
