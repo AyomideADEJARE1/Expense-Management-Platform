@@ -539,3 +539,17 @@ Run `38221595123` passed all eight jobs for source-branch head `72ff22992e8561b5
 **Pass evidence:** Written scope decision; if in scope, passing security tests and redacted staging evidence of the complete flow; if out of scope, approved documentation/UI wording.
 
 **Fail conditions:** A password can be changed without the required authorization, a reset token can be reused or does not expire, recovery responses disclose account existence, or the team claims self-service recovery without a working tested path.
+
+
+## RV-45 — Verify backend password policy boundaries
+
+**Finding:** QA-FIND-075. **Owner:** Backend + product/security. **Status:** Open.
+
+**Procedure:**
+1. Record the approved minimum and maximum password lengths and any other required policy.
+2. Submit registration requests through the API with a password below the minimum, exactly at the minimum, above the minimum, empty, non-string, and above the maximum.
+3. Repeat through the browser form.
+4. Verify invalid requests return the documented 4xx response, do not create a user row, and do not expose internal exception details.
+5. Confirm a valid password is hashed and login succeeds with it.
+
+**Pass evidence:** Approved policy, backend validation tests, browser/API boundary results, and database evidence that rejected registrations did not create accounts.
