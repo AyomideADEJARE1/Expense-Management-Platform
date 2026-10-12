@@ -480,6 +480,17 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Evidence to close:** Written product decision, approved UI/data-model behavior, regression tests, and browser evidence across financial screens.
 
+### 44. Product/backend: connect the budget alert threshold to real behavior
+**What happens:** Settings saves a “Budget Alert Threshold (%)”, but the budget and dashboard components do not use that value. The visible budget status changes at 100% of the limit, not at the user's selected threshold.
+
+**Why it matters:** A user who chooses 80% may expect an early warning, but the setting currently has no effect.
+
+**Required decision/correction:** Confirm whether the threshold should trigger an alert. If yes, implement a defined threshold rule, prevent duplicate alerts for the same budget/period, honor notification preferences, and decide how alerts behave if spending later falls below and crosses the threshold again. If not, remove or relabel the setting so it does not imply active alerts.
+
+**How QA will verify:** Set thresholds such as 50%, 80%, and 100%; create expenses just below, at, and above each threshold; verify the agreed warning behavior and no repeated alerts. Check separate users and budgets.
+
+**Evidence to close:** Written threshold rules, passing boundary/duplicate-prevention tests, and browser evidence or approved revised settings wording.
+
 ## Release checklist
 
 Do not mark a check as passed until evidence is attached.
@@ -517,3 +528,6 @@ Do not mark a check as passed until evidence is attached.
 
 
 **Currency behavior:** QA-FIND-069 remains open for a product decision. Changing the symbol is not the same as converting historical amounts.
+
+
+**Budget alert threshold:** QA-FIND-070 remains open. The setting is saved, but no budget component currently uses it to trigger alerts.
