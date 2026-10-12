@@ -104,3 +104,8 @@ The dashboard month now uses local year/month fields; transaction defaults use a
 ## QA-FIND-059 trace — canonical expense date validation
 
 The API contract requires `YYYY-MM-DD`. PR #54 now checks that parsing and re-serializing an expense date returns exactly the submitted value on create and update. Regression tests reject compact and week-date forms on create and reject a compact date on update without changing the saved value. CI must pass for the exact commit containing these tests; date-range filter validation and AWS runtime behavior remain separate checks.
+
+
+## QA-FIND-067 trace — Settings phone persistence
+
+Settings previously displayed an editable phone number without a matching database field or API persistence. PR #54 adds migration 005, model/API/frontend support, validation tests, a CI schema assertion, and a deployment-order assertion. Passing CI proves the correction in the CI database only. Verify migration 005 against an existing AWS database and test save/reload behavior in the deployed browser before closing this item.
