@@ -559,6 +559,17 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Evidence required:** Written scope decision, passing security tests, and redacted browser/API evidence of the agreed flow.
 
+### 49. Backend/product/security: define and enforce a password policy
+**What happens:** Registration currently rejects an empty password but does not enforce a minimum length or a documented password policy. A direct API request can bypass any browser-only rule.
+
+**Why it matters:** Users can create accounts with short passwords, increasing the risk of account compromise.
+
+**Required correction:** Agree on a documented minimum and maximum length, then enforce the same policy in the backend and browser. Apply it to future password-change/reset routes as well. Keep passwords out of logs.
+
+**How QA will verify:** Submit passwords below, at, and above the approved boundary directly to the API and through the browser. Confirm rejected requests create no account and valid requests work.
+
+**Evidence to close:** Approved policy, backend validation, automated boundary tests, and API/browser results.
+
 ## Release checklist
 
 Do not mark a check as passed until evidence is attached.
