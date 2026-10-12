@@ -161,3 +161,7 @@ Run 38270547450 passed all eight jobs for correction commit 8d5fddc6c163a3f48986
 ## QA-FIND-077 trace — Partial profile update
 
 PR #54 changes the profile API to preserve the stored first/last name when the request omits that field, and adds regression coverage. Confirm the current code head passes CI and test both one-field update paths with API read-back and browser save/reload evidence before closure.
+
+
+## QA-FIND-077 — Partial profile-name update integrity
+PR #54 now preserves the omitted first/last name part and adds a regression test. CI run `38270979144` failed at Flake8 before pytest due to one overlong line. Commit `2316a358ca37495ecc41eff8aaf48f888654e5b8` fixes the lint issue; the retest is pending. Do not mark the correction passed until the new run succeeds.
