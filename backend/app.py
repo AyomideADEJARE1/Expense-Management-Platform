@@ -44,6 +44,11 @@ def _is_strong_secret(value):
     return not any(marker in normalized for marker in placeholders)
 
 
+def debug_mode_enabled(environment):
+    """Enable the Werkzeug debugger only in explicitly non-production modes."""
+    return environment in {"development", "dev", "testing", "test"}
+
+
 def validate_secret_configuration(secret_key, jwt_secret, environment):
     """Reject unsafe signing keys when running in production."""
     if environment not in {"production", "prod"}:
@@ -180,4 +185,4 @@ def database_health():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=debug_mode_enabled(app_environment))
