@@ -221,6 +221,8 @@ The Flask app assigns `SECRET_KEY` and `JWT_SECRET_KEY` directly from the `SECRE
 
 Required action: define the production-mode configuration convention, reject missing/default/weak secrets at startup in production, document generation and rotation, and ensure CI uses a separate non-production test key. This audit does not establish that the live production secret is weak; it establishes that the application does not currently enforce a safe value.
 
+Correction status update — 2026-10-12: PR #54 now validates production signing secrets at application startup. Production requires a strong, non-placeholder Flask secret and a separate strong JWT secret; missing, short, placeholder, or identical keys raise a clear startup error. CI tests cover missing/placeholder/short/shared keys, valid distinct keys, and non-production test configuration. The new source commit's CI result is pending, so this is not yet a verified correction.
+
 ## QA-FIND-028 — PostgreSQL port configuration was ignored by the application
 Classification: Configuration defect. Status: Code correction included in PR #54; non-default-port verification pending. Priority: Low.
 
@@ -343,7 +345,7 @@ Evidence: in backend/app.py, app.config["JWT_SECRET_KEY"] is assigned from os.ge
 
 Why it matters: a production secret rotation may not change the JWT signing key as expected if the operator changes only JWT_SECRET. It also makes it harder to follow least-privilege/secret-separation practices and can leave tokens signed with an unintended key.
 
-Correction now proposed in PR #54: backend/app.py reads JWT_SECRET_KEY first, then the existing JWT_SECRET variable used by CI, and falls back to SECRET_KEY only for backward compatibility when no dedicated JWT secret is configured. backend/.env.example now documents separate Flask and JWT placeholders. Remaining action: make production startup reject missing/placeholder/weak secrets rather than accepting the compatibility fallback, and add automated tests proving the dedicated JWT variable is honored.
+Correction now proposed in PR #54: backend/app.py reads JWT_SECRET_KEY first, then the existing JWT_SECRET variable used by CI, and falls back to SECRET_KEY only for backward compatibility when no dedicated JWT secret is configured. backend/.env.example now documents separate Flask and JWT placeholders. Correction status update — 2026-10-12: PR #54 now uses `JWT_SECRET_KEY` or `JWT_SECRET` as the dedicated JWT key, only falls back to `SECRET_KEY` outside production, and fails closed in production if the Flask key or dedicated JWT key is missing, weak, a placeholder, or the same value. Automated tests cover those cases and valid distinct values. The new source commit's CI result is pending.
 
 Required regression tests:
 - Production configuration fails startup when either required key is missing or is a placeholder.
