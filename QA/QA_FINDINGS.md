@@ -1042,7 +1042,7 @@ CI run `38272033341` passed all eight jobs for correction commit `ea775178ea545b
 
 
 
-## QA-FIND-079 — Whole-month budget spending is calculated as zero in the dashboard
+## QA-FIND-080 — Whole-month budget spending is calculated as zero in the dashboard
 
 **Classification:** Functional correctness / financial reporting. **Priority:** High. **Status:** Correction committed to PR #54; current-head CI and UI verification pending.
 
