@@ -1019,6 +1019,40 @@ def test_delete_category_in_use_returns_conflict(client):
     assert still_exists.status_code == 200
 
 
+def test_category_delete_budget_foreign_key_race_returns_409(
+    client, monkeypatch
+):
+    category_name = f"QA budget FK race {uuid.uuid4().hex}"
+    created = client.post(
+        "/api/categories",
+        json={"name": category_name},
+    )
+    assert created.status_code == 201
+    category_id = created.get_json()["data"]["id"]
+
+    def fail_with_budget_reference(self):
+        raise IntegrityError(
+            "category delete budget foreign key",
+            {},
+            SimpleNamespace(
+                diag=SimpleNamespace(
+                    constraint_name="fk_budgets_category"
+                )
+            ),
+        )
+
+    with monkeypatch.context() as patcher:
+        patcher.setattr(Session, "commit", fail_with_budget_reference)
+        deleted = client.delete(f"/api/categories/{category_id}")
+
+    assert deleted.status_code == 409
+    assert "expense or budget" in deleted.get_json()["message"]
+
+    still_exists = client.get(f"/api/categories/{category_id}")
+    assert still_exists.status_code == 200
+    assert still_exists.get_json()["data"]["name"] == category_name
+
+
 def test_unexpected_category_delete_failure_returns_500_and_recovers(
     client, monkeypatch
 ):
