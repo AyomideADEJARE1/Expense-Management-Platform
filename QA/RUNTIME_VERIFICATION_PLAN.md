@@ -465,6 +465,6 @@ Run `38219803561` passed all eight jobs for commit `92eefc22555c7c98df2400147210
 
 **Check:** Deploy the reviewed commit to AWS staging and record the running container IDs/image tags. Reboot the EC2 VM or restart Docker. Do not SSH in to manually run Compose. Verify PostgreSQL, backend, frontend, and Nginx return to healthy status, both public health endpoints recover, and the expected commit-specific images remain in use. Confirm saved test users, expenses, and budgets still exist. Verify startup recovery does not bypass migration ordering.
 
-**Current source evidence:** The reviewed Compose file has no explicit service restart policies, and the reviewed CD workflow does not install a systemd startup unit. AWS reboot recovery has not been demonstrated.
+**Current source correction:** PR #54 adds `restart: unless-stopped` to all four Compose services, and CI checks the resolved Compose configuration contains all four policies. AWS reboot recovery has not been demonstrated; confirm Docker starts on boot and the stack becomes healthy without manual intervention.
 
 **Pass evidence:** Restart/recovery timestamps, container health and image versions before/after, successful public health checks, and data-persistence results.
