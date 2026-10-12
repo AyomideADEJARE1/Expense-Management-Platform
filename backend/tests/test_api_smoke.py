@@ -279,6 +279,67 @@ def test_profile_update_rejects_non_string_name_and_currency(client):
     assert bad_currency.status_code == 400
 
 
+def test_profile_phone_is_persisted_and_invalid_values_are_rejected(client):
+    email = f"qa-phone-{uuid.uuid4().hex}@example.test"
+    password = "TestPassword123!"
+
+    registration = client.post(
+        "/api/auth/register",
+        json={
+            "full_name": "QA Phone Test",
+            "email": email,
+            "password": password,
+        },
+    )
+    assert registration.status_code == 201
+
+    login = client.post(
+        "/api/auth/login",
+        json={"email": email, "password": password},
+    )
+    assert login.status_code == 200
+    headers = {
+        "Authorization": f"Bearer {login.get_json()['data']['access_token']}"
+    }
+
+    initial_profile = client.get("/api/auth/me", headers=headers)
+    assert initial_profile.status_code == 200
+    assert initial_profile.get_json()["data"]["phone"] is None
+
+    updated_profile = client.put(
+        "/api/auth/me",
+        headers=headers,
+        json={"phone": "+234 803 123 4567"},
+    )
+    assert updated_profile.status_code == 200
+    assert updated_profile.get_json()["data"]["phone"] == "+234 803 123 4567"
+
+    persisted_profile = client.get("/api/auth/me", headers=headers)
+    assert persisted_profile.status_code == 200
+    assert persisted_profile.get_json()["data"]["phone"] == "+234 803 123 4567"
+
+    invalid_values = [12345, "9" * 31, "123\\n456"]
+    for invalid_phone in invalid_values:
+        rejected = client.put(
+            "/api/auth/me",
+            headers=headers,
+            json={"phone": invalid_phone},
+        )
+        assert rejected.status_code == 400
+
+    unchanged_profile = client.get("/api/auth/me", headers=headers)
+    assert unchanged_profile.status_code == 200
+    assert unchanged_profile.get_json()["data"]["phone"] == "+234 803 123 4567"
+
+    cleared_profile = client.put(
+        "/api/auth/me",
+        headers=headers,
+        json={"phone": "   "},
+    )
+    assert cleared_profile.status_code == 200
+    assert cleared_profile.get_json()["data"]["phone"] is None
+
+
 def test_non_finite_budget_amount_is_rejected(client):
     email = f"qa-budget-{uuid.uuid4().hex}@example.test"
     password = "TestPassword123!"
