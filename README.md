@@ -25,7 +25,7 @@ Implementation presence is not proof that every flow has passed runtime QA. See 
 
 - `frontend/` — Vite/React application served by its container.
 - `backend/` — Flask API, routes, SQLAlchemy models, and dependencies.
-- `database/migrations/` — ordered PostgreSQL SQL files (initial schema and follow-up migrations 002–004).
+- `database/migrations/` — ordered PostgreSQL SQL files (initial schema and follow-up migrations 002–005).
 - `nginx/` — reverse proxy configuration.
 - `docker-compose.yml` — local multi-container stack.
 - `.github/workflows/` — CI and prepared CD workflows.
@@ -60,7 +60,7 @@ Stop the services without deleting stored development data:
 docker compose down
 ```
 
-The PostgreSQL data is held in a named Docker volume. **Do not run `docker compose down -v` unless you intend to delete the local database volume and its data.** PostgreSQL runs files in `/docker-entrypoint-initdb.d` only when initializing a new data volume. The CD workflow explicitly applies migrations 002–004 to an existing volume before restarting the application; if a migration fails, deployment must stop and the data/schema state must be reviewed before retrying.
+The PostgreSQL data is held in a named Docker volume. **Do not run `docker compose down -v` unless you intend to delete the local database volume and its data.** PostgreSQL runs files in `/docker-entrypoint-initdb.d` only when initializing a new data volume. The CD workflow explicitly applies migrations 002–005 to an existing volume before restarting the application; if a migration fails, deployment must stop and the data/schema state must be reviewed before retrying.
 
 ## Health checks and useful diagnostics
 
