@@ -368,7 +368,7 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **How QA will verify:** Confirm canonical `YYYY-MM-DD` dates succeed; compact/noncanonical formats return HTTP 400 for both create and update; and a rejected update does not alter the saved date.
 
-**Evidence to close:** Passing current CI for the exact commit, API results for both invalid requests, and a read-back confirming the original date remains unchanged. The new test's CI run is currently pending.
+**Evidence to close:** Passing current CI for the exact commit, API results for both invalid requests, and a read-back confirming the original date remains unchanged. CI run `38215898127` passed all eight jobs for commit `9b00f76863b48686bb5fe232926e20ee1d383eb0`, including the new expense date regression test.
 
 ### 34. Backend: enforce the documented budget month format
 **What happens:** Budget create/update previously accepted compact date strings such as `20261101`, although the API says the month must use `YYYY-MM-DD` and be the first day of the month.
@@ -379,7 +379,7 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **How QA will verify:** A canonical value such as `2026-10-01` succeeds; compact/noncanonical values return HTTP 400; after a rejected update, the saved budget month remains unchanged.
 
-**Evidence to close:** Passing current CI for the exact commit, API results for create/update, and read-back showing no change after the rejected update. Current CI is pending.
+**Evidence to close:** Passing current CI for the exact commit, API results for create/update, and read-back showing no change after the rejected update. CI run `38215898127` passed all eight jobs for commit `9b00f76863b48686bb5fe232926e20ee1d383eb0`, including the budget month regression assertions.
 
 ### 35. Team lead + frontend/backend: decide whether overall monthly budgets are required
 **What happens:** The API/database support a whole-month budget with no category, but the browser form currently requires a category and cannot submit that type.
