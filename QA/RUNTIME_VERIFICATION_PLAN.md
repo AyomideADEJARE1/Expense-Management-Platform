@@ -665,3 +665,13 @@ CI run 38273922288 passed all eight jobs for correction commit 77620d6547cad3ee3
 **Pass criteria:** All exports complete consistently with correct row counts and contents in each supported browser tested. CI verifies the helper and build but does not close browser download verification.
 
 **Evidence:** Browser/version, sanitized test data, expected versus actual row count, and download confirmation. CI passing alone does not close this gate.
+
+
+## RV-54 — Verify debug mode is disabled outside development/test
+**Owner:** Backend/security. **Environment:** CI; production entry-point source review.
+
+**Steps:** Run the parameterized `debug_mode_enabled` tests for production, prod, development, dev, testing, test, and empty environment values. Review the backend Dockerfile to confirm it still starts Gunicorn rather than `python app.py`.
+
+**Pass criteria:** Debug is enabled only for the explicit development/test values; production, prod, and empty/unknown values return false. The production container entry point remains Gunicorn.
+
+**Evidence:** CI run ID, commit SHA, parameterized test result, and reviewed Docker entry point. Do not claim a live AWS debugger check unless the deployed environment was actually inspected.
