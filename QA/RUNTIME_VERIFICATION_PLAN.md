@@ -265,16 +265,20 @@ Pass evidence: CI order check, staging failure/recovery evidence, deployed commi
 ## RV-24 — Verify PostgreSQL is healthy before migration execution
 Related finding: QA-FIND-055. Priority: Medium–High.
 
-CI now requires the CD workflow to start PostgreSQL with `docker compose up -d --wait postgres`, apply migrations 002 and 003, and only then restart application services. Confirm the CI order check passes. In staging, restart PostgreSQL from a cold state and verify the migration commands begin only after the database health check is successful.
+CI run `38212158351` passed for commit `927e35eaf3af827d8b52ef93f6f883c6bfcaa667`. It verified migrations 001–004, and the CD order check requires PostgreSQL health wait, then migrations 002–004, then application-service restart. In staging, restart PostgreSQL from a cold state and verify the migration commands begin only after the database health check is successful.
 
-Pass evidence: CI order check, staging deployment logs showing the health wait, successful migrations, and application/database health checks.
+Pass evidence: CI run `38212158351` and the order check, plus staging deployment logs showing the health wait, successful migrations, and application/database health checks. CI passing alone does not close the AWS runtime gate.
 
 
 ## RV-25 — Preserve budget category links when deleting categories
 Related finding: QA-FIND-056. Priority: High.
 
-Source correction in PR #54 adds a route-level check for linked budgets, changes the database foreign key to `ON DELETE RESTRICT` through migration 004, updates the SQLAlchemy model, and adds API/database constraint tests. The latest correction CI result must pass before source-level checks are considered verified.
+Source correction in PR #54 adds a route-level check for linked budgets, changes the database foreign key to `ON DELETE RESTRICT` through migration 004, updates the SQLAlchemy model, and adds API/database constraint tests. CI run `38212158351` passed for commit `927e35eaf3af827d8b52ef93f6f883c6bfcaa667`, including the route test, constraint-rule test, and database migration/order checks. AWS existing-volume and browser verification remain pending.
 
 Run the API test with a category-linked budget and confirm category deletion returns HTTP 409. Confirm the budget remains present with the same category ID and amount. Repeat where a whole-month budget already exists for the same user/month; the result must still be a clear 409, not an unhandled 500. Verify migration 004 on a clean database and a populated existing AWS staging volume.
 
 Pass evidence: passing CI for the exact correction commit; `fk_budgets_category` reports `RESTRICT`; before/after API or database evidence shows no budget field changed; fresh/existing-volume migration logs; and AWS staging commit/image identity plus public health checks.
+
+
+## Latest CI checkpoint — 2026-10-12
+Run `38212158351` passed all eight jobs for commit `927e35eaf3af827d8b52ef93f6f883c6bfcaa667`; the backend suite passed 35 tests. The database job applied migrations 001–004 and verified the category-budget foreign key is RESTRICT. This is CI evidence only. Do not mark AWS staging, populated-volume migration, failure/recovery, public health, or browser journey gates as passed without their own recorded results.
