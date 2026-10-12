@@ -257,6 +257,7 @@ The Compose configuration mounts these versioned SQL files:
 database/migrations/001_initial_schema.sql
 database/migrations/002_user_settings.sql
 database/migrations/003_budget_uniqueness.sql
+database/migrations/004_restrict_category_budget_delete.sql
 ```
 
 into:
@@ -265,7 +266,7 @@ into:
 /docker-entrypoint-initdb.d/001_initial_schema.sql
 ```
 
-The files are mounted read-only. PostgreSQL executes initialization scripts from this directory when a new database cluster is created, in filename order. Migration 001 creates the initial schema; migration 002 adds user settings; migration 003 adds database-level budget uniqueness, including separate handling for budgets with a NULL category. Migration 003 stops with an actionable error if duplicate legacy budgets exist, so those records must be reviewed and resolved before deployment can continue.
+The files are mounted read-only. PostgreSQL executes initialization scripts from this directory when a new database cluster is created, in filename order. Migration 001 creates the initial schema; migration 002 adds user settings; migration 003 adds database-level budget uniqueness, including separate handling for budgets with a NULL category. Migration 003 stops with an actionable error if duplicate legacy budgets exist, so those records must be reviewed and resolved before deployment can continue. Migration 004 changes the budget-to-category foreign key from `ON DELETE SET NULL` to `ON DELETE RESTRICT`; a category referenced by a budget cannot be deleted and silently turned into a whole-month budget.
 
 ---
 
