@@ -18,15 +18,62 @@ from routes.summaries import summaries_bp
 load_dotenv()
 
 
+def _is_strong_secret(value):
+    if not isinstance(value, str) or len(value.strip()) < 32:
+        return False
+
+    normalized = value.strip().lower()
+    placeholders = (
+        "replace-with",
+        "change-me",
+        "your-secret",
+        "placeholder",
+        "example-secret",
+    )
+    return not any(marker in normalized for marker in placeholders)
+
+
+def validate_secret_configuration(secret_key, jwt_secret, environment):
+    """Reject missing, placeholder, weak, or shared signing keys in production."""
+    if environment not in {"production", "prod"}:
+        return
+
+    if not _is_strong_secret(secret_key):
+        raise RuntimeError(
+            "Production SECRET_KEY must be a strong random value "
+            "of at least 32 characters."
+        )
+
+    if not _is_strong_secret(jwt_secret):
+        raise RuntimeError(
+            "Production JWT_SECRET or JWT_SECRET_KEY must be a separate "
+            "strong random value of at least 32 characters."
+        )
+
+    if secret_key == jwt_secret:
+        raise RuntimeError(
+            "Production SECRET_KEY and JWT signing secret must be different."
+        )
+
+
 app = Flask(__name__)
 
+app_environment = (
+    os.getenv("APP_ENV")
+    or os.getenv("FLASK_ENV")
+    or "production"
+).strip().lower()
+flask_secret = os.getenv("SECRET_KEY")
+jwt_secret = os.getenv("JWT_SECRET_KEY") or os.getenv("JWT_SECRET")
 
-app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
-app.config["JWT_SECRET_KEY"] = (
-    os.getenv("JWT_SECRET_KEY")
-    or os.getenv("JWT_SECRET")
-    or os.getenv("SECRET_KEY")
+validate_secret_configuration(
+    flask_secret,
+    jwt_secret,
+    app_environment,
 )
+
+app.config["SECRET_KEY"] = flask_secret
+app.config["JWT_SECRET_KEY"] = jwt_secret or flask_secret
 
 
 database_url = URL.create(
