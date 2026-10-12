@@ -8,7 +8,7 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 | REQ-02 | Add expenses | TC-EXP-001 | PENDING |
 | REQ-03 | Edit expenses | TC-EXP-002 | PENDING |
 | REQ-04 | Delete expenses | TC-EXP-003 | PENDING |
-| REQ-05 | Expense categories | TC-CAT-001–003 | OBSERVATION |
+| REQ-05 | Expense categories | TC-CAT-001–004 | Category create/update now validate the database's 100-character name limit before commit; new boundary tests are pending CI. Category endpoint authorization policy remains an open finding |
 | REQ-06 | Monthly summaries | TC-REP-001, TC-REP-DATE-002 | Summary endpoints now validate canonical `YYYY-MM` values and new tests compare monthly/category totals to known expenses; current CI pending, browser/runtime verification remains open |
 | REQ-07 | Budget limits | TC-BUD-001–006, TC-DB-006, TC-BUD-DATE-007, TC-BUD-UI-008 | PR #54 adds database uniqueness for category and whole-month budgets, known-conflict handling, and canonical month-date validation. New compact-date tests are pending CI. Confirm whether whole-month budgets must be creatable through the browser; populated-volume and concurrency checks remain open |
 | REQ-08 | Dashboard with charts | TC-DASH-001–003 | FINDING OPEN |
@@ -79,3 +79,8 @@ The API/database support a whole-month budget with `category_id = NULL`, but the
 ## QA-FIND-062 trace — month query format and summary correctness
 
 The expense list, monthly summary, and category summary now validate exact `YYYY-MM` input before parsing. Regression tests cover malformed values (`2026-1`, `2026-010`) and check summary totals against known expense data. CI run `38216409164` passed all eight jobs for commit `7c3eb3a08464ff9b97ce854f5a105383db8646cb`; Flake8 and all 48 backend tests passed, including the month-query/summary regression test. Live runtime/browser checks remain separate.
+
+
+## QA-FIND-063 trace — category name length
+
+The API now checks the 100-character category name limit on create and update before database commit. Regression tests cover oversized create/update values and verify that a rejected update leaves the stored name unchanged. CI for this latest correction is pending; do not mark the trace passed until the run completes.
