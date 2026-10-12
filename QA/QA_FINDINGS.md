@@ -997,3 +997,18 @@ Classification: Account lifecycle / recoverability. Status: Open; product/securi
 **Required retest:** Verify a valid current-password change succeeds; an incorrect current password fails without changing the stored hash; old password stops working after a successful change; reset tokens expire and cannot be reused; requests do not reveal whether an email exists; and reset requests are rate-limited. Test delivery only in a controlled environment.
 
 **Closure evidence:** Written scope decision, endpoint and token design review, automated security tests, redacted delivery logs if email recovery is implemented, and a browser/API trace showing the approved flow end to end.
+
+
+## QA-FIND-077 — Partial profile-name updates can erase the omitted name part
+
+**Classification:** API correctness and profile-data integrity. **Status:** Correction proposed in PR #54; CI retest pending. **Priority:** Medium.
+
+**Evidence:** In the reviewed `backend/routes/auth.py`, the profile update endpoint accepts `first_name` and `last_name`. When either field is present, the old code used an empty string as the default for the field that was omitted. Therefore, a request that updates only `first_name` can replace the stored full name with only that first name; a request that updates only `last_name` is rejected because the first-name value becomes empty.
+
+**Impact:** A partial profile edit can unintentionally remove part of the user's name. This is data loss from an otherwise valid update request and can affect the account name shown across the application.
+
+**Correction proposed in PR #54:** The profile route now reads the current name parts and preserves any part not included in the request. A regression test updates only the first name, verifies the last name remains, then updates only the last name and verifies the first name remains.
+
+**Required retest:** Run CI for the latest correction commit. Verify partial first-name and last-name updates preserve the omitted part, a request with an explicitly empty first name is still rejected, and the stored profile returned by `GET /api/auth/me` matches the successful update.
+
+**Closure evidence:** Passing CI for the exact commit, API request/response evidence for both partial update cases, and a read-back confirming the stored full name is correct.
