@@ -3,6 +3,7 @@ from types import SimpleNamespace
 
 import pytest
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from app import app
 from extensions import db, limiter
@@ -714,3 +715,74 @@ def test_budget_category_foreign_key_restricts_deletion():
         ).scalar_one()
 
     assert constraint == "RESTRICT"
+
+
+
+def test_category_name_constraint_conflict_returns_409_for_create_and_update(
+    client, monkeypatch
+):
+    def fail_unique_commit(self):
+        raise IntegrityError(
+            "category name insert/update",
+            {},
+            SimpleNamespace(
+                diag=SimpleNamespace(
+                    constraint_name="uq_expense_category_name"
+                )
+            ),
+        )
+
+    with monkeypatch.context() as patcher:
+        patcher.setattr(Session, "commit", fail_unique_commit)
+        create_response = client.post(
+            "/api/categories",
+            json={"name": f"QA category race {uuid.uuid4().hex}"},
+        )
+
+    assert create_response.status_code == 409
+    assert "already exists" in create_response.get_json()["message"]
+
+    original_name = f"QA category update {uuid.uuid4().hex}"
+    category_response = client.post(
+        "/api/categories",
+        json={"name": original_name},
+    )
+    assert category_response.status_code == 201
+    category_id = category_response.get_json()["data"]["id"]
+
+    with monkeypatch.context() as patcher:
+        patcher.setattr(Session, "commit", fail_unique_commit)
+        update_response = client.put(
+            f"/api/categories/{category_id}",
+            json={"name": f"QA category renamed {uuid.uuid4().hex}"},
+        )
+
+    assert update_response.status_code == 409
+    stored = client.get(f"/api/categories/{category_id}")
+    assert stored.status_code == 200
+    assert stored.get_json()["data"]["name"] == original_name
+
+
+def test_category_create_unexpected_commit_failure_rolls_back_and_recovers(
+    client, monkeypatch
+):
+    def fail_commit(self):
+        raise RuntimeError("simulated category database failure")
+
+    with monkeypatch.context() as patcher:
+        patcher.setattr(Session, "commit", fail_commit)
+        failed = client.post(
+            "/api/categories",
+            json={"name": f"QA category failure {uuid.uuid4().hex}"},
+        )
+
+    assert failed.status_code == 500
+    assert "simulated category database failure" not in failed.get_data(
+        as_text=True
+    )
+
+    recovered = client.post(
+        "/api/categories",
+        json={"name": f"QA category recovery {uuid.uuid4().hex}"},
+    )
+    assert recovered.status_code == 201
