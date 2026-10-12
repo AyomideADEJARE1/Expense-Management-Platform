@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { api } from '../services/api';
 import { formatCurrency } from '../utils/currency';
+import { escapeCsvCell } from '../utils/csv';
 import {
   Calendar,
   TrendingDown,
@@ -126,11 +127,7 @@ export default function Reports({
       headers,
       ...rows,
     ]
-      .map((row) =>
-        row
-          .map((value) => `"${String(value).replace(/"/g, '""')}"`)
-          .join(',')
-      )
+      .map((row) => row.map(escapeCsvCell).join(','))
       .join('\n');
 
     const blob = new Blob([csvContent], {
