@@ -84,3 +84,8 @@ The expense list, monthly summary, and category summary now validate exact `YYYY
 ## QA-FIND-063 trace — category name length
 
 The API now checks the 100-character category name limit on create and update before database commit. Regression tests cover oversized create/update values and verify that a rejected update leaves the stored name unchanged. CI for this latest correction is pending; do not mark the trace passed until the run completes.
+
+
+## QA-FIND-043 trace — test database safety and repeatability
+
+PR #54 now tightens the database-name guard, rejects names containing production/staging/live markers, truncates the test tables and resets identities after each API test, and runs the backend test suite twice consecutively. CI run `38217288387` passed all eight jobs for commit `52438ec387ed2c9bfaff56081930e6df317604dd`; both pytest runs collected and passed all 57 tests. This verifies the correction in CI. Keep the gate open if local or staging test database configuration differs from CI, and do not point tests at a shared live database.
