@@ -255,7 +255,9 @@ def update_current_user():
     # Preserve a name part when a caller updates only the other part.
     if "first_name" in data or "last_name" in data:
         current_name_parts = user.full_name.split(maxsplit=1)
-        current_first_name = current_name_parts[0] if current_name_parts else ""
+        current_first_name = (
+            current_name_parts[0] if current_name_parts else ""
+        )
         current_last_name = (
             current_name_parts[1] if len(current_name_parts) > 1 else ""
         )
