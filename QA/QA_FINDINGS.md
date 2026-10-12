@@ -2,7 +2,7 @@
 
 Findings are evidence-based. QA is not judged by defect count.
 
-Latest completed CI checkpoint: PR #54 run `38164855365` passed secret scanning, database migration/schema checks, backend lint, frontend lint/build, 26 backend tests, both Docker image builds, and `ci-success` for commit `94787e0c66f19e7e337a0e8af6ec6629885c9596`. The npm audit report showed zero vulnerabilities after the `source-map-js` patch to `1.2.2`. This is CI evidence for the correction branch, not proof that upstream `main` or the live deployment is fixed or fully tested. Browser-level and live-deployment verification remain pending.
+CI run 38270547450 passed all eight jobs for correction-branch commit 8d5fddc6c163a3f48986d22b770bd76d4547a81c. Backend lint passed and the suite passed 59 tests twice, including the trusted-proxy regression test. CI verified migrations 001–005, budget-category RESTRICT, the users.phone column, and migration order; frontend lint/build, secret scanning, both Docker builds, and the aggregate check passed. npm audit reported zero vulnerabilities. Flask-Limiter still warns that its rate-limit counters use in-memory storage. This is CI evidence only; AWS live deployment, populated-volume migration, browser flows, reboot recovery, backup restore, and shared production rate-limit storage remain unverified.
 
 ## QA-FIND-001 — Duplicate frontend source structures
 Classification: Observation. Status: Open.
