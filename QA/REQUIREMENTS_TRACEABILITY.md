@@ -109,3 +109,8 @@ The API contract requires `YYYY-MM-DD`. PR #54 now checks that parsing and re-se
 ## QA-FIND-067 trace — Settings phone persistence
 
 Settings previously displayed an editable phone number without a matching database field or API persistence. PR #54 adds migration 005, model/API/frontend support, validation tests, a CI schema assertion, and a deployment-order assertion. Passing CI proves the correction in the CI database only. Verify migration 005 against an existing AWS database and test save/reload behavior in the deployed browser before closing this item.
+
+
+## QA-FIND-068 trace — notification delivery scope
+
+The profile API stores notification preference flags, but the reviewed source tree did not reveal an email sender, notification scheduler/worker, or browser-push delivery path. The team must decide whether real delivery is in scope. Close only with a written scope decision and either tested staging delivery or clearly revised UI wording that does not promise active alerts.
