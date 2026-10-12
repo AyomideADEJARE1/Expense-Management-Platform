@@ -40,7 +40,7 @@ This document tells the team what is wrong, why it matters, and who needs to act
 **QA check:** A fresh local setup works with documented environment values; missing production values stop startup; logs do not reveal passwords.
 
 ### 4. Backend owner: use the intended JWT secret
-**What happens:** The application previously read the Flask secret for JWT signing even though a separate JWT secret was supplied by CI. A source correction now checks the dedicated JWT variables first, but production must still reject a missing or placeholder JWT secret.
+**What happens:** The application previously read the Flask secret for JWT signing even though a separate JWT secret was supplied by CI. PR #54 now checks the dedicated JWT variables and validates production startup: Flask and JWT secrets must be strong, separate, and not placeholders. Automated tests cover missing, short, placeholder, shared, and valid distinct values. CI for this newest source change is pending.
 
 **Why it matters:** A person may change the JWT secret but the application may continue using another key. That makes secret rotation unreliable.
 
