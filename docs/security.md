@@ -155,19 +155,7 @@ POSTGRES_DB
 
 The Flask application also uses environment-based secret configuration.
 
-For Docker Compose development, the database service currently uses:
-
-```text
-Database: expense_db
-User: expense_user
-Password: expense_password
-Host: postgres
-Port: 5432
-```
-
-These credentials are intended for **local development only**.
-
-Production deployments must use securely managed credentials and must not reuse development credentials.
+For local Docker Compose development, the example file provides placeholder values for the database name and user. The password must be replaced in the root `.env` file before startup. Compose requires these variables to be supplied and does not embed a fixed password in the YAML. Example values are for local development only; AWS production credentials must be strong, unique, protected from Git, and managed through the deployment environment.
 
 ---
 
@@ -396,7 +384,7 @@ Before production deployment, the following areas should be addressed:
 - Use production-grade secrets management
 - Rotate development credentials
 - Configure HTTPS/TLS
-- Secure the Azure VM and network
+- Secure the AWS EC2 instance, security groups, SSH access, and network
 - Restrict inbound network access
 - Use least-privilege cloud identities
 - Protect production database credentials
@@ -407,7 +395,7 @@ Before production deployment, the following areas should be addressed:
 - Keep Docker images and operating system packages updated
 - Configure secure backups and recovery procedures
 
-Azure deployment and its associated production security controls are currently planned rather than completed.
+AWS EC2 is the approved deployment target for this capstone. Repository configuration is not proof that the live AWS environment has been secured or verified; retain instance, security-group, TLS, secret-management, monitoring, and runtime evidence before declaring deployment complete.
 
 ---
 
