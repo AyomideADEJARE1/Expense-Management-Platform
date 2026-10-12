@@ -2,6 +2,7 @@ import { api } from '../services/api';
 import { useState } from 'react';
 import { useToast } from '../context/ToastContext';
 import ConfirmationModal from '../Components/ConfirmationModal';
+import { formatCurrency, getCurrencySymbol } from '../utils/currency';
 
 import { 
   Plus, Edit3, Trash2, X, Utensils, Car, ShoppingBag, 
@@ -15,6 +16,7 @@ const ICON_MAP = {
 
 export default function Budgets({
   categories = [],
+  currency = 'NGN (₦)',
   budgets = [],
   setBudgets,
   isDarkMode = false,
@@ -203,12 +205,12 @@ export default function Budgets({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
         <div className={`${cardStyle} p-5 rounded-2xl border shadow-sm`}>
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Total Budget</p>
-          <h2 className={`text-2xl font-extrabold ${primaryText} mt-2`}>₦{totalLimit.toLocaleString()}</h2>
+          <h2 className={`text-2xl font-extrabold ${primaryText} mt-2`}>{formatCurrency(totalLimit, currency)}</h2>
         </div>
 
         <div className={`${cardStyle} p-5 rounded-2xl border shadow-sm`}>
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Total Spent</p>
-          <h2 className={`text-2xl font-extrabold ${primaryText} mt-2`}>₦{totalSpent.toLocaleString()}</h2>
+          <h2 className={`text-2xl font-extrabold ${primaryText} mt-2`}>{formatCurrency(totalSpent, currency)}</h2>
         </div>
 
         <div className={`${cardStyle} p-6 rounded-2xl border shadow-sm flex flex-col justify-between hover:shadow-md transition`}>
@@ -269,8 +271,8 @@ export default function Budgets({
 
                   <div className="flex items-baseline justify-between mb-2">
                     <div>
-                      <span className={`text-2xl font-extrabold ${primaryText}`}>₦{b.spent.toLocaleString()}</span>
-                      <span className="text-sm font-semibold text-gray-400 ml-1">/ ₦{b.limit.toLocaleString()}</span>
+                      <span className={`text-2xl font-extrabold ${primaryText}`}>{formatCurrency(b.spent, currency)}</span>
+                      <span className="text-sm font-semibold text-gray-400 ml-1">/ {formatCurrency(b.limit, currency)}</span>
                     </div>
                     <span
                       className={`text-xs font-bold px-2.5 py-1 rounded-md ${
@@ -302,11 +304,11 @@ export default function Budgets({
                 <div className={`pt-3 border-t ${isDarkMode ? 'border-slate-700' : 'border-gray-100'} flex items-center justify-between text-xs`}>
                   {isExceeded ? (
                     <span className="text-red-500 font-semibold flex items-center gap-1">
-                      <AlertTriangle className="w-3.5 h-3.5" /> Exceeded by ₦{Math.abs(remaining).toLocaleString()}
+                      <AlertTriangle className="w-3.5 h-3.5" /> Exceeded by {formatCurrency(Math.abs(remaining), currency)}
                     </span>
                   ) : (
                     <span className={`font-medium ${secondaryText}`}>
-                      Remaining: <strong className={primaryText}>₦{remaining.toLocaleString()}</strong>
+                      Remaining: <strong className={primaryText}>{formatCurrency(remaining, currency)}</strong>
                     </span>
                   )}
                   <span className="text-gray-400">Monthly</span>
@@ -362,7 +364,7 @@ export default function Budgets({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">Spending Limit (₦)</label>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Spending Limit ({getCurrencySymbol(currency)})</label>
                 <input
                   type="number"
                   required
@@ -374,7 +376,7 @@ export default function Budgets({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">Amount Already Spent (₦)</label>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Amount Already Spent ({getCurrencySymbol(currency)})</label>
                 <input
                   type="number"
                   placeholder="0"
