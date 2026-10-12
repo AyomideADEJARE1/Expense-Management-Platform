@@ -15,6 +15,15 @@ categories_bp = Blueprint(
 )
 
 
+def _is_category_name_conflict(error):
+    """Return True only for the database's category-name unique constraint."""
+    diag = getattr(getattr(error, "orig", None), "diag", None)
+    return (
+        getattr(diag, "constraint_name", None)
+        == "uq_expense_category_name"
+    )
+
+
 @categories_bp.get("")
 def get_categories():
     categories = ExpenseCategory.query.order_by(
@@ -90,8 +99,28 @@ def create_category():
         description=description
     )
 
-    db.session.add(category)
-    db.session.commit()
+    try:
+        db.session.add(category)
+        db.session.commit()
+    except IntegrityError as error:
+        db.session.rollback()
+
+        if _is_category_name_conflict(error):
+            return error_response(
+                "A category with this name already exists",
+                409
+            )
+
+        return error_response(
+            "Failed to create category",
+            500
+        )
+    except Exception:
+        db.session.rollback()
+        return error_response(
+            "Failed to create category",
+            500
+        )
 
     return success_response(
         "Category created successfully",
@@ -188,7 +217,27 @@ def update_category(category_id):
 
         category.description = description
 
-    db.session.commit()
+    try:
+        db.session.commit()
+    except IntegrityError as error:
+        db.session.rollback()
+
+        if _is_category_name_conflict(error):
+            return error_response(
+                "A category with this name already exists",
+                409
+            )
+
+        return error_response(
+            "Failed to update category",
+            500
+        )
+    except Exception:
+        db.session.rollback()
+        return error_response(
+            "Failed to update category",
+            500
+        )
 
     return success_response(
         "Category updated successfully",
