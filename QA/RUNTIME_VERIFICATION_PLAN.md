@@ -580,3 +580,23 @@ CI run 38271222415 passed all eight jobs for correction commit 2316a358ca37495ec
 ## Latest code CI checkpoint — 2026-10-12
 
 CI run 38272033341 passed all eight jobs for correction commit ea775178ea545b48bfea9cdaadd77b7b0965d4b8. Backend lint passed and 61 tests passed twice, including the budget foreign-key race regression. Migrations 001–005, budget-category RESTRICT, the phone column, and migration order passed CI; frontend lint/build, secret scan, both Docker builds, and aggregate CI passed. Flask-Limiter still warns that storage is in-memory. This does not close AWS populated-volume migration, live deployment, public health, browser, reboot recovery, backup restore, or shared rate-limit storage gates.
+
+
+
+## RV-49 — Verify whole-month budget totals and frontend regression tests
+
+**Finding:** QA-FIND-079. **Owner:** Frontend + QA. **Status:** Open until current-head CI and browser verification pass.
+
+**Source-level correction:** PR #54 adds `calculateBudgetSpent` in `frontend/src/utils/budgetSpending.js`, tests in `frontend/tests/budgetSpending.test.js`, and a `npm test` script. This is not closed until the new source head passes CI.
+
+**Procedure:**
+1. Run the frontend test command and confirm the CI job executes (not skips) `npm test`.
+2. Confirm whole-month budget tests add all same-month expense categories and exclude other months.
+3. Confirm category-budget tests count only the matching category.
+4. In a browser, create a whole-month budget and add two same-month expenses in different categories plus one expense in a different month.
+5. Confirm spent amount, percent spent, remaining amount, and exceeded/on-track status are correct.
+6. Repeat with a category-specific budget and confirm only its matching category is counted.
+
+**Pass evidence:** Current-head CI success, test output showing the test count, and redacted browser evidence with expected and displayed totals.
+
+**Fail conditions:** Whole-month budget shows zero despite expenses, includes another month's expense, a category budget includes other categories, or CI skips the frontend tests.
