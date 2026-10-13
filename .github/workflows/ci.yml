@@ -195,7 +195,7 @@ jobs:
             'POSTGRES_DB=expense_management_test' \
             'POSTGRES_APP_USER=ci_app_user' \
             'POSTGRES_APP_PASSWORD=ci-compose-app-password-strong-123456789' > .env
-          docker compose config --format json > /tmp/compose-resolved.json
+          env -u POSTGRES_APP_PASSWORD docker compose config --format json > /tmp/compose-resolved.json
           python - <<'PY'
           import json
           with open('/tmp/compose-resolved.json', encoding='utf-8') as handle:
