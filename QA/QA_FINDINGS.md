@@ -1247,4 +1247,4 @@ Two duplicate placeholder sections for category-write authorization have been re
 
 **How QA will verify:** Confirm the backend job runs pytest twice and fails on zero collected tests. Confirm frontend lint and test steps do not use `--if-present`, and that npm reports a nonzero test count. Review the job logs for the exact tested commit.
 
-**Closure evidence:** Green CI for the commit containing this workflow change, backend test collection and pass counts from both runs, frontend test count, and source review confirming no empty-suite success path remains. The earlier PR #54 green run predates the newest CI-workflow edit and must not be used as its verification.
+**Closure evidence obtained:** Green CI run `38420803176` for commit `8d781f3fb45cdce2a07e50ef3250b99ce0501333`, backend 71 tests passed twice, frontend nine tests passed, and source review confirms pytest exit code 5 is no longer converted to success and frontend lint/test are mandatory. **Still outstanding:** merge/review of PR #54 into upstream main; the QA-only PR #53 branch can still show zero tests because it is based on the upstream implementation being audited.
