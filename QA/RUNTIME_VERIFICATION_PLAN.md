@@ -711,3 +711,7 @@ CI run 38273922288 passed all eight jobs for correction commit 77620d6547cad3ee3
 **Pass criteria:** The URL resolves to the reviewed application; both health checks pass; the diagram includes the actual cloud entry point, host/network, Nginx, frontend, Flask API, PostgreSQL, and CI/CD flow; the diagram file is committed and embedded in README.md.
 
 **Evidence:** URL, sanitized health responses, deployed commit/image digest, diagram path and commit. Do not close using an unverified URL or a placeholder diagram.
+
+
+## RV-56 CI update — 2026-10-13
+CI run `38381389211` passed all eight jobs for code commit `85871877850b81b367be2acb1135dced73a95255`. The database job applied migrations 001–006 and confirmed the application role has required table/sequence privileges while prohibited role/database/schema creation fails. The backend suite passed 69 tests and the frontend suite passed nine tests. This closes the CI portion of RV-56 only. A disposable populated AWS database, actual deployment, and post-deployment CRUD/privilege checks are still required.
