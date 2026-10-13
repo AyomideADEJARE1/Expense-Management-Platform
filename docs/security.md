@@ -463,3 +463,18 @@ backend/README.md
 ```
 
 This document should be updated whenever a significant security control or deployment security requirement changes.
+
+
+---
+
+## 19. PostgreSQL Least-Privilege Accounts
+
+PostgreSQL must use separate credentials for administration/migrations and normal application traffic.
+
+- The bootstrap account is configured with `POSTGRES_USER` and `POSTGRES_PASSWORD` in the root environment file. Use it for database initialization and controlled migrations only.
+- The Flask backend receives `POSTGRES_APP_USER` and `POSTGRES_APP_PASSWORD` through the Compose environment mapping. It must not receive the bootstrap password.
+- Migration 006 configures the runtime role as a non-superuser without role-creation or database-creation privileges, and grants only the data/sequence privileges required by the application.
+- Use unique strong passwords and keep all real environment files out of version control.
+- For an existing AWS database, configure the new runtime variables before deploying the change. Apply migration 006 as the bootstrap account, then verify application CRUD and confirm prohibited administrative operations fail.
+
+CI verifies the role attributes and basic privilege boundaries. The disposable AWS staging database still needs migration, application-flow, and recovery verification before this security control can be considered closed.
