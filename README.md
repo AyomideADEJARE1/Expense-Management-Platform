@@ -31,10 +31,10 @@ The listed domain and diagram are repository evidence, not proof that the latest
 - Create, view, edit, and delete personal expenses.
 - Filter transactions by month, date range, and category.
 - Manage expense categories.
-- Create and review monthly and category-specific budgets through the supported API and application flows.
+- Set monthly spending limits by category and review budget utilization in the dashboard.
 - View monthly summaries, category summaries, dashboard totals, charts, and recent transactions.
 - Export transaction and report data to CSV, with spreadsheet-formula protection and UTF-8 handling.
-- Update supported profile settings, including currency and notification preferences.
+- Update available profile settings and preferences, including preferred currency and notification options.
 - Check application and database health through dedicated endpoints.
 
 Access control, budget rules, exports, and database behavior are covered by automated tests and the QA documents. A passing CI run demonstrates the checks executed by CI; it does not by itself prove that the latest version is deployed or that every browser flow has been tested.
