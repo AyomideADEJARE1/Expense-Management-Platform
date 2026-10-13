@@ -263,3 +263,7 @@ README.md now includes explicit placeholders for the verified public URL and fin
 
 ## Documentation alignment — PR #53
 The root README and `docs/architecture.md` are updated to describe AWS EC2, current host port `80:80`, private PostgreSQL, the existing architecture image, and the gated GHCR-to-AWS release path. This resolves the documentation/source-alignment portion of QA-FIND-002 and QA-FIND-049 in the PR branch. It does not close the live URL, deployed commit, health-check, or clean-start runtime requirements.
+
+
+## Current correction test retest
+CI run 38416621129 failed one API test because the malformed-category-body check called a protected category route without authentication and received 401 instead of 400. The test now authenticates that request in correction commit 04fe7f2ea0942c467b1c0af29d7e60d63b3791e2. CI run 38416894925 was queued at the last check. Treat this as open until the current-head workflow and its repeatability run pass.
