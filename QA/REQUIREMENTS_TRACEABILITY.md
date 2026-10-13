@@ -282,7 +282,7 @@ CI run `38418979526` passed all eight jobs for correction commit `ae54eec01018a7
 
 
 ## Audit register hygiene
-Two duplicate category-write authorization placeholders were removed from QA/QA_FINDINGS.md; QA-FIND-010 remains the canonical entry. The register now has 80 findings/observations. IDs remain stable to preserve traceability; numbering gaps are intentional.
+Five non-active duplicate/consolidation placeholders (QA-FIND-007, 016, 037, 039 and 051) were removed. Canonical coverage remains in QA-FIND-010, QA-FIND-022 and QA-FIND-073. The register now has 80 findings/observations; IDs remain stable for traceability.
 
 
 ## CI test-execution gate trace
