@@ -212,7 +212,7 @@ Pass evidence: Sanitized config, startup/health results, CI run for the exact co
 ## RV-17 — Verify frontend regression tests and browser journeys
 Related finding: QA-FIND-011. Priority: Medium–High.
 
-The PR #54 correction branch now defines `npm test` using Node's test runner, and CI run `38418979526` passed the frontend test job. Confirm the current correction head still runs the test command and reports a non-zero test count. Then verify core browser journeys: registration/login, profile refresh, expense create/edit/delete, date filters, budget create/edit, dashboard totals, and CSV downloads. If the team uses browser automation, make those journeys required CI checks; otherwise retain dated browser-test evidence and the tested commit SHA.
+The PR #54 correction branch defines `npm test` using Node's test runner. CI run `38420803176` passed for correction head `8d781f3fb45cdce2a07e50ef3250b99ce0501333`: backend tests passed twice (71 tests each run), frontend lint/test/build passed, and nine Node tests ran. This verifies the CI test-execution gate. Then verify core browser journeys: registration/login, profile refresh, expense create/edit/delete, date filters, budget create/edit, dashboard totals, and CSV downloads. If the team uses browser automation, make those journeys required CI checks; otherwise retain dated browser-test evidence and the tested commit SHA.
 
 Pass evidence: CI output showing frontend tests actually ran, plus browser automation results or a signed/dated test record with screenshots, expected/actual results, and tested commit SHA.
 
@@ -755,4 +755,8 @@ Two duplicate category-write authorization placeholders were removed from QA/QA_
 
 
 ## Current audit counts
-The active register contains 85 distinct findings/observations, the team action summary contains 60 actions, and this plan contains 58 runtime verification gates. Two duplicate finding placeholders were removed; finding IDs remain stable for traceability.
+The active register contains 85 distinct findings/observations, the team action summary contains 60 actions, and this plan contains 48 runtime verification gates. Two duplicate finding placeholders were removed; finding IDs remain stable for traceability.
+
+
+## Current CI enforcement checkpoint — 2026-10-13
+CI run `38420803176` passed all eight jobs for PR #54 correction head `8d781f3fb45cdce2a07e50ef3250b99ce0501333`. Backend tests passed twice (71 each run); frontend lint, nine Node tests, and build passed; database migration/runtime-role checks, secret scanning, both Docker builds, and aggregate CI passed. This closes the CI test-execution gate for that correction head, but not AWS deployment/version, populated-volume migrations, public health, browser journeys/downloads, reboot recovery, backup restore, or shared rate-limit storage. The correction remains in an open PR and is not yet on upstream `main`.
