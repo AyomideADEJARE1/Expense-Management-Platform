@@ -665,3 +665,7 @@ Run `38276034129` passed all eight jobs for code commit `97e6515f00c15e240532da6
 PR #54 updates the existing root README rather than creating a duplicate. It documents the project as Expense Tracker / Enhanced Personal Expense Management Platform, describes the implemented React/Vite, Flask, PostgreSQL 16, Nginx, Docker Compose, GitHub Actions, GHCR, and AWS EC2 path, and gives local setup/test commands and release evidence requirements. The existing architecture image is embedded rather than replaced with a second diagram. The public domain remains subject to live health verification.
 
 The architecture document is also aligned with host port 80, private PostgreSQL, restricted runtime database credentials, migrations 002–006 for existing AWS volumes, and the gated AWS deployment workflow. 
+
+
+### Documentation ownership checkpoint — 2026-10-13
+PR #54 owns the root README and architecture documentation because they must stay aligned with its code and migration changes. PR #53 contains the QA audit package only, avoiding duplicate root documentation edits across open PRs.
