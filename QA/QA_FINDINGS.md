@@ -84,11 +84,11 @@ Impact: unauthenticated callers can mutate global categories that other accounts
 Required action: first verify the current PR #54 authentication guard and its negative tests. Then agree on whether categories are administrator-managed shared records or user-owned records. Implement the matching role/ownership enforcement, add tests for an authenticated non-admin/other user, and verify category deletion cannot damage expenses or leave inconsistent records. Closure requires a documented policy, role/ownership checks in the API, passing API/browser tests, and a successful current-head CI run.
 
 ## QA-FIND-011 — Automated test coverage was missing/incomplete
-Classification: Confirmed verification gap; initial backend smoke tests proposed in PR #54. Status: Retest pending. Priority: High.
+Classification: Confirmed baseline coverage gap. Status: The proposed PR #54 now adds and runs backend and frontend automated tests; full browser end-to-end coverage remains open. Priority: High.
 
-The baseline CI workflow runs `pytest -v` but explicitly treats exit code 5 (no tests collected) as success. The frontend workflow uses `npm test --if-present`, while the integrated frontend `package.json` defines no test script. A prior CI run confirmed that pytest collected zero tests. PR #54 adds backend smoke/regression tests for `/health`, protected expense access, authentication/profile validation, category input types, CSV formula neutralization, invalid monetary values, and category ID validation. It also applies database migrations before tests and removes the CI exception that treated pytest exit code 5 (no tests collected) as success. The expanded suite must pass on the latest commit before this finding can be closed.
+On the reviewed upstream `main` branch, the CI workflow previously treated pytest exit code 5 (no tests collected) as success, and the frontend package did not define a test script. PR #54 corrects both gaps: pytest collection failure is no longer accepted as success, and the frontend package defines `npm test` using Node's test runner. The latest verified correction CI run `38418979526` passed all eight jobs; the backend suite passed 71 tests on both runs, and the frontend test/lint/build job passed. These results apply to the unmerged PR #54 correction branch, not the current upstream `main` branch.
 
-This is a useful starting suite, not complete coverage. The new CI run must confirm the tests actually collect and pass. Additional coverage is still required for cross-user data isolation, expense/category/budget CRUD, summaries, filters, CSV, invalid payloads, and frontend/browser journeys.
+The correction provides automated regression coverage, but it is not full browser end-to-end coverage. Remaining test work includes critical browser journeys such as registration/login, expense create/edit/delete, date filtering, category/budget workflows, dashboard totals, and CSV downloads. Those require browser-level test evidence; Node utility tests and a green build alone do not prove the complete UI works.
 
 ## QA-FIND-012 — Deployment workflow does not align cleanly with Compose image configuration
 Classification: Confirmed deployment-configuration inconsistency; correction proposed in PR #54. Status: Retest/configuration review pending. Priority: High.
@@ -495,20 +495,6 @@ Retest: Open the create and edit budget modals. Confirm the spending value canno
 Closure evidence: CI result for the fixing commit, browser screenshot, and comparison between displayed spending and the API/expense records. Source correction alone is not a pass.
 
 
-## QA-FIND-048 — Frontend CI has no automated test script
-
-Classification: Confirmed automated-coverage gap. Status: Open. Priority: Medium; release confidence.
-
-Evidence: The reviewed `frontend/package.json` defines `dev`, `build`, `lint`, and `preview`, but no `test` script. The CI workflow uses `npm test --if-present`, which succeeds without running tests when the script is absent.
-
-Impact: A green frontend CI result proves the configured lint/build checks passed, but it does not prove that login state, navigation, forms, budget editing, charts, or CSV-related UI interactions behave correctly.
-
-Required correction: Add a suitable frontend test runner and tests for the highest-risk user flows, or add a documented browser automation job. Once a test script is introduced, CI should execute it as a required check rather than silently skipping it.
-
-Retest: Verify the CI log explicitly shows tests executed and a non-zero test count. Include at least the profile refresh, expense-search navigation, budget create/edit, and validation cases. Add browser end-to-end coverage for the key complete user journeys.
-
-Closure evidence: Test script and test files, CI log showing the test command and count, and results for the covered flows.
-
 ## QA-FIND-049 — Docker Compose port documentation disagrees with the actual port mapping
 
 Classification: Documentation/reproducibility finding. Status: README and architecture-document corrections proposed in PR #54; clean-start runtime verification remains open. Priority: Low–Medium.
@@ -612,7 +598,7 @@ Latest CI run 38179822312 passed for code commit 81f1ac88449012b530c83a9d9c23175
 
 Both Docker builds passed the .dockerignore rule checks and sentinel inspections: the backend image did not contain /app/.env, and the frontend bundle did not contain VITE_SECRET_SENTINEL. This proves the test sentinel files were excluded, not that an actual secret was previously leaked.
 
-Important limitations: the frontend package still has no test script, so the optional frontend test step can pass without running frontend functional tests. CI does not prove live AWS deployment, a populated existing-volume migration, staging failure/recovery behavior, browser end-to-end behavior, the negative non-test-database guard case, category write authorization, proxy-aware production rate limiting, or public CSP/HSTS behavior. Those remain open and require their documented runtime evidence.
+Important limitations: upstream main still lacks the frontend test script, but PR #54 adds `npm test` and the current correction CI passed frontend tests. Neither the earlier CI checkpoint nor the correction branch's passing CI proves live AWS deployment, a populated existing-volume migration, staging failure/recovery, browser end-to-end behavior, the negative non-test-database guard case, category write authorization, proxy-aware production rate limiting, or public CSP/HSTS behavior. Those still require their documented evidence. CI does not prove live AWS deployment, a populated existing-volume migration, staging failure/recovery behavior, browser end-to-end behavior, the negative non-test-database guard case, category write authorization, proxy-aware production rate limiting, or public CSP/HSTS behavior. Those remain open and require their documented runtime evidence.
 
 
 ## QA-FIND-056 — Deleting a category can change a user's budget meaning
@@ -634,7 +620,7 @@ Closure evidence: Passing CI for the latest correction commit, verified `fk_budg
 
 CI run [38212158351](https://github.com/AyomideADEJARE1/Expense-Management-Platform/actions/runs/38212158351) passed all eight jobs for correction commit `927e35eaf3af827d8b52ef93f6f883c6bfcaa667`. The database job applied migrations 001–004, confirmed the budget-category foreign key uses `RESTRICT`, checked the CD migration order, and exercised the legacy duplicate-budget migration guard. The backend suite passed 35 tests; frontend lint/build, secret scan, both Docker builds, and the aggregate CI check passed.
 
-This result supersedes the older CI checkpoint recorded earlier in this file for the current correction branch. It does **not** prove that migrations 002–004 succeeded on a populated AWS volume, that a migration-failure deployment preserves the old running app, that the latest image is live on AWS, or that browser end-to-end journeys pass. The frontend test command is still optional and the frontend package has no test script, so frontend functional test coverage remains open.
+This result supersedes the older CI checkpoint recorded earlier in this file for the correction branch. It does **not** prove that migrations 002–004 succeeded on a populated AWS volume, that a migration-failure deployment preserves the old running app, that the latest image is live on AWS, or that browser end-to-end journeys pass. PR #54 now defines and runs frontend Node tests; full browser-level functional coverage remains open.
 
 
 ## QA-FIND-057 — Category create/update do not handle database commit failures
@@ -656,7 +642,7 @@ Closure evidence: Passing current CI run, tested commit SHA, API results for dup
 
 CI run [38212554474](https://github.com/AyomideADEJARE1/Expense-Management-Platform/actions/runs/38212554474) passed all eight jobs for correction commit `57c13c60386419d84594ce64d7db015351d105f5`. The backend suite passed 37 tests. The latest source includes migration 004 and category-budget deletion protection, plus category create/update conflict handling and rollback tests. Frontend lint/build, secret scanning, both Docker builds, database migrations, and the aggregate check passed.
 
-This checkpoint supersedes the prior 35-test CI checkpoint for the correction branch. The frontend package still has no test script, so frontend functional tests may be skipped by the optional command. Populated AWS volume migration, staging failure/recovery, deployed image identity, public health checks, category write authorization, production rate limiting, CSP/HSTS, and browser end-to-end evidence remain open.
+This checkpoint supersedes the prior 35-test CI checkpoint for the correction branch. PR #54 now defines and runs frontend Node tests; full browser-level functional coverage remains open. Populated AWS volume migration, staging failure/recovery, deployed image identity, public health checks, category write authorization, production rate limiting, CSP/HSTS, and browser end-to-end evidence remain open. Populated AWS volume migration, staging failure/recovery, deployed image identity, public health checks, category write authorization, production rate limiting, CSP/HSTS, and browser end-to-end evidence remain open.
 
 
 ## QA-FIND-058 — Email uniqueness races return a server error instead of a conflict
@@ -678,14 +664,14 @@ Closure evidence: Passing CI for the exact commit, API results for registration/
 
 CI run [38212818430](https://github.com/AyomideADEJARE1/Expense-Management-Platform/actions/runs/38212818430) passed all eight jobs for correction commit `0207384272129a22c719425fee062a87fc0f29ae`. The backend suite passed 39 tests. This run includes migrations 001–004, category-budget deletion protection, category create/update error handling, and email uniqueness conflict handling for registration/profile updates. Secret scanning, frontend lint/build, both Docker builds, database migration checks, and the aggregate CI check passed.
 
-The frontend package still has no test script, so the optional frontend test command may skip functional tests. CI does not prove populated AWS-volume migration, staging failure/recovery, deployed image identity, public health checks, browser end-to-end behavior, category write authorization, production rate-limit storage/proxy handling, or public CSP/HSTS. These remain open until evidence is recorded.
+At this historical checkpoint, the frontend package lacked a test script. PR #54 now adds `npm test` and the latest verified correction CI passes it; full browser end-to-end tests remain open. CI does not prove populated AWS-volume migration, staging failure/recovery, deployed image identity, public health checks, browser end-to-end behavior, category write authorization, production rate-limit storage/proxy handling, or public CSP/HSTS. CI does not prove populated AWS-volume migration, staging failure/recovery, deployed image identity, public health checks, browser end-to-end behavior, category write authorization, production rate-limit storage/proxy handling, or public CSP/HSTS. These remain open until evidence is recorded.
 
 
 ## Latest code CI checkpoint — 2026-10-12
 
 CI run [38213095648](https://github.com/AyomideADEJARE1/Expense-Management-Platform/actions/runs/38213095648) passed all eight jobs for code commit `2c7d244067d7ca3727f4c346995380dbc4a95fea`. This includes the README clarification after the previously passing 39-test correction run. The run passed database migrations, backend lint/tests, frontend lint/build, secret scanning, both Docker builds, and the aggregate check.
 
-The latest application-code regression coverage includes category-budget deletion protection, category create/update commit error handling, and email uniqueness conflict/recovery. The frontend package still has no test script, so the optional frontend test step does not establish frontend functional coverage. AWS populated-volume migration, staging failure/recovery, deployed image identity, public health checks, and browser end-to-end verification remain pending.
+The latest application-code regression coverage includes category-budget deletion protection, category create/update commit error handling, email uniqueness conflict/recovery, and frontend Node tests. PR #54's current verified CI passes those configured checks. AWS populated-volume migration, staging failure/recovery, deployed image identity, public health checks, and browser end-to-end verification remain pending. AWS populated-volume migration, staging failure/recovery, deployed image identity, public health checks, and browser end-to-end verification remain pending.
 
 
 ## Latest code CI checkpoint — 2026-10-12 (secret validation)
@@ -699,7 +685,7 @@ This verifies the source behavior in CI, not the actual AWS environment. Before 
 
 CI run [38213904072](https://github.com/AyomideADEJARE1/Expense-Management-Platform/actions/runs/38213904072) passed all eight jobs for correction commit `3bce1183a2916a62cca0018bccaeb8527adb8ebc`. The backend suite passed 47 tests. The run includes production signing-secret validation and the README explanation of production-mode behavior. Database migrations, frontend lint/build, secret scan, both Docker builds, and the aggregate check passed.
 
-The latest green CI result does not prove that AWS is running this commit, that populated-volume migrations or deployment failure/recovery work in staging, or that public health and browser flows pass. The frontend package still has no test script; category write authorization, production rate-limit storage/proxy handling, CSP/HSTS, and live AWS evidence remain open.
+The latest green correction CI result does not prove that AWS is running this commit, that populated-volume migrations or deployment failure/recovery work in staging, or that public health and browser flows pass. PR #54 now defines and runs frontend Node tests; category write authorization, production rate-limit storage/proxy handling, CSP/HSTS, and live AWS evidence remain open. category write authorization, production rate-limit storage/proxy handling, CSP/HSTS, and live AWS evidence remain open.
 
 
 ## QA-FIND-059 — Expense create/update accept noncanonical date formats
