@@ -208,14 +208,14 @@ jobs:
           assert postgres['POSTGRES_PASSWORD'] == 'ci-bootstrap-password-for-compose-test'
           assert backend['POSTGRES_PASSWORD'] != postgres['POSTGRES_PASSWORD']
           assert postgres['POSTGRES_APP_USER'] == 'ci_app_user'
+          assert all(service.get('restart') == 'unless-stopped' for service in config['services'].values())
           print('Compose separates bootstrap credentials from backend runtime credentials.')
+          print('All four services have restart: unless-stopped.')
           PY
           if grep -q 'expense_password' /tmp/compose-resolved.json; then
             echo "::error::Resolved Compose configuration still contains the old fixed password."
             exit 1
           fi
-          restart_count=$(grep -c 'restart: unless-stopped' /tmp/compose-resolved.json)
-          test "$restart_count" -eq 4 || { echo "::error::Expected restart policies for all four services; found $restart_count."; exit 1; }
           echo "Compose has separate database roles, no fixed legacy password, and restart policies for all four services."
 
       - name: Verify deployment migrations run before app restart
