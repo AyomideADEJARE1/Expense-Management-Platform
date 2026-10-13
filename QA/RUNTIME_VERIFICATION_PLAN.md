@@ -731,3 +731,7 @@ CI run 38418489243 passed all eight jobs for commit 905f5db2ff17d968e220f890d900
 
 ## Documentation ownership checkpoint — 2026-10-13
 PR #54 is the sole owner of the root README and architecture document changes. PR #53 contains QA findings, traceability, test planning, runtime gates, and the release checklist only. This removes duplicated root-document changes across the two open PRs. Live AWS verification remains pending.
+
+
+## Repository metadata alignment
+The repository's GitHub About description still says Azure even though the root README, architecture guide, and CD workflow on PR #54 now use AWS EC2. QA-FIND-087 and team action 59 record the required repository-admin update. This is metadata outside the code files; the team must update the repository description and retain evidence. PR #53 remains open and unmerged.
