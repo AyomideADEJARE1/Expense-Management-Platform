@@ -377,10 +377,6 @@ Closure evidence: correction on the target branch, successful clean setup, confi
 
 Correction status update — 2026-10-11: PR #54's correction branch now requires POSTGRES_USER, POSTGRES_PASSWORD, and POSTGRES_DB through root Compose environment variables, updates the root .env.example, and updates the README/Docker setup steps. The source correction is committed, but the current CI run and clean-start configuration/runtime checks must pass before this finding can close. If the former fixed password was ever used on a reachable host, rotate it.
 
-## QA-FIND-038 — Duplicate evidence consolidated into QA-FIND-010
-
-This entry describes the same category-write authorization root cause already tracked by QA-FIND-010. Do not count it as a separate defect. QA-FIND-010 is the canonical finding and includes the required policy decision, role enforcement, negative tests, and closure evidence.
-
 ## QA-FIND-039 — Shared rate-limit storage is not configured (consolidated)
 
 Classification: Production configuration / abuse protection. Status: Consolidated into QA-FIND-073; the missing shared storage remains open there.
@@ -498,10 +494,6 @@ Retest: Open the create and edit budget modals. Confirm the spending value canno
 
 Closure evidence: CI result for the fixing commit, browser screenshot, and comparison between displayed spending and the API/expense records. Source correction alone is not a pass.
 
-
-## QA-FIND-047 — Duplicate evidence consolidated into QA-FIND-010
-
-This entry repeats the unauthenticated category mutation finding. Do not count it as a separate defect. Use QA-FIND-010 as the canonical finding; QA-FIND-047 is retained only as a cross-reference so earlier review notes remain traceable.
 
 ## QA-FIND-048 — Frontend CI has no automated test script
 
@@ -1251,3 +1243,7 @@ PR #54 now includes a CI check that asserts the public `/api/health` and `/api/h
 
 ## Latest correction CI checkpoint — 2026-10-13 (commit ae54eec)
 CI run `38418979526` passed all eight jobs for correction commit `ae54eec01018a728f97bd7c77f7ccbcad3a96a05`. The database migration/role checks, secret scan, backend lint/tests (71 tests), frontend lint/test/build, both Docker builds, and aggregate CI passed; npm audit reported zero vulnerabilities. This supersedes earlier green checkpoints for PR #54 source/CI verification. It does not close AWS populated-volume migration, live deployment/version, public health, browser journeys/downloads, reboot recovery, backup restore, or shared production rate-limit storage. Findings with source corrections remain open for their stated browser/AWS verification until that evidence is retained.
+
+
+## Register hygiene — duplicate placeholder removal
+Two duplicate placeholder sections for category-write authorization have been removed from the active register. QA-FIND-010 remains the single canonical finding for that root cause. Finding IDs are kept stable for traceability, so the register has numbering gaps but no duplicate placeholder findings.
