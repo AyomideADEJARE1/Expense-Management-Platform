@@ -457,7 +457,7 @@ jobs:
       - name: Verify Nginx image configuration
         if: steps.dockerfile.outputs.present == 'true' && matrix.service == 'nginx'
         run: |
-          docker run --rm --entrypoint sh expense-nginx:ci -c 'test -f /etc/nginx/conf.d/default.conf && nginx -t'
+          docker run --rm --add-host frontend:127.0.0.1 --add-host backend:127.0.0.1 --entrypoint sh expense-nginx:ci -c 'test -f /etc/nginx/conf.d/default.conf && nginx -t'
 
   ci-success:
     name: ci-success
