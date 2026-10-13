@@ -1233,3 +1233,18 @@ CI run `38418979526` passed all eight jobs for correction commit `ae54eec01018a7
 
 ## Register hygiene — duplicate placeholder removal
 Two duplicate placeholder sections for category-write authorization have been removed from the active register. QA-FIND-010 remains the single canonical finding for that root cause. Finding IDs are kept stable for traceability, so the register has numbering gaps but no duplicate placeholder findings.
+
+
+## QA-FIND-088 — CI can pass when required automated tests are absent
+
+**Classification:** Continuous-integration quality gate / regression protection. **Priority:** High for release confidence. **Status:** Confirmed on upstream main; correction proposed in PR #54; latest correction CI retest pending.
+
+**Evidence:** The upstream `.github/workflows/ci.yml` runs `pytest -v`, but treats pytest exit code 5 (“no tests collected”) as a warning and exits successfully. The frontend job also uses `npm test --if-present`, so a missing test script silently skips frontend tests. On the current QA-only PR #53 branch, CI run `38420555104` collected zero backend tests, emitted “No backend tests found yet,” and did not fail the backend job. That means a green CI result on a documentation-only branch is not evidence that backend tests ran.
+
+**Why it matters:** A future change could accidentally delete or rename the test suite, remove the frontend test script, or break test discovery and still receive a green CI result. The team may then believe regressions are being checked when the tests did not execute.
+
+**Correction in PR #54:** The correction branch removes the special allowance for pytest exit code 5 and runs the backend suite twice, so zero collected tests fail the job. This audit adds a further correction: frontend lint and tests are now required commands (`npm run lint` and `npm test`) instead of optional `--if-present` steps. The current correction commit must pass CI after this workflow change.
+
+**How QA will verify:** Confirm the backend job runs pytest twice and fails on zero collected tests. Confirm frontend lint and test steps do not use `--if-present`, and that npm reports a nonzero test count. Review the job logs for the exact tested commit.
+
+**Closure evidence:** Green CI for the commit containing this workflow change, backend test collection and pass counts from both runs, frontend test count, and source review confirming no empty-suite success path remains. The earlier PR #54 green run predates the newest CI-workflow edit and must not be used as its verification.
