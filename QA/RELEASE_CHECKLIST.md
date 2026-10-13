@@ -64,3 +64,7 @@ Evidence:
 - [ ] Category create/update return HTTP 409 only for the category-name unique constraint, return generic 500 for unexpected commit failures, roll back, and recover for the next valid request.
 
 - [ ] Duplicate-email constraint conflicts during registration/profile update return HTTP 409; unexpected failures return generic 500 and recover after rollback.
+
+
+## Repository metadata
+- [ ] GitHub About/description field names AWS EC2, not Azure, and matches the README/CD workflow. Capture the repository header as evidence after the repository administrator updates it.
