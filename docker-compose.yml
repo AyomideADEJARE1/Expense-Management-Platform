@@ -1,9 +1,16 @@
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   frontend:
     image: ${FRONTEND_IMAGE:-expense-frontend:local}
     build: ./frontend
     container_name: expense-frontend
     restart: unless-stopped
+    logging: *default-logging
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1/"]
       interval: 10s
@@ -16,6 +23,7 @@ services:
     build: ./backend
     container_name: expense-backend
     restart: unless-stopped
+    logging: *default-logging
     env_file:
       - ./backend/.env
     environment:
@@ -38,6 +46,7 @@ services:
     image: postgres:16-alpine
     container_name: expense-postgres
     restart: unless-stopped
+    logging: *default-logging
     environment:
       POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in the root .env file}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the root .env file}
@@ -64,6 +73,7 @@ services:
     build: ./nginx
     container_name: expense-nginx
     restart: unless-stopped
+    logging: *default-logging
     ports:
       - "80:80"
     depends_on:
