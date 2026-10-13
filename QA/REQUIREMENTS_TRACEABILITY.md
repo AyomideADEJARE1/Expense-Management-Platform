@@ -8,9 +8,9 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 | REQ-02 | Add expenses | TC-EXP-001 | PENDING |
 | REQ-03 | Edit expenses | TC-EXP-002 | PENDING |
 | REQ-04 | Delete expenses | TC-EXP-003 | PENDING |
-| REQ-05 | Expense categories | TC-CAT-001–004 | Category create/update now validate the database's 100-character name limit before commit; new boundary tests are pending CI. Category endpoint authorization policy remains an open finding |
-| REQ-06 | Monthly summaries | TC-REP-001, TC-REP-DATE-002 | Summary endpoints now validate canonical `YYYY-MM` values and new tests compare monthly/category totals to known expenses; current CI pending, browser/runtime verification remains open |
-| REQ-07 | Budget limits | TC-BUD-001–006, TC-DB-006, TC-BUD-DATE-007, TC-BUD-UI-008 | PR #54 adds database uniqueness for category and whole-month budgets, known-conflict handling, and canonical month-date validation. New compact-date tests are pending CI. Confirm whether whole-month budgets must be creatable through the browser; populated-volume and concurrency checks remain open |
+| REQ-05 | Expense categories | TC-CAT-001–004 | Category create/update validate the database's 100-character name limit before commit; the boundary tests passed in correction CI run 38418979526. Category endpoint authorization policy remains an open finding |
+| REQ-06 | Monthly summaries | TC-REP-001, TC-REP-DATE-002 | Summary endpoints validate canonical `YYYY-MM` values and tests compare monthly/category totals to known expenses; correction CI run 38418979526 passed, while browser/runtime verification remains open |
+| REQ-07 | Budget limits | TC-BUD-001–006, TC-DB-006, TC-BUD-DATE-007, TC-BUD-UI-008 | PR #54 adds database uniqueness for category and whole-month budgets, known-conflict handling, and canonical month-date validation. Compact-date regression tests passed in correction CI run 38418979526. Confirm whether whole-month budgets must be creatable through the browser; populated-volume and concurrency checks remain open |
 | REQ-08 | Dashboard with charts | TC-DASH-001–003 | FINDING OPEN |
 | REQ-09 | Date/category filtering | TC-FLT-001–005, TC-FLT-MONTH-006, TC-FLT-TZ-007 | Expense month filters validate exact `YYYY-MM`; dashboard, transaction defaults, and Reports now use local-calendar handling for date-only values. Latest frontend CI/browser timezone retest pending |
 | REQ-10 | CSV export | TC-EXP-004–005 | UI correction proposed in PR #54; retest pending |
