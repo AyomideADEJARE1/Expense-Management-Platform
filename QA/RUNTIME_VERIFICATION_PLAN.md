@@ -744,7 +744,7 @@ CI run `38418979526` passed all eight jobs for `ae54eec01018a728f97bd7c77f7ccbca
 Two duplicate category-write authorization placeholders were removed from QA/QA_FINDINGS.md; QA-FIND-010 remains the canonical entry. The register now has 85 distinct findings/observations. IDs remain stable to preserve traceability; numbering gaps are intentional.
 
 
-### RV-49 — Require non-empty backend and frontend test execution
+### RV-58 — Require non-empty backend and frontend test execution
 **Related finding:** QA-FIND-088. Priority: High for CI trust.
 
 **Current evidence:** Upstream CI allowed pytest exit code 5 (zero tests collected) and used `npm test --if-present`. QA branch run `38420555104` showed zero backend tests collected while the job emitted a warning instead of failing. PR #54 changes the backend job to run pytest twice without a zero-test exception and changes frontend lint/test to mandatory commands.
@@ -752,3 +752,7 @@ Two duplicate category-write authorization placeholders were removed from QA/QA_
 **Verification:** Wait for CI on the exact latest PR #54 head. Confirm backend tests are collected and pass twice, frontend tests run with a nonzero test count, and the workflow no longer allows a missing test command. If possible, run a disposable negative check in a temporary worktree where the test suite or frontend test script is removed and confirm the job fails; do not commit that destructive test change.
 
 **Pass evidence:** Current-head green CI, logs showing backend counts on both runs and frontend test count, and workflow source showing mandatory test commands. A prior CI run does not close this gate if it predates the workflow change.
+
+
+## Current audit counts
+The active register contains 85 distinct findings/observations, the team action summary contains 60 actions, and this plan contains 58 runtime verification gates. Two duplicate finding placeholders were removed; finding IDs remain stable for traceability.
