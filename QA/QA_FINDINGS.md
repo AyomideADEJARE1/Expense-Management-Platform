@@ -45,11 +45,6 @@ Classification: Correction proposed in PR #54; retest pending.
 
 The backend exposes an authenticated CSV endpoint at `/api/expenses/export`, and PR #44 adds a client-side CSV download for the selected report. The Transactions page did not previously offer a direct export action; PR #54 now proposes one for the currently filtered transaction rows. Verify the downloaded file's headers, contents, formula handling, and user-data scope in a browser before closing this finding.
 
-## QA-FIND-007 — Category authorization observation (consolidated)
-Classification: Duplicate/overlapping observation. Status: Consolidated into QA-FIND-010.
-
-The category write-authorization issue is tracked as the high-priority finding QA-FIND-010. Do not count this entry as a separate defect. PR #54 now requires JWT authentication for category writes, but the team still needs to choose and enforce the global-category administration model (administrator-managed versus user-owned categories).
-
 ## QA-FIND-008 — Deployment target decision and evidence
 
 Classification: Requirements/deployment decision. Status: Target decision recorded; deployment evidence pending.
@@ -127,12 +122,6 @@ The follow-up correction branch removes those unused bindings/imports. The next 
 
 The same CI log reports one high-severity npm dependency vulnerability during `npm ci`. The log excerpt does not identify the affected package; run `npm audit` and record the package, advisory, affected version, and safe remediation before classifying the risk as resolved.
 
-
-## QA-FIND-016 — In-memory rate-limit storage (consolidated)
-
-Classification: Historical production-readiness observation. Status: Consolidated into QA-FIND-039 and QA-FIND-073; not a separate active finding.
-
-The absence of an explicit shared rate-limit store remains a real issue. It is tracked in QA-FIND-039 and QA-FIND-073, which include the production storage requirement and the proxy-aware runtime tests. The old note about a JWT key-length warning is not treated as current evidence; the latest inspected CI log shows the Flask-Limiter in-memory-storage warning. Keep the active correction and closure evidence in the consolidated findings.
 
 ## QA-FIND-017 — Frontend dependency audit reported a high-severity source-map-js advisory
 Classification: Dependency-security finding. Status: Retest PASS for current PR #54 frontend lockfile; broader release review pending. Priority: High.
@@ -231,7 +220,7 @@ The backend constructs its SQLAlchemy URL from PostgreSQL environment variables 
 
 
 ## QA-FIND-029 — Authentication tests were coupled through the shared rate limiter
-Classification: Test-isolation defect. Status: Retest PASS in CI run `38164448383`; production rate-limit storage remains open under QA-FIND-016. Priority: Medium.
+Classification: Test-isolation defect. Status: Retest PASS in CI run `38164448383`; production rate-limit storage remains open under QA-FIND-073. Priority: Medium.
 
 The first expanded CI run returned HTTP 429 in otherwise unrelated registration/profile tests because multiple test cases shared the same process-local five-requests-per-minute registration limit. This was test-state interference, not evidence that the validation assertions themselves were wrong.
 
@@ -377,12 +366,6 @@ Closure evidence: correction on the target branch, successful clean setup, confi
 
 Correction status update — 2026-10-11: PR #54's correction branch now requires POSTGRES_USER, POSTGRES_PASSWORD, and POSTGRES_DB through root Compose environment variables, updates the root .env.example, and updates the README/Docker setup steps. The source correction is committed, but the current CI run and clean-start configuration/runtime checks must pass before this finding can close. If the former fixed password was ever used on a reachable host, rotate it.
 
-## QA-FIND-039 — Shared rate-limit storage is not configured (consolidated)
-
-Classification: Production configuration / abuse protection. Status: Consolidated into QA-FIND-073; the missing shared storage remains open there.
-
-The current source still initializes Flask-Limiter without a shared storage URI. QA-FIND-073 is the active tracking item for both this gap and proxy-aware client identity. The team must configure approved shared storage for AWS production and verify restart/multi-worker behavior. Do not treat this consolidation as a fix.
-
 ## QA-FIND-040 — Deployment publishes and deploys mutable latest image tags
 Classification: Deployment reproducibility / release integrity. Priority: High. Status: Open.
 
@@ -523,12 +506,6 @@ Retest: Inspect response headers from the public HTTPS URL and run browser smoke
 
 Closure evidence: Header capture from the deployed HTTPS endpoint, reviewed CSP policy, and browser test evidence. Do not report HSTS as enabled unless observed on HTTPS responses.
 
-
-## QA-FIND-051 — Proxy-aware login/register rate limiting (consolidated)
-
-Classification: Historical proxy-identity finding. Status: Partially corrected in PR #54 and consolidated into QA-FIND-073 for remaining AWS topology/shared-storage verification.
-
-PR #54 now configures ProxyFix for exactly one trusted Nginx hop and adds a regression test that verifies the rightmost forwarded address. This source-level correction still requires confirmation against the actual AWS topology. Shared rate-limit storage is not configured, and the public endpoint has not yet been tested from independent clients. QA-FIND-073 is the active closure record; do not count this entry as a separate active defect.
 
 ## QA-FIND-052 — Category deletion maps every database failure to a conflict
 
