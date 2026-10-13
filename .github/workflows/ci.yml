@@ -189,11 +189,11 @@ jobs:
       - name: Validate Docker Compose environment configuration
         run: |
           cp backend/.env.example backend/.env
-          printf '%s\\n' \\
-            'POSTGRES_USER=ci_user' \\
-            'POSTGRES_PASSWORD=ci-bootstrap-password-for-compose-test' \\
-            'POSTGRES_DB=expense_management_test' \\
-            'POSTGRES_APP_USER=ci_app_user' \\
+          printf '%s\n' \
+            'POSTGRES_USER=ci_user' \
+            'POSTGRES_PASSWORD=ci-bootstrap-password-for-compose-test' \
+            'POSTGRES_DB=expense_management_test' \
+            'POSTGRES_APP_USER=ci_app_user' \
             'POSTGRES_APP_PASSWORD=ci-compose-app-password-strong-123456789' > .env
           docker compose config --format json > /tmp/compose-resolved.json
           python - <<'PY'
