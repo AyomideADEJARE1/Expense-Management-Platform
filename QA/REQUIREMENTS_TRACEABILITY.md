@@ -283,3 +283,7 @@ CI run `38418979526` passed all eight jobs for correction commit `ae54eec01018a7
 
 ## Audit register hygiene
 Two duplicate category-write authorization placeholders were removed from QA/QA_FINDINGS.md; QA-FIND-010 remains the canonical entry. The register now has 80 findings/observations. IDs remain stable to preserve traceability; numbering gaps are intentional.
+
+
+## CI test-execution gate trace
+QA-FIND-088 is covered by TC-CI-004 and TC-CI-006. Upstream CI previously allowed zero backend tests and optional frontend tests; PR #54 now requires backend pytest twice and mandatory frontend lint/tests. CI run `38420803176` passed all eight jobs for correction head `8d781f3fb45cdce2a07e50ef3250b99ce0501333`, including 71 backend tests twice and nine frontend tests. The correction is not in upstream main until PR #54 is merged.
