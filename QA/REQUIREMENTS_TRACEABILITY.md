@@ -59,7 +59,7 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 | REQ-40 | Account email uniqueness conflicts are handled safely | TC-AUTH-012–013, RV-28 | PR #54 adds named-constraint handling and rollback tests; CI run 38213904072 passed all 39 backend tests. AWS runtime verification remains pending |
 
 | REQ-41 | Production Flask/JWT signing secrets fail closed | TC-SEC-011, RV-06, RV-10 | PR #54 adds startup validation and tests for missing, weak, placeholder, or shared keys; CI run 38213904072 passed all 47 backend tests. AWS configuration verification remains pending |
-| REQ-42 | Nginx configuration is rebuilt and applied for the deployed commit | TC-CD-009, RV-58 | Upstream main does not explicitly rebuild the locally built Nginx image after checkout. PR #54 adds `docker compose build nginx`, includes Nginx in the CI Docker matrix, runs `nginx -t`, and checks build-before-migration/restart ordering. CI run `38423159920` failed only at the isolated Nginx config test because upstream hostnames were unresolved; the host-alias correction passed all nine jobs in run `38423587724` for PR #54 head `cf02398d63fa2a2fd920d131d88fda42974b2700`. AWS runtime verification remains required |
+| REQ-42 | Nginx configuration is rebuilt and applied for the deployed commit | TC-CD-009, RV-58 | Upstream main does not explicitly rebuild the locally built Nginx image after checkout. PR #54 adds `docker compose build nginx`, includes Nginx in the CI Docker matrix, runs `nginx -t`, and checks build-before-migration/restart ordering. CI run `38423159920` failed only at the isolated Nginx config test because upstream hostnames were unresolved; the host-alias correction passed all nine jobs in run `38423587724` for commit `cf02398d63fa2a2fd920d131d88fda42974b2700`. Latest PR #54 head `edcebac4482f33ca9280874f31a2a923b27865f6` also passed all nine jobs in run `38424685532`. AWS runtime verification remains required |
 
 
 ## QA-FIND-059 trace — expense date format
@@ -291,7 +291,7 @@ QA-FIND-088 is covered by TC-CI-004 and TC-CI-006. Upstream CI previously allowe
 
 
 ## Latest PR #54 status — 2026-10-13
-The root README and architecture documentation are part of PR #54, which remains open and unmerged. Latest correction head `cf02398d63fa2a2fd920d131d88fda42974b2700` passed all nine CI jobs in run `38423587724`, including the Nginx syntax-check fix. Live AWS/browser checks remain separate release gates.
+The root README and architecture documentation are part of PR #54, which remains open and unmerged. The Nginx test-harness correction `cf02398d63fa2a2fd920d131d88fda42974b2700` passed all nine jobs in run `38423587724`. Latest PR #54 head `edcebac4482f33ca9280874f31a2a923b27865f6` also passed all nine jobs in run `38424685532`. Live AWS/browser checks remain separate release gates.
 
 
 ## REQ-DEPLOY-05 — Nginx image matches the checked-out deployment commit
@@ -302,4 +302,4 @@ The root README and architecture documentation are part of PR #54, which remains
 
 **PR #54 correction:** The deployment now runs `docker compose build nginx` from the checked-out commit before migrations and service restart. CI builds the Nginx image and runs `nginx -t` as a configuration check. The first test failed because the isolated test container could not resolve the `frontend` and `backend` upstream hostnames. Commit `cf02398d63fa2a2fd920d131d88fda42974b2700` adds temporary host mappings for that isolated check; CI run `38423587724` passed all nine jobs, including the Nginx syntax check.
 
-**Verification still required:** Pass CI on the current commit, then deploy to AWS staging and verify the running Nginx configuration, public health routes, and expected security headers. CI syntax validation alone does not prove the live VM is running the new image.
+**Verification still required:** CI passed for the current PR #54 head in run `38424685532`; deploy to AWS staging and verify the running Nginx configuration, public health routes, and expected security headers. CI syntax validation alone does not prove the live VM is running the new image.
