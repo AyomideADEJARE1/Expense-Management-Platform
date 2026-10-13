@@ -1232,3 +1232,18 @@ The earlier notes that attributed the README and architecture edits to PR #53 ar
 
 ## Nginx health-route regression guard — 2026-10-13
 PR #54 now includes a CI check that asserts the public `/api/health` and `/api/health/db` Nginx locations point to `/health` and `/health/db` respectively, and that CD checks both public URLs. This guards against accidental removal or path mismatch. It does not replace a running Compose or live AWS HTTP test.
+
+
+## QA-FIND-087 — GitHub repository description does not match the approved AWS deployment target
+
+**Classification:** Repository metadata/documentation consistency. **Priority:** Low. **Status:** Open; repository-level settings change still required.
+
+**Evidence:** The repository's GitHub About/description metadata still names the previously intended cloud provider, while the current correction branch, deployment workflow, and professional README use AWS EC2. This metadata is outside the README and workflow files, so changing those files does not update the repository card/header description.
+
+**Why it matters:** A tutor, reviewer, or teammate may see conflicting deployment targets on the repository page even though the code and README describe AWS. This makes the project appear inconsistent and can confuse deployment review.
+
+**Required correction:** A repository administrator should edit the GitHub repository About/description field to a concise AWS-aligned description, for example: "A full-stack personal expense management platform built with React, Flask, PostgreSQL, Docker, CI/CD, Nginx, and AWS EC2, with a focus on cloud architecture, DevOps, security, monitoring, and automated deployment."
+
+**How QA will verify:** Refresh the repository home page and confirm the About description names AWS EC2 and matches the README/CD workflow. Confirm the README, architecture guide, and CD workflow remain aligned.
+
+**Closure evidence:** Updated repository description visible on GitHub, plus the current README and CD workflow showing the same AWS target. This metadata item is separate from the two code/documentation PRs and does not require an application-code change.
