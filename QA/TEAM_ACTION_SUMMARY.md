@@ -84,7 +84,7 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Why it matters:** The team could report deployment success while the VM is unavailable, running an older image, or unable to pull the intended package.
 
-**Required correction:** Confirm the protected AWS secrets/variables, deploy the exact tested commit-specific image, and capture the running digest and public health checks. Do not claim deployment success just because workflow code exists.
+**Required correction:** Confirm the protected AWS secrets/variables, deploy the exact tested commit-specific image, and capture the running digest and public health checks. Update the GitHub repository About/description metadata so it also names AWS EC2. Do not claim deployment success just because workflow code exists.
 
 **How QA will verify:** Confirm the AWS job targets the intended EC2 host, deploys the reviewed commit, and completes application and database health checks.
 
