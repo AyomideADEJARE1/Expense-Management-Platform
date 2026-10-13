@@ -28,4 +28,4 @@ Documents:
 Historical reconstruction is kept separate from executed testing. Git history can establish that code changed; it does not by itself prove that a feature passed functional testing.
 
 
-Latest CI checkpoint: PR #54 root README commit `425d435f08e1a11a0ca40060db8f285654ab54ad` passed all eight CI jobs in run `38421606402`. The latest PR #54 head `0002b8a21e88e54917e7b6519ea07683d183001c` updates architecture wording only; run `38422688117` was in progress at the last check. PR #53 is documentation-only and also requires a successful CI result for its exact latest head. Neither PR has been merged; no live AWS deployment acceptance is claimed.
+Latest CI checkpoint: PR #54 root README commit `425d435f08e1a11a0ca40060db8f285654ab54ad` passed all eight CI jobs in run `38421606402`. The latest PR #54 head `0002b8a21e88e54917e7b6519ea07683d183001c` updates architecture wording only; run `38422688117` passed all eight jobs for that exact head. PR #53 is documentation-only and also requires a successful CI result for its exact latest head. Neither PR has been merged; no live AWS deployment acceptance is claimed.
