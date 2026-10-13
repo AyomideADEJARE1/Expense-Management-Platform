@@ -259,3 +259,7 @@ The runner's GHCR login did not authenticate the remote EC2 host. PR #54 now for
 
 ## Submission trace — public URL and architecture diagram
 README.md now includes explicit placeholders for the verified public URL and final AWS architecture diagram. The team lead/DevOps must fill these from the running AWS environment after the public health checks and deployed commit/image have been verified. This is a submission evidence gate, not a source-code test.
+
+
+## Documentation alignment — PR #53
+The root README and `docs/architecture.md` are updated to describe AWS EC2, current host port `80:80`, private PostgreSQL, the existing architecture image, and the gated GHCR-to-AWS release path. This resolves the documentation/source-alignment portion of QA-FIND-002 and QA-FIND-049 in the PR branch. It does not close the live URL, deployed commit, health-check, or clean-start runtime requirements.
