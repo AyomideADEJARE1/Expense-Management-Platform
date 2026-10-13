@@ -290,4 +290,4 @@ QA-FIND-088 is covered by TC-CI-004 and TC-CI-006. Upstream CI previously allowe
 
 
 ## Latest PR #54 status — 2026-10-13
-The root README follow-up commit `425d435f08e1a11a0ca40060db8f285654ab54ad` passed CI run `38421606402`. Latest PR #54 head `0002b8a21e88e54917e7b6519ea07683d183001c` updates architecture documentation only; CI run `38422688117` was in progress at the last check. The correction PR remains open and unmerged. Live AWS/browser checks remain separate release gates.
+The root README follow-up commit `425d435f08e1a11a0ca40060db8f285654ab54ad` passed CI run `38421606402`. Latest PR #54 head `0002b8a21e88e54917e7b6519ea07683d183001c` updates architecture documentation only; CI run `38422688117` passed all eight jobs for this exact head. The correction PR remains open and unmerged. Live AWS/browser checks remain separate release gates.
