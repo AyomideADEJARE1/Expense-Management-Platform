@@ -767,7 +767,7 @@ CI run `38420803176` passed all eight jobs for PR #54 correction head `8d781f3fb
 
 
 ## Latest PR #54 source checkpoint — 2026-10-13
-The professional root README follow-up at `425d435f08e1a11a0ca40060db8f285654ab54ad` passed CI run `38421606402`. The latest PR #54 head `0002b8a21e88e54917e7b6519ea07683d183001c` only changes architecture-document wording to distinguish intended AWS topology from live runtime evidence; CI run `38422688117` passed all eight jobs for this exact head. Keep AWS runtime gates open regardless of CI result until live health, deployed commit/image, populated-volume migration, recovery, backup/restore, and browser evidence are recorded.
+The professional root README follow-up at `425d435f08e1a11a0ca40060db8f285654ab54ad` passed CI run `38421606402`. The latest PR #54 head `cf02398d63fa2a2fd920d131d88fda42974b2700` passed all nine CI jobs in run `38423587724`. The Nginx syntax check uses temporary host mappings because this isolated check does not run the frontend/backend services. This is CI evidence only; AWS runtime gates remain open. Keep AWS runtime gates open regardless of CI result until live health, deployed commit/image, populated-volume migration, recovery, backup/restore, and browser evidence are recorded.
 
 
 ## RV-58 — Verify Nginx is rebuilt and deployed from the target commit
