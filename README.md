@@ -234,6 +234,8 @@ The deployment uses these repository secrets:
 - `AWS_EC2_HOST` — AWS instance IP or hostname.
 - `AWS_EC2_USER` — SSH user on the instance.
 - `AWS_EC2_SSH_KEY` — private SSH key for deployment.
+- `GHCR_READ_USERNAME` — account used by the AWS host to pull images from GHCR.
+- `GHCR_READ_TOKEN` — a protected, read-only package token for GHCR image pulls; never print or commit it.
 
 It uses these repository variables:
 
@@ -241,7 +243,7 @@ It uses these repository variables:
 - `APP_URL` — verified public URL used by post-deployment health checks.
 - `DEPLOY_PATH` — application directory on the instance; otherwise the documented default is used.
 
-The workflow checks out the commit associated with the successful CI run, uses commit-tagged images, waits for PostgreSQL, applies migrations before restarting application services, and checks both public health endpoints. A commit-specific tag is traceable but is not inherently immutable; recording image digests or enforcing registry tag immutability provides stronger release integrity.
+The workflow checks out the commit associated with the successful CI run, authenticates the AWS host to GHCR using the read-only registry credentials, uses commit-tagged images, waits for PostgreSQL, applies migrations before restarting application services, and checks both public health endpoints. The SSH deployment step logs out of GHCR after the pull. A commit-specific tag is traceable but is not inherently immutable; recording image digests or enforcing registry tag immutability provides stronger release integrity.
 
 **Deployment status:** Do not claim that the latest commit is live until the team has captured the deployed commit/image, successful health checks, and end-to-end browser results. The verified public URL is intentionally pending team-lead confirmation in the submission section above.
 
