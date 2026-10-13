@@ -405,7 +405,7 @@ PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit tes
 
 **How QA will verify:** Save each supported currency and inspect Dashboard, Transactions, Budgets, Reports, dashboard chart tooltips, and budget search results. All amount labels must match the selected currency. Switching back to NGN must update the display without changing numeric values.
 
-**Evidence to close:** Passing frontend lint/build for the exact commit and browser screenshots for each supported currency across the named screens. Automated frontend tests are not currently configured, so browser evidence is required.
+**Evidence to close:** Passing frontend lint/build for the exact commit and browser screenshots for each supported currency across the named screens. The correction branch has Node frontend tests, but browser evidence is still required because those tests do not exercise these screens end to end.
 
 ### 38. Backend/frontend/DevOps: make the Settings phone field persist
 **What happens:** Settings showed a Phone Number field, but the backend did not store or return the value. The save message could appear even though the phone number disappeared after reload.
