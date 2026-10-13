@@ -64,9 +64,9 @@ Initial schema: database/migrations/001_initial_schema.sql.
 
 ## Production
 
-Cloudflare -> expense-tracker.live -> AWS EC2 Ubuntu -> Docker Compose -> Nginx/React/Flask/PostgreSQL.
+Documented target topology (not live-runtime proof): Cloudflare -> expense-tracker.live -> AWS EC2 Ubuntu -> Docker Compose -> Nginx/React/Flask/PostgreSQL.
 
-Let's Encrypt/Certbot manages the production certificate in the deployment environment.
+Deployment notes identify Let's Encrypt/Certbot as the certificate-management approach. Verify the active certificate, expiry, and renewal status on the live environment before claiming HTTPS is currently verified.
 
 The repository Nginx container is HTTP-only on port 80; production TLS/domain handling is surrounding infrastructure.
 
