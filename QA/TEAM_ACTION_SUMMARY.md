@@ -673,7 +673,7 @@ PR #54 owns the root README and architecture documentation because they must sta
 
 
 ### 59. Repository administrator: align the GitHub About description with AWS
-**What happens:** The repository's GitHub About description still names Azure, while the correction branch README, architecture guide, and deployment workflow use AWS EC2.
+**What happens:** The repository's GitHub About description still names the previous cloud target, while the correction branch README, architecture guide, and deployment workflow use AWS EC2.
 
 **Why it matters:** The repository header can contradict the approved deployment target even when the code and project documents are aligned.
 
