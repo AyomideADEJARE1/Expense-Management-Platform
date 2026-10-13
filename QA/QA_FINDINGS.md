@@ -10,11 +10,11 @@ Classification: Observation. Status: Open.
 The repository contains both a root-level React source structure and frontend/src. Docker builds ./frontend, making that tree the apparent containerized frontend. The role of the other tree should be clarified.
 
 ## QA-FIND-002 — README accuracy differs by branch
-Classification: Documentation defect. Status: README correction proposed in PR #53; branch-specific follow-up remains.
+Classification: Documentation defect. Status: README correction proposed in PR #54; branch-specific follow-up remains.
 
 The current upstream `main` README already describes the integrated React/Flask/PostgreSQL stack and identifies AWS EC2 as the documented live environment. The `integration/deployable-main` README still contained legacy frontend/localStorage descriptions that did not match its integrated backend and Docker/Nginx implementation.
 
-PR #53 updates the main-branch README with the current React/Flask/PostgreSQL/Docker/Nginx stack, AWS EC2 deployment path, local setup, health routes, environment configuration, CI/CD limits, and release evidence. It embeds the architecture image already present in `docs/`. The existing production domain is retained from the previous main README but still requires live verification. The separate `integration/deployable-main` branch should only be updated separately if it remains an active delivery branch.
+PR #54 updates the existing root README with the current React/Flask/PostgreSQL/Docker/Nginx stack, AWS EC2 deployment path, local setup, health routes, environment configuration, CI/CD limits, and release evidence. It embeds the architecture image already present in `docs/`. The existing production domain is retained from the previous main README but still requires live verification. The separate `integration/deployable-main` branch should only be updated separately if it remains an active delivery branch.
 
 ## QA-FIND-003 — Dashboard budget data is not passed to all budget-dependent components
 Classification: Historical finding; source correction present. Status: Retest pending.
@@ -104,7 +104,7 @@ Classification: Branch-specific documentation defect. Status: Consolidated into 
 
 The root `README.md` on `integration/deployable-main` describes a React/localStorage application and lists a legacy component structure. The current integrated implementation instead uses the frontend under `frontend/`, Flask API routes, PostgreSQL, Docker Compose, and Nginx. This discrepancy can cause a developer or reviewer to follow incorrect setup and persistence instructions.
 
-Main-branch correction is now proposed in PR #53. If `integration/deployable-main` remains an active branch, align its README separately; otherwise retain this as historical branch-specific context and track the main README under QA-FIND-002.
+Main-branch correction is now proposed in PR #54. If `integration/deployable-main` remains an active branch, align its README separately; otherwise retain this as historical branch-specific context and track the main README under QA-FIND-002.
 
 ## QA-FIND-014 — Docker Compose uses development credentials and requires a local backend env file
 Classification: Configuration/security observation. Status: Open.
@@ -519,7 +519,7 @@ Closure evidence: Test script and test files, CI log showing the test command an
 
 ## QA-FIND-049 — Docker Compose port documentation disagrees with the actual port mapping
 
-Classification: Documentation/reproducibility finding. Status: README and architecture-document corrections proposed in PR #53; clean-start runtime verification remains open. Priority: Low–Medium.
+Classification: Documentation/reproducibility finding. Status: README and architecture-document corrections proposed in PR #54; clean-start runtime verification remains open. Priority: Low–Medium.
 
 Evidence: The Compose file publishes Nginx as `80:80`. The README and architecture document now describe `http://localhost/` and host port `80`; older documentation/snapshots mentioned `8080:80`. Review all active guides and screenshots for remaining stale `8080` instructions.
 
@@ -1213,9 +1213,9 @@ PR #54 now includes `database/migrations/006_app_runtime_role.sql`, Compose cred
 
 
 ## Documentation refresh status — 2026-10-13
-PR #53 now updates the root README and `docs/architecture.md` on the documentation branch. The README uses the project name “Expense Tracker” with “Enhanced Personal Expense Management Platform”, documents AWS EC2, the current four-service Compose architecture, both environment files, migration behavior, tests, health endpoints, protected deployment settings, and release evidence. It embeds the architecture image that already exists in `docs/Expense Platform System Architecture.png` and retains the public domain recorded in the previous main README, explicitly requiring live verification.
+PR #54 now updates the root README and `docs/architecture.md` on the correction branch. The README uses the project name “Expense Tracker” with “Enhanced Personal Expense Management Platform”, documents AWS EC2, the current four-service Compose architecture, both environment files, migration behavior, tests, health endpoints, protected deployment settings, and release evidence. It embeds the architecture image that already exists in `docs/Expense Platform System Architecture.png` and retains the public domain recorded in the previous main README, explicitly requiring live verification.
 
-The architecture document now reflects the current host mapping `80:80`, private PostgreSQL port, restricted runtime database role, migration sequence 002–006 for existing deployments, and the AWS EC2/GHCR release path. Source/document review is complete; current-head CI and live AWS verification are separate gates.
+The architecture document now reflects the current host mapping `80:80`, private PostgreSQL port, restricted runtime database role, migration sequence 002–006 for existing deployments, and the AWS EC2/GHCR release path. Source/document review is complete; the current README/architecture commit needs its own CI run, and live AWS verification is a separate gate.
 
 
 ## Current correction CI checkpoint — 2026-10-13
