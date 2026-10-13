@@ -670,3 +670,15 @@ The architecture document is also aligned with host port 80, private PostgreSQL,
 ### Documentation ownership checkpoint — 2026-10-13
 PR #54 owns the root README and architecture documentation because they must stay aligned with its code and migration changes. PR #53 contains the QA audit package only, avoiding duplicate root documentation edits across open PRs.
 
+
+
+### 59. Repository administrator: align the GitHub About description with AWS
+**What happens:** The repository's GitHub About description still names Azure, while the correction branch README, architecture guide, and deployment workflow use AWS EC2.
+
+**Why it matters:** The repository header can contradict the approved deployment target even when the code and project documents are aligned.
+
+**Required correction:** A repository administrator should update the GitHub About/description to: “A full-stack personal expense management platform built with React, Flask, PostgreSQL, Docker, CI/CD, Nginx, and AWS EC2, with a focus on cloud architecture, DevOps, security, monitoring, and automated deployment.”
+
+**How to verify:** Refresh the repository home page and confirm the description says AWS EC2 and agrees with the root README and .github/workflows/cd.yml.
+
+**Evidence required:** The updated repository header and confirmation that README, architecture guide, and CD workflow all name AWS EC2. This metadata change is outside a code-file commit.
