@@ -1,315 +1,90 @@
-# Database
+# Database Architecture and Operations
 
-PostgreSQL database layer for the Expense Management Platform.
+PostgreSQL 16 is the persistent data store for Expense Tracker. The database is reachable by the application containers over the internal Docker Compose network and is not published directly to the host.
 
-The application uses **PostgreSQL 16** as its relational database and runs PostgreSQL through Docker Compose during local application development and integration testing.
+## Database accounts
 
----
+The deployment uses two distinct database accounts:
 
-## Database Configuration
+| Account | Configuration | Purpose |
+|---|---|---|
+| Bootstrap/migration account | Root `.env`: `POSTGRES_USER` and `POSTGRES_PASSWORD` | Initializes PostgreSQL and applies controlled schema migrations |
+| Application runtime account | Root `.env`: `POSTGRES_APP_USER` and `POSTGRES_APP_PASSWORD` | Used by Flask to read and modify application records |
 
-The current Docker Compose configuration is:
+The backend must not receive the bootstrap password. Migration 006 creates or updates the runtime role as a non-superuser, without database-creation or role-creation privileges, and grants only the table and sequence permissions needed for normal application CRUD. It also configures default privileges for future objects created by the bootstrap account.
 
-| Setting | Value |
-|---|---|
-| Database | `expense_db` |
-| User | `expense_user` |
-| Host | `postgres` |
-| Port | `5432` |
-| PostgreSQL Version | 16 |
+Use unique strong passwords. The runtime password must be at least 32 characters and must not be a placeholder. Never commit real environment files or passwords.
 
-The hostname `postgres` is the Docker Compose service name and is used by the Flask backend to connect to PostgreSQL.
+## Database tables and relationships
 
-The database is not exposed directly to the host by the current Docker Compose configuration. Other containers communicate with PostgreSQL over the Docker Compose network.
+The database includes:
 
----
+- `users` — user accounts and preferences.
+- `expense_categories` — category labels.
+- `expenses` — individual expense records linked to a user and category.
+- `budgets` — category-specific or whole-month budget records.
+- `monthly_expense_summary` — stored monthly summary data where used by the application.
 
-## Database Schema
-
-The database contains the following tables:
-
-- `users` — application users
-- `expense_categories` — available expense categories
-- `expenses` — individual user expenses
-- `budgets` — user budget allocations
-- `monthly_expense_summary` — monthly expense totals
-
-### Relationships
+Conceptual relationships:
 
 ```text
 users
-  │
   ├──< expenses >── expense_categories
-  │
-  ├──< budgets
-  │
+  ├──< budgets >─── expense_categories (optional category)
   └──< monthly_expense_summary
 ```
 
----
+The browser and React frontend do not connect directly to PostgreSQL. The backend accesses it through SQLAlchemy and Psycopg.
 
-## Initial Migration
+## Ordered migrations
 
-The initial database migration is:
+Migration files live in `database/migrations/`:
 
-```text
-database/migrations/001_initial_schema.sql
-```
+1. `001_initial_schema.sql` — initial tables and constraints.
+2. `002_user_settings.sql` — user preferences and related constraints.
+3. `003_budget_uniqueness.sql` — database-enforced budget uniqueness.
+4. `004_restrict_category_budget_delete.sql` — prevents deleting a category that is still referenced by a budget.
+5. `005_user_phone.sql` — optional profile phone field.
+6. `006_app_runtime_role.sql` — creates/configures the restricted application account and grants required data permissions.
 
-Docker Compose mounts this file into PostgreSQL's initialization directory:
+On a fresh volume, PostgreSQL executes the mounted initialization scripts in order. PostgreSQL does **not** rerun those scripts merely because a container restarts or a file changes. The AWS CD workflow therefore applies migrations 002–006 explicitly to an existing database before restarting application services.
 
-```text
-/docker-entrypoint-initdb.d/001_initial_schema.sql
-```
+Migration 003 intentionally stops if legacy duplicate budgets need manual review. Back up the database and review the migration output before resolving any legacy data conflicts. If any migration fails, the deployment must stop before the new backend starts.
 
-When PostgreSQL starts with a **new database volume**, the official PostgreSQL image automatically executes the SQL file during database initialization.
+## Start and inspect the database
 
-This means the initial schema does not normally need to be applied manually when using the project's Docker Compose setup.
-
----
-
-## Starting the Database
-
-From the project root:
+From the repository root, after both environment files have been created and configured:
 
 ```bash
 docker compose up -d postgres
-```
-
-Check the PostgreSQL service:
-
-```bash
 docker compose ps postgres
+docker compose logs postgres
 ```
 
-The PostgreSQL health check uses:
+The health check uses the bootstrap account only to check that PostgreSQL is accepting connections. The backend itself must connect using the restricted runtime account.
 
-```text
-pg_isready -U expense_user -d expense_db
-```
+## Recreate a local development database
 
-The database should report as healthy before the backend attempts to connect.
-
----
-
-## Recreating the Development Database
-
-To completely recreate the local development database from the initial migration:
+The following commands destroy the local database volume and all data stored in it:
 
 ```bash
 docker compose down -v
 docker compose up --build -d
 ```
 
-> **Warning:** `docker compose down -v` removes the `postgres_data` Docker volume and permanently deletes the existing local database data.
+Only do this when the local data can be discarded. For any shared or production database, do not remove volumes or apply migrations without a backup and an agreed recovery plan.
 
-The migration in:
+## Verification checklist
 
-```text
-database/migrations/001_initial_schema.sql
-```
+- Confirm the backend container receives `POSTGRES_APP_USER` and `POSTGRES_APP_PASSWORD`, not the bootstrap credentials.
+- Confirm the runtime role can perform the application's required CRUD operations.
+- Confirm it cannot create roles, create databases, or create/alter schema objects.
+- Confirm the migration role can apply migrations 002–006.
+- Test both a fresh database and a disposable populated database.
+- Preserve sanitized migration logs and privilege-test output; never include passwords or real user financial data.
 
-will then be executed automatically when the new PostgreSQL volume is initialized.
-
----
-
-## Verifying the Database
-
-List the running services:
-
-```bash
-docker compose ps
-```
-
-You can verify the database tables directly inside the PostgreSQL container:
-
-```bash
-docker exec expense-postgres \
-  psql -U expense_user -d expense_db -c "\dt"
-```
-
-Expected tables include:
+## Connection path
 
 ```text
-budgets
-expense_categories
-expenses
-monthly_expense_summary
-users
-```
-
-### Test Database Connectivity from the Backend
-
-The backend can also verify the PostgreSQL connection using SQLAlchemy:
-
-```bash
-docker exec expense-backend \
-  python -c "from app import app, db; app.app_context().push(); db.session.execute(db.text('SELECT 1')); print('Database connection: OK')"
-```
-
-A successful connection prints:
-
-```text
-Database connection: OK
-```
-
----
-
-## Database Health Endpoint
-
-The Flask backend provides a database health endpoint:
-
-```text
-GET /health/db
-```
-
-When accessed through Nginx:
-
-```text
-GET /api/health/db
-```
-
-Example:
-
-```bash
-curl http://localhost:8080/api/health/db
-```
-
-A healthy database should return:
-
-```json
-{
-    "status": "ok",
-    "database": "connected"
-}
-```
-
----
-
-## Schema Reference
-
-The repository also contains:
-
-```text
-database/schema/schema.sql
-```
-
-The migration and schema reference serve different purposes:
-
-| File | Purpose |
-|---|---|
-| `database/migrations/001_initial_schema.sql` | Executable initial database migration |
-| `database/schema/schema.sql` | Schema reference/documentation |
-
-When making database changes, the executable migration should remain consistent with the application's expected schema.
-
----
-
-## Manual PostgreSQL Access
-
-Although Docker Compose is the recommended development setup, PostgreSQL can be accessed directly from inside the database container.
-
-Open a PostgreSQL shell:
-
-```bash
-docker exec -it expense-postgres \
-  psql -U expense_user -d expense_db
-```
-
-Then list the tables:
-
-```sql
-\dt
-```
-
-Exit PostgreSQL with:
-
-```sql
-\q
-```
-
----
-
-## Database Persistence
-
-PostgreSQL data is persisted using the Docker volume:
-
-```text
-postgres_data
-```
-
-The volume is mounted at:
-
-```text
-/var/lib/postgresql/data
-```
-
-As a result, stopping the containers does not normally remove the database data.
-
-For example:
-
-```bash
-docker compose down
-```
-
-stops and removes the containers while preserving the database volume.
-
-In contrast:
-
-```bash
-docker compose down -v
-```
-
-also removes the database volume and therefore deletes the local database data.
-
----
-
-## Security
-
-Never commit:
-
-- Database passwords
-- API keys
-- Private keys
-- Production credentials
-- `.env` files containing secrets
-
-The PostgreSQL credentials currently defined in Docker Compose are **development-only credentials**.
-
-Production deployments should use securely managed credentials and should not reuse the development database password.
-
----
-
-## Database Development Notes
-
-The database is consumed by the Flask backend through:
-
-```text
-Flask
-  │
-  ▼
-SQLAlchemy
-  │
-  ▼
-Psycopg
-  │
-  ▼
-PostgreSQL 16
-```
-
-The browser and React frontend do not connect directly to PostgreSQL.
-
-The normal application request path is:
-
-```text
-Browser
-   │
-   ▼
-Nginx
-   │
-   ▼
-Flask API
-   │
-   ▼
-PostgreSQL
+Browser -> Nginx -> Flask API -> SQLAlchemy/Psycopg -> PostgreSQL 16
 ```
