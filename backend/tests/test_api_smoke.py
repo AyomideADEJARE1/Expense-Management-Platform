@@ -827,14 +827,20 @@ def test_budgets_are_isolated_between_users(client):
     assert owner_read.get_json()["data"]["amount"] == 250.0
 
 
-def test_non_object_json_bodies_are_rejected(client):
+def test_non_object_json_bodies_are_rejected(client, auth_headers):
     for endpoint in (
         "/api/auth/register",
         "/api/auth/login",
-        "/api/categories",
     ):
         response = client.post(endpoint, json=["not", "an", "object"])
         assert response.status_code == 400
+
+    category_response = client.post(
+        "/api/categories",
+        headers=auth_headers,
+        json=["not", "an", "object"],
+    )
+    assert category_response.status_code == 400
 
 
 def test_expenses_and_csv_export_are_isolated_between_users(
