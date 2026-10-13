@@ -1,5 +1,6 @@
 # Expense Tracker
-## Enhanced Personal Expense Management Platform
+
+## Personal expense tracking, budgeting, and reporting
 
 Expense Tracker is a full-stack web application for recording personal expenses, organizing spending by category, setting budgets, reviewing monthly spending, and exporting transaction data for further analysis.
 
