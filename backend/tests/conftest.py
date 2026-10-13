@@ -50,7 +50,7 @@ def refuse_non_test_database():
 
 @pytest.fixture(autouse=True)
 def clean_test_database():
-    """Keep API tests independent by clearing rows from the disposable test DB."""
+    """Keep API tests independent by clearing the disposable test DB."""
     from app import app
     from extensions import db
 
