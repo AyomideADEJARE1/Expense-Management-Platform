@@ -34,7 +34,7 @@ The listed domain and diagram are repository evidence, not proof that the latest
 - Set monthly spending limits by category and review budget utilization in the dashboard.
 - View monthly summaries, category summaries, dashboard totals, charts, and recent transactions.
 - Export transaction and report data to CSV, with spreadsheet-formula protection and UTF-8 handling.
-- Update available profile settings and preferences, including preferred currency and notification options.
+- Update available profile settings and preferences, including preferred currency and notification preference flags. These flags are saved, but notification delivery is not implemented or verified.
 - Check application and database health through dedicated endpoints.
 
 Access control, budget rules, exports, and database behavior are covered by automated tests and the QA documents. A passing CI run demonstrates the checks executed by CI; it does not by itself prove that the latest version is deployed or that every browser flow has been tested.
