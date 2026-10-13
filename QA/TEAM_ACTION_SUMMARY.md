@@ -10,7 +10,7 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Status rule:** “Found” means the code has a problem. “Correction proposed” means code has been changed but still needs review and tests. “CI passed” means automated checks passed for the named commit. “Runtime pending” means the app still needs to be run and checked. These statuses must not be treated as the same thing.
 
-**Current audit size:** 82 distinct findings/observations, 62 distinct team actions, and 50 runtime verification gates. CI run `38420803176` passed all eight jobs for code commit `8d781f3fb45cdce2a07e50ef3250b99ce0501333`, including the required-test gate. Both backend test runs passed 71 tests; frontend lint, all nine Node tests, and build passed; migrations 001–006 and restricted runtime-role checks passed; secret scan, both Docker builds, and aggregate CI passed. The README-only follow-up commit `425d435f08e1a11a0ca40060db8f285654ab54ad` passed CI run `38421606402` across all eight jobs. Flask-Limiter still warns about in-memory storage. AWS live/runtime evidence remains separate from CI evidence. The root README follow-up passed run `38421606402`; the latest PR #54 head `0002b8a21e88e54917e7b6519ea07683d183001c` updates architecture-status wording and run `38422688117` passed all eight jobs for that exact head.
+**Current audit size:** 81 distinct findings/observations, 61 distinct team actions, and 49 runtime verification gates. CI run `38420803176` passed all eight jobs for code commit `8d781f3fb45cdce2a07e50ef3250b99ce0501333`, including the required-test gate. Both backend test runs passed 71 tests; frontend lint, all nine Node tests, and build passed; migrations 001–006 and restricted runtime-role checks passed; secret scan, both Docker builds, and aggregate CI passed. The README-only follow-up commit `425d435f08e1a11a0ca40060db8f285654ab54ad` passed CI run `38421606402` across all eight jobs. Flask-Limiter still warns about in-memory storage. AWS live/runtime evidence remains separate from CI evidence. The root README follow-up passed run `38421606402`; the latest PR #54 head `0002b8a21e88e54917e7b6519ea07683d183001c` updates architecture-status wording and run `38422688117` passed all eight jobs for that exact head.
 
 ## Actions for the team
 
@@ -19,9 +19,11 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Why it matters:** Requiring login blocks anonymous changes, but any signed-in user can still affect categories seen by other accounts.
 
-**Backend owner:** First verify the PR #54 guard and anonymous 401 tests. Then decide whether categories are admin-managed shared records or per-user records, and implement the matching role/ownership checks. Do not treat login alone as full authorization.
+**Team lead/product owner decision:** Choose and document one policy: (A) shared categories managed only by a defined administrator role, or (B) per-user categories with ownership and user-scoped queries. Login alone is not full authorization. If choosing per-user categories, plan a migration and decide how existing expenses and budgets retain category references.
 
-**QA check:** Anonymous writes must return 401. Authenticated non-admin users must not be able to make changes outside the chosen policy; authorized users must still be able to manage categories. Verify referenced-category deletion remains protected.
+**Backend owner:** Implement the chosen role/ownership checks and retain the anonymous JWT guards. Do not block legitimate category administration without defining who is allowed to perform it.
+
+**QA check:** Use two accounts. Anonymous writes must return 401; an ordinary signed-in user must not change shared categories unless policy allows it; the authorized admin/owner must be able to perform permitted actions. Verify the second account's category list, expense labels, budgets, and summaries remain correct. Test referenced-category deletion and cross-user ID tampering.
 
 ### 2. Backend and database owner: verify budget uniqueness correction
 **What happens:** The original route checked for duplicate budgets in application code only, which could allow concurrent requests to race.
@@ -711,14 +713,3 @@ PR #54 owns the root README and architecture documentation because they must sta
 
 
 **Latest deployment correction status (2026-10-13):** The audit identified that upstream `main` did not explicitly rebuild the local Nginx image after checkout. PR #54 now runs `docker compose build nginx` before migrations/restart and includes Nginx in the CI Docker matrix with an `nginx -t` check and an order guard. CI run `38423159920` failed at the isolated Nginx `nginx -t` check because the test container could not resolve the `frontend` and `backend` upstream hostnames. Follow-up commit `cf02398d63fa2a2fd920d131d88fda42974b2700` adds temporary host mappings; CI run `38423587724` was pending at the last check. AWS staging verification remains open.
-
-### 62. Team lead/backend: decide and enforce shared-category permissions
-**What happens:** Categories are global records, but the current correction only requires a valid login to create, rename, or delete them. It does not require an administrator role or check ownership.
-
-**Why it matters:** One ordinary user may change category labels or remove categories that other users rely on. Login authentication does not by itself authorize changes to shared data.
-
-**Decision needed:** Choose either (A) shared categories managed only by a defined administrator role, or (B) per-user categories with ownership and user-scoped queries. Record the decision before implementing; existing expenses and budgets already reference category IDs.
-
-**Required correction:** Backend owner implements the chosen role/ownership checks. If choosing per-user categories, add a migration and define how existing categories and their expense/budget references are assigned. Add tests for anonymous requests, normal users, admins/owners, and cross-user ID tampering. Do not mark this solved merely because category mutation endpoints require a JWT.
-
-**Verification and evidence:** Two-account API/browser tests show one account cannot modify another account's categories or change its expense/budget labels. Attach the requirements decision, migration if applicable, test results, and current-head CI run.
