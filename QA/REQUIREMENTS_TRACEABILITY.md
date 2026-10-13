@@ -283,7 +283,7 @@ CI run `38418979526` passed all eight jobs for correction commit `ae54eec01018a7
 
 
 ## Audit register hygiene
-Five non-active duplicate/consolidation placeholders (QA-FIND-007, 016, 037, 039 and 051) were removed. Canonical coverage remains in QA-FIND-010, QA-FIND-022 and QA-FIND-073. The register now has 80 findings/observations; IDs remain stable for traceability.
+Five non-active duplicate/consolidation placeholders (QA-FIND-007, 016, 037, 039 and 051) were removed. Canonical coverage remains in QA-FIND-010, QA-FIND-022 and QA-FIND-073. The register now has 81 findings/observations; IDs remain stable for traceability.
 
 
 ## CI test-execution gate trace
@@ -313,6 +313,6 @@ The root README follow-up commit `425d435f08e1a11a0ca40060db8f285654ab54ad` pass
 
 **Upstream main:** The CD workflow checked out the target commit and updated application services but did not explicitly rebuild the Compose Nginx image.
 
-**PR #54 correction:** The deployment now runs `docker compose build nginx` from the checked-out commit before migrations and service restart. CI builds the Nginx image and runs `nginx -t` as a configuration check. The first test failed because the isolated test container could not resolve the `frontend` and `backend` upstream hostnames. Commit `cf02398d63fa2a2fd920d131d88fda42974b2700` adds temporary host mappings for that isolated check; CI run `38423587724` was pending at the last check.
+**PR #54 correction:** The deployment now runs `docker compose build nginx` from the checked-out commit before migrations and service restart. CI builds the Nginx image and runs `nginx -t` as a configuration check. The first test failed because the isolated test container could not resolve the `frontend` and `backend` upstream hostnames. Commit `cf02398d63fa2a2fd920d131d88fda42974b2700` adds temporary host mappings for that isolated check; CI run `38423587724` passed all nine jobs, including the Nginx syntax check.
 
 **Verification still required:** Pass CI on the current commit, then deploy to AWS staging and verify the running Nginx configuration, public health routes, and expected security headers. CI syntax validation alone does not prove the live VM is running the new image.
