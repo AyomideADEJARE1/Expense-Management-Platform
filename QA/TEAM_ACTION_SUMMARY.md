@@ -10,7 +10,7 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Status rule:** “Found” means the code has a problem. “Correction proposed” means code has been changed but still needs review and tests. “CI passed” means automated checks passed for the named commit. “Runtime pending” means the app still needs to be run and checked. These statuses must not be treated as the same thing.
 
-**Current audit size:** 85 distinct findings/observations, 60 distinct team actions, and 58 runtime verification gates. CI run `38418979526` passed all eight jobs for correction commit `ae54eec01018a728f97bd7c77f7ccbcad3a96a05`, which also includes the professional README and AWS architecture updates: 71 backend tests passed twice, nine frontend tests passed, npm audit reported zero vulnerabilities, migrations 001–006 and runtime-role checks passed, secret scanning and both Docker builds passed. Flask-Limiter still warns about in-memory storage. AWS live/runtime evidence remains separate from CI evidence.
+**Current audit size:** 85 distinct findings/observations, 60 distinct team actions, and 48 runtime verification gates. CI run `38418979526` passed all eight jobs for correction commit `ae54eec01018a728f97bd7c77f7ccbcad3a96a05`, which also includes the professional README and AWS architecture updates: 71 backend tests passed twice, nine frontend tests passed, npm audit reported zero vulnerabilities, migrations 001–006 and runtime-role checks passed, secret scanning and both Docker builds passed. Flask-Limiter still warns about in-memory storage. AWS live/runtime evidence remains separate from CI evidence.
 
 ## Actions for the team
 
@@ -190,7 +190,7 @@ The missing shared production store remains open and is tracked in action 47 alo
 
 **Why it matters:** A green build does not prove that login state, navigation, budget editing, or key screens work when users interact with them.
 
-**Required correction:** Add a frontend test runner and tests for profile refresh, expense search, budget create/edit, and validation. Add browser end-to-end tests for the main user journeys.
+**Required action:** PR #54 now defines `npm test` and runs Node regression tests. Add browser end-to-end tests for profile refresh, expense search/navigation, budget create/edit, validation, expense CRUD, dashboard totals, and CSV downloads; keep lint and tests as mandatory CI steps.
 
 **How QA will verify:** Check CI logs for a test command that actually runs and reports a non-zero test count.
 
