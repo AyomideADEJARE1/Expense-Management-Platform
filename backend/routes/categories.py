@@ -1,4 +1,5 @@
 from flask import Blueprint, request
+from flask_jwt_extended import jwt_required
 from sqlalchemy.exc import IntegrityError
 
 from extensions import db
@@ -55,6 +56,7 @@ def get_categories():
 
 
 @categories_bp.post("")
+@jwt_required()
 def create_category():
     data = request.get_json(silent=True)
 
@@ -172,6 +174,7 @@ def get_category(category_id):
 
 
 @categories_bp.put("/<int:category_id>")
+@jwt_required()
 def update_category(category_id):
     category = db.session.get(
         ExpenseCategory,
@@ -271,6 +274,7 @@ def update_category(category_id):
 
 
 @categories_bp.delete("/<int:category_id>")
+@jwt_required()
 def delete_category(category_id):
     category = db.session.get(
         ExpenseCategory,
