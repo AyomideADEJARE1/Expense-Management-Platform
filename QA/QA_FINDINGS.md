@@ -265,13 +265,13 @@ Several write routes checked only whether `request.get_json()` returned a truthy
 
 
 ## QA-FIND-031 — VM authentication to GitHub Container Registry is not established
-Classification: Deployment configuration risk. Status: Source correction proposed in PR #54; CI/runtime retest pending. Priority: Medium.
+Classification: Deployment configuration risk. Status: Source correction and CI verified; AWS runtime retest pending. Priority: Medium.
 
 The CD workflow publishes images to GHCR and the deployment script pulls those images on the AWS VM. A login performed by the GitHub Actions runner does not automatically authenticate the remote VM. If either package is private, the pull fails unless the VM authenticates separately.
 
 Correction in PR #54: the remote SSH deployment step now receives `GHCR_READ_USERNAME` and `GHCR_READ_TOKEN` through environment forwarding, logs in with `docker login --password-stdin`, pulls the commit-tagged images, and logs out on exit. The CI workflow checks that the remote authentication configuration remains present. The README and CI/CD guide document the two required repository secrets.
 
-Required retest: current-head CI must pass. Then verify the AWS host can authenticate and pull both images from a clean Docker-authentication state. Confirm the token has read-only package access and is not printed or committed. If packages are public, still test the configured flow or document and verify anonymous pulls explicitly.
+CI run `38381389211` passed all eight jobs for code commit `85871877850b81b367be2acb1135dced73a95255`, including a source check for the remote GHCR login configuration. Verify the AWS host can authenticate and pull both images from a clean Docker-authentication state. Confirm the token has read-only package access and is not printed or committed. If packages are public, still test the configured flow or document and verify anonymous pulls explicitly.
 
 Closure evidence: green current-head CI, the secret names (never their values), successful AWS image-pull logs, image tags/digests, and proof the running containers use the intended commit.
 
@@ -1209,4 +1209,4 @@ QA-FIND-082 through QA-FIND-085 now have source-level corrections covered by CI.
 
 ### Status update — QA-FIND-086 (2026-10-13)
 
-PR #54 now includes `database/migrations/006_app_runtime_role.sql`, Compose credential separation, a CD step that applies migration 006 before application restart, and CI privilege-boundary checks. The backend test job is configured to connect using the restricted application role, while the migration connection uses the bootstrap account. CI run `38381389211` passed all eight jobs for commit `85871877850b81b367be2acb1135dced73a95255`. AWS populated-database migration and live runtime verification remain pending. Do not close this finding until the current CI passes and the disposable AWS staging checks confirm CRUD works while privileged operations fail.
+PR #54 now includes `database/migrations/006_app_runtime_role.sql`, Compose credential separation, a CD step that applies migration 006 before application restart, and CI privilege-boundary checks. The backend test job is configured to connect using the restricted application role, while the migration connection uses the bootstrap account. CI run `38381389211` passed all eight jobs for commit `85871877850b81b367be2acb1135dced73a95255`. AWS populated-database migration and live runtime verification remain pending. Do not close this finding until disposable AWS staging checks confirm CRUD works while privileged operations fail.
