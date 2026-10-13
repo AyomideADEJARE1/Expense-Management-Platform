@@ -708,3 +708,6 @@ PR #54 owns the root README and architecture documentation because they must sta
 
 **Evidence required:** Current-head CI result, deployment log showing the Nginx build before migrations/restart, before/after image IDs or digests, sanitized `nginx -T` output, public response headers/health responses, and failure-path evidence.
 
+
+
+**Latest deployment correction status (2026-10-13):** The audit identified that upstream `main` did not explicitly rebuild the local Nginx image after checkout. PR #54 now runs `docker compose build nginx` before migrations/restart and includes Nginx in the CI Docker matrix with an `nginx -t` check and an order guard. Current PR #54 head is `83352b2ff90551a896113385f036b66d77f1009c`; CI run `38423159920` was pending at the last check. AWS staging verification remains open.
