@@ -1,12 +1,10 @@
-# Expense Tracker — System Architecture
+# System Architecture
 
-The Enhanced Personal Expense Management Platform is a React, Nginx, Flask, PostgreSQL 16, and Docker Compose application. AWS EC2 is the approved deployment target.
+The implemented platform consists of React, Nginx, Flask, PostgreSQL 16, and Docker Compose.
 
 Current production runs on AWS EC2 Ubuntu. Cloudflare provides the public DNS/proxy layer and HTTPS is active.
 
 ## Architecture
-
-![Expense Tracker system architecture](Expense%20Platform%20System%20Architecture.png)
 
     Internet
        |
@@ -45,13 +43,12 @@ The /api/health route maps to backend /health.
 
 ## Database
 
-Database: configured by `POSTGRES_DB` in the protected root `.env`
-Bootstrap/migration user: configured by `POSTGRES_USER`
-Application runtime user: configured separately by `POSTGRES_APP_USER`
-Host: `postgres`
-Port: `5432`
+Database: expense_db
+User: expense_user
+Host: postgres
+Port: 5432
 Version: PostgreSQL 16
-Volume: `postgres_data`
+Volume: postgres_data
 
 Initial schema: database/migrations/001_initial_schema.sql.
 
@@ -70,10 +67,4 @@ Let's Encrypt/Certbot manages the production certificate in the deployment envir
 
 The repository Nginx container is HTTP-only on port 80; production TLS/domain handling is surrounding infrastructure.
 
-The browser reaches the app through Nginx. Nginx serves React and routes `/api/*` to Flask. PostgreSQL remains private to the Docker Compose network. Only Nginx is published on host port `80` by the current Compose file.
-
-## CI/CD release path
-
-GitHub Actions validates the source, applies database migration checks, runs backend and frontend checks, and builds the container images. The configurable CD workflow publishes commit-tagged images to GHCR and can deploy to AWS EC2 when `DEPLOY_ENABLED=true` and the required protected AWS/GHCR credentials are configured. The workflow waits for PostgreSQL, applies migrations `002` through `006`, restarts application services only after migrations succeed, and checks both public health endpoints.
-
-A passing CI run does not prove that the latest commit is live. Release evidence should record the deployed commit/image and successful public health and browser checks.
+The main branch is the source of truth for the implemented application. Azure is not the current production target.
