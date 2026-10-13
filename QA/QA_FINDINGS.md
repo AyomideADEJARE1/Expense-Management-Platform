@@ -351,21 +351,6 @@ Impact if left unresolved: operators may believe they rotated JWT_SECRET while t
 
 Closure evidence: correction merged to the intended target branch, passing configuration tests, secret-scan success, and a reviewed example/deployment configuration. Until the production fail-closed checks and tests are added, status remains RETEST PENDING. This finding overlaps the broader production-secret enforcement concern but is retained separately because the ignored JWT environment variable is a specific, directly evidenced configuration defect.
 
-## QA-FIND-037 — Compose hard-codes database credentials in both services
-Classification: Security/configuration. Priority: High; production release blocker. Status: Open on upstream main; PR #54 uses required environment variables and passes CI run 38213904072. Clean setup, AWS secret configuration, and credential-rotation confirmation remain pending.
-
-Evidence reviewed in `docker-compose.yml` on `stephen/qa-transaction-fixes`: the backend environment block sets `POSTGRES_USER=expense_user`, `POSTGRES_PASSWORD=expense_password`, and `POSTGRES_DB=expense_db`; the PostgreSQL service repeats the same fixed values. The backend also loads `backend/.env`, but the later Compose `environment` entries explicitly set these database values, so the fixed Compose values override same-named values from the env file.
-
-Why it matters: operators may believe they configured production database credentials in `backend/.env` while Compose injects the hard-coded values instead. The database may therefore run with predictable credentials even in a deployment intended to use secrets.
-
-Required correction: use one documented source of configuration for both services, such as required Compose interpolation variables or a supported secrets mechanism. Do not silently default production to known credentials. Keep local defaults confined to a clearly local-only override file if needed. Rotate any credential that was used in a reachable environment.
-
-Required tests: inspect the resolved Compose configuration without printing secret values; verify missing production values fail safely; verify both services receive the same configured values; start a fresh test stack; test an existing volume; verify no secret is emitted in logs.
-
-Closure evidence: correction on the target branch, successful clean setup, configuration tests, and a secret scan. A README warning alone is not sufficient.
-
-Correction status update — 2026-10-11: PR #54's correction branch now requires POSTGRES_USER, POSTGRES_PASSWORD, and POSTGRES_DB through root Compose environment variables, updates the root .env.example, and updates the README/Docker setup steps. The source correction is committed, but the current CI run and clean-start configuration/runtime checks must pass before this finding can close. If the former fixed password was ever used on a reachable host, rotate it.
-
 ## QA-FIND-040 — Deployment publishes and deploys mutable latest image tags
 Classification: Deployment reproducibility / release integrity. Priority: High. Status: Open.
 
@@ -1209,7 +1194,7 @@ CI run `38418979526` passed all eight jobs for correction commit `ae54eec01018a7
 
 
 ## Register hygiene — duplicate placeholder removal
-Two duplicate placeholder sections for category-write authorization have been removed from the active register. QA-FIND-010 remains the single canonical finding for that root cause. Finding IDs are kept stable for traceability, so the register has numbering gaps but no duplicate placeholder findings.
+Five non-active duplicate/consolidation placeholders have been removed from the active register: QA-FIND-007, 016, 037, 039 and 051. The hard-coded database-credential issue remains in canonical QA-FIND-022, category authorization in QA-FIND-010, and proxy-aware/shared rate-limit risks in QA-FIND-073. Finding IDs remain stable for traceability; numbering gaps are intentional.
 
 
 ## QA-FIND-088 — CI can pass when required automated tests are absent
