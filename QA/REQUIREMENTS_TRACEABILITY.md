@@ -35,7 +35,7 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 
 
 | REQ-27 | Category write authorization | TC-CAT-004–005 | FINDING OPEN: upstream main category POST/PUT/DELETE routes do not require authentication/authorization; the intended shared-category policy must be recorded and enforced |
-| REQ-28 | Automated frontend functional coverage | TC-UI-001, TC-CI-004 | Baseline issue on upstream main: no frontend test script. PR #54 adds `npm test` and Node regression tests; CI run 38418979526 passed the frontend test job. Full browser end-to-end coverage remains open and needs evidence for core user journeys |
+| REQ-28 | Automated frontend functional coverage | TC-UI-001, TC-CI-004 | Baseline issue on upstream main: no frontend test script and CI can skip it. PR #54 adds mandatory `npm run lint` and `npm test`; CI run 38420803176 passed the required frontend test job with nine Node tests on correction head 8d781f3fb45cdce2a07e50ef3250b99ce0501333. Full browser end-to-end coverage remains open and needs evidence for core user journeys. Current PR #54 README-only follow-up head 425d435f08e1a11a0ca40060db8f285654ab54ad has its own CI run pending |
 | REQ-29 | Reliable authentication rate limiting behind Nginx | TC-RL-001 | FINDING OPEN: proxy-aware client identity and shared production rate-limit storage require configuration and runtime proof |
 | REQ-30 | Browser security headers | TC-SEC-005, TC-SEC-008–009 | Baseline headers exist in correction branch; CSP/HSTS configuration and public HTTPS verification remain pending |
 | REQ-31 | Reproducible local setup | TC-ENV-001–002, TC-DOC-004 | Compose environment configuration and docs updated in PR #54; clean-checkout startup retest pending |
