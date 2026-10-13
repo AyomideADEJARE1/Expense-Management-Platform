@@ -10,18 +10,18 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Status rule:** “Found” means the code has a problem. “Correction proposed” means code has been changed but still needs review and tests. “CI passed” means automated checks passed for the named commit. “Runtime pending” means the app still needs to be run and checked. These statuses must not be treated as the same thing.
 
-**Current audit size:** 81 numbered findings/observations (including consolidated historical entries), 55 team actions, and 51 runtime verification gates. CI run 38273922288 passed all eight jobs for correction commit 77620d6547cad3ee3774657df9dd0b9256ed9ff6; 62 backend tests passed twice and all seven frontend Node tests passed. npm audit reported zero vulnerabilities. Flask-Limiter still warns about in-memory storage. AWS live/runtime evidence remains separate from CI evidence.
+**Current audit size:** 86 numbered findings/observations, 62 team actions, and 48 runtime verification gates. CI run `38381389211` passed all eight jobs for code commit `85871877850b81b367be2acb1135dced73a95255`; 69 backend tests and nine frontend Node tests passed, both Docker builds succeeded, and npm audit reported zero vulnerabilities. A later category-authentication patch is now in PR #54 and requires its own current-head CI result. Flask-Limiter still warns about in-memory storage. AWS live/runtime evidence remains separate from CI evidence.
 
 ## Actions for the team
 
-### 1. Backend: protect category changes
-**What happens:** The category API allows create, edit, and delete requests without checking who is making the request.
+### 1. Backend: complete category-write authorization
+**What happens:** Upstream `main` still allows category mutations without authentication. PR #54 adds JWT authentication to category POST/PUT/DELETE and tests anonymous requests, but all categories remain shared and there is no administrator/owner policy.
 
-**Why it matters:** Someone who should not manage categories may change categories used by other users.
+**Why it matters:** Requiring login blocks anonymous changes, but any signed-in user can still affect categories seen by other accounts.
 
-**Backend owner:** Decide whether categories are shared and admin-managed or belong to individual users. Add the correct login/role or ownership checks and tests. Do not simply block all category changes without providing an authorized way to manage them.
+**Backend owner:** First verify the PR #54 guard and anonymous 401 tests. Then decide whether categories are admin-managed shared records or per-user records, and implement the matching role/ownership checks. Do not treat login alone as full authorization.
 
-**QA check:** Requests without permission must fail. An authorized administrator or owner must still be able to make allowed changes.
+**QA check:** Anonymous writes must return 401. Authenticated non-admin users must not be able to make changes outside the chosen policy; authorized users must still be able to manage categories. Verify referenced-category deletion remains protected.
 
 ### 2. Backend and database owner: verify budget uniqueness correction
 **What happens:** The original route checked for duplicate budgets in application code only, which could allow concurrent requests to race.
