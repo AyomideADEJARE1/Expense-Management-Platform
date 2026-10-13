@@ -279,3 +279,7 @@ The GitHub repository description is separate from README and workflow files. It
 
 ## Latest correction CI checkpoint — 2026-10-13
 CI run `38418979526` passed all eight jobs for correction commit `ae54eec01018a728f97bd7c77f7ccbcad3a96a05`: 71 backend tests, frontend lint/build/tests, npm audit with zero reported vulnerabilities, migrations 001–006 and restricted runtime-role checks, secret scan, both Docker builds, and aggregate CI. This is not live AWS/browser evidence. Public health, deployed commit/image, existing-volume migrations, browser journeys/downloads, reboot recovery, backup restore, and shared production rate-limit storage remain pending.
+
+
+## Audit register hygiene
+Two duplicate category-write authorization placeholders were removed from QA/QA_FINDINGS.md; QA-FIND-010 remains the canonical entry. The register now has 85 distinct findings/observations. IDs remain stable to preserve traceability; numbering gaps are intentional.
