@@ -10,7 +10,7 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Status rule:** “Found” means the code has a problem. “Correction proposed” means code has been changed but still needs review and tests. “CI passed” means automated checks passed for the named commit. “Runtime pending” means the app still needs to be run and checked. These statuses must not be treated as the same thing.
 
-**Current audit size:** 86 numbered findings/observations, 62 team actions, and 48 runtime verification gates. CI run `38381389211` passed all eight jobs for code commit `85871877850b81b367be2acb1135dced73a95255`; 69 backend tests and nine frontend Node tests passed, both Docker builds succeeded, and npm audit reported zero vulnerabilities. A later category-authentication patch is now in PR #54 and requires its own current-head CI result. Flask-Limiter still warns about in-memory storage. AWS live/runtime evidence remains separate from CI evidence.
+**Current audit size:** 86 numbered findings/observations, 58 distinct team actions, and 48 runtime verification gates. CI run `38381389211` passed all eight jobs for code commit `85871877850b81b367be2acb1135dced73a95255`; 69 backend tests and nine frontend Node tests passed, both Docker builds succeeded, and npm audit reported zero vulnerabilities. A later category-authentication patch is now in PR #54 and requires its own current-head CI result. Flask-Limiter still warns about in-memory storage. AWS live/runtime evidence remains separate from CI evidence.
 
 ## Actions for the team
 
@@ -136,16 +136,7 @@ The missing shared production store remains open and is tracked in action 47 alo
 
 **QA verification and closure evidence:** Recheck duplicate and concurrent budget requests against AWS, then submit a valid budget after a conflict. Retain response codes, row counts, and sanitized-error evidence.
 
-### 14. Backend/test owner: verify test-database isolation
-**What happens:** The original test fixture did not prove isolation or cleanup.
-
-**Correction status:** The correction branch uses a dedicated test database, rejects unsafe database names, truncates test tables and resets identities after each test, and runs the full backend suite twice. CI run 38219803561 passed all eight jobs and both 58-test runs.
-
-**Why it matters:** Tests must not depend on leftover records or risk touching a live database.
-
-**QA verification and closure evidence:** Retain the CI database guard, cleanup implementation, both passing test runs, and evidence that local/staging tests cannot point to production data.
-
-### 15. Frontend/backend: normalize the signed-in user profile
+### 14. Frontend/backend: normalize the signed-in user profile
 
 **What happens:** The API returns the current profile inside a response object, but upstream main stores the whole response as the user profile. The UI then looks for name fields on the wrong object.
 
@@ -157,7 +148,7 @@ The missing shared production store remains open and is tracked in action 47 alo
 
 **Evidence to close:** Tested commit SHA, redacted API response, browser screenshot, and a passing regression test where available.
 
-### 16. Frontend: verify expense search navigation
+### 15. Frontend: verify expense search navigation
 
 **What happens:** Upstream main uses a misspelled tab identifier for expense search results, while the page uses the correctly spelled Transactions identifier. The correction branch fixes the identifier.
 
@@ -169,7 +160,7 @@ The missing shared production store remains open and is tracked in action 47 alo
 
 **Evidence to close:** Tested commit SHA, browser screenshot/video, and a passing regression check where available.
 
-### 17. Frontend/backend: preserve the month when editing an older budget
+### 16. Frontend/backend: preserve the month when editing an older budget
 
 **What happens:** The upstream frontend sends the current month when saving any budget, including an edit to an older budget. The backend accepts that month and updates the existing record.
 
@@ -181,7 +172,7 @@ The missing shared production store remains open and is tracked in action 47 alo
 
 **Evidence to close:** Tested commit SHA, browser/API result, and before-and-after month values.
 
-### 18. Frontend: make calculated spending clear in the budget form
+### 17. Frontend: make calculated spending clear in the budget form
 
 **What happens:** The budget form allows the user to edit “Amount Already Spent,” but the save request does not send that value. Spending is calculated from recorded expenses, so the input suggests a change can be saved when it cannot.
 
@@ -193,31 +184,7 @@ The missing shared production store remains open and is tracked in action 47 alo
 
 **Evidence to close:** Tested commit SHA, browser screenshot, and comparison with API/expense data.
 
-### 19. Backend/security: protect category changes
-
-**What happens:** The category API allows category creation, editing, and deletion without requiring a signed-in user or checking a role.
-
-**Why it matters:** Anyone who can reach the API may try to change shared categories used by multiple accounts. This can affect what other users see or prevent deletion when a category is already in use.
-
-**Required correction:** Confirm whether categories are shared and administrator-managed or owned by each user. Then enforce the selected policy on every category write endpoint. Frontend button visibility is not a security control.
-
-**How QA will verify:** Try POST, PUT, and DELETE without a token, as a normal signed-in user, and as the permitted role. Confirm unauthorized requests are rejected and one user's changes cannot affect another user's data.
-
-**Evidence to close:** Agreed category policy, code diff, automated authorization tests, tested commit SHA, and redacted API results.
-
-### 20. Backend/DevOps: remove fixed database credentials
-
-**What happens:** Upstream main contains fixed PostgreSQL credentials in Compose. The correction branch now requires values from the root environment file and updates the setup instructions.
-
-**Why it matters:** Fixed credentials are easily reused across environments and make production secrets harder to manage safely.
-
-**Required correction:** Keep the environment-variable configuration, set a unique local password, use protected AWS deployment configuration, and rotate the old password if it was used in a shared/deployed environment.
-
-**How QA will verify:** Run Compose configuration with a configured environment file; confirm it fails clearly when required values are missing; start the services and check application/database health.
-
-**Evidence to close:** Sanitized Compose output, successful startup and health checks, CI result for the correction commit, and confirmation that no real secrets were committed.
-
-### 21. Frontend: add automated UI tests
+### 18. Frontend: add automated UI tests
 
 **What happens:** The frontend package has no test script, while CI uses npm test with if-present behavior. Therefore, CI can pass without executing frontend tests.
 
@@ -229,7 +196,7 @@ The missing shared production store remains open and is tracked in action 47 alo
 
 **Evidence to close:** Test files, package script, CI run showing tests executed, and results for key flows.
 
-### 22. DevOps/documentation: make the port and startup instructions consistent
+### 19. DevOps/documentation: make the port and startup instructions consistent
 
 **What happens:** The Compose file maps Nginx to host port 80, but the Docker guide previously described port 8080. Setup instructions also did not clearly require the root environment file used for Compose database values.
 
@@ -241,7 +208,7 @@ The missing shared production store remains open and is tracked in action 47 alo
 
 **Evidence to close:** Documentation diff, sanitized Compose config, and clean-start test results.
 
-### 23. DevOps/security: review browser security headers
+### 20. DevOps/security: review browser security headers
 
 **What happens:** Nginx sets several security headers, but the reviewed configuration does not include Content-Security-Policy or HSTS.
 
@@ -253,11 +220,11 @@ The missing shared production store remains open and is tracked in action 47 alo
 
 **Evidence to close:** Header capture, reviewed CSP configuration, and browser results. Do not claim HSTS is enabled unless it is observed on HTTPS responses.
 
-### 24. Backend/DevOps: make authentication rate limits proxy-aware (consolidated)
+### 21. Backend/DevOps: make authentication rate limits proxy-aware (consolidated)
 
 PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit test for forwarded client identity. The AWS topology check and shared-store requirement remain open under action 47. Do not close this action until the public AWS test proves independent client quotas and safe forwarding-header handling.
 
-### 25. Frontend: make the budget spending value read-only
+### 22. Frontend: make the budget spending value read-only
 
 **What happens:** The budget form previously displayed an editable spending value, but the save request did not send or store it. Actual spending is calculated from recorded expenses.
 
@@ -269,7 +236,7 @@ PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit tes
 
 **Evidence to close:** CI result for the fixing commit, browser screenshot, and comparison against expense/API records.
 
-### 26. Backend: return the right error when category deletion fails
+### 23. Backend: return the right error when category deletion fails
 
 **What happens:** The category-delete route previously returned HTTP 409 for every database exception, even when the database itself failed. HTTP 409 should be used when an expense actually references the category.
 
@@ -281,7 +248,7 @@ PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit tes
 
 **Evidence to close:** Passing CI, API results for both cases, session recovery result, and tested commit SHA.
 
-### 27. DevOps: keep local secrets out of Docker images
+### 24. DevOps: keep local secrets out of Docker images
 
 **What happens:** The backend and frontend Dockerfiles copy source directories into their build stages. Without .dockerignore files, a local environment file can enter the build context even when Git ignores it.
 
@@ -293,7 +260,7 @@ PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit tes
 
 **Evidence to close:** Ignore-file diff, CI run, successful image builds, and sentinel-based verification where available.
 
-### 28. DevOps: apply database migrations before restarting the app
+### 25. DevOps: apply database migrations before restarting the app
 
 **What happens:** The deployment workflow previously restarted all services before applying the database migrations.
 
@@ -305,7 +272,7 @@ PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit tes
 
 **Evidence to close:** Passing CI order check, staging failure/recovery proof, deployed image/commit identity, and health results.
 
-### 29. DevOps: wait until PostgreSQL is healthy before migrations
+### 26. DevOps: wait until PostgreSQL is healthy before migrations
 
 **What happens:** The deployment script previously started PostgreSQL in detached mode and immediately ran migrations. The database might not yet be ready to accept connections.
 
@@ -317,7 +284,7 @@ PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit tes
 
 **Evidence to close:** CI result, staging logs showing database readiness before migrations, and successful application/database health checks.
 
-### 30. Backend/database: prevent category deletion from changing budget meaning
+### 27. Backend/database: prevent category deletion from changing budget meaning
 **What happens:** The original budget-category foreign key uses `ON DELETE SET NULL`. If a category is deleted while a budget references it, that budget may become a whole-month budget; if a whole-month budget already exists for the same user/month, the uniqueness index may instead make deletion fail.
 
 **Why it matters:** The saved budget can change meaning without the user editing it. Budget totals, alerts, and reports may then be misleading.
@@ -328,7 +295,7 @@ PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit tes
 
 **Evidence to close:** Passing CI for the latest commit, database constraint reports `RESTRICT`, before/after API/database evidence, fresh/existing-volume migration logs, and AWS staging version/health evidence.
 
-### 31. Backend: handle category create/update commit errors
+### 28. Backend: handle category create/update commit errors
 **What happens:** Category create/update check for duplicate names before saving, but the database commit previously had no error handler. Two requests can race after the pre-check, and the database unique constraint can reject one request.
 
 **Why it matters:** A duplicate-name race may return an unhandled 500 instead of HTTP 409. Unexpected database errors also need rollback before the session can recover.
@@ -339,7 +306,7 @@ PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit tes
 
 **Evidence to close:** Passing CI for the latest commit, API results for both conflict/error paths, and proof the failed update did not change stored data.
 
-### 32. Backend: return a conflict for duplicate-email races
+### 29. Backend: return a conflict for duplicate-email races
 **What happens:** Registration and profile update check whether an email already exists before saving. Two requests can race after that check, and PostgreSQL can reject the second commit because email is unique.
 
 **Why it matters:** A normal duplicate-email conflict may be reported as HTTP 500 instead of HTTP 409. A failed update must also preserve the existing email and roll back safely.
@@ -350,7 +317,7 @@ PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit tes
 
 **Evidence to close:** Passing CI for the latest commit, API results for conflict and recovery tests, and the exact tested commit SHA.
 
-### 33. Backend: enforce one date format for expense create/update
+### 30. Backend: enforce one date format for expense create/update
 **What happens:** Expense create/update previously accepted some ISO date formats other than the documented `YYYY-MM-DD`, while the date-range filters enforce the exact format.
 
 **Why it matters:** The same API treats a date differently depending on whether it is used to save an expense or filter expenses. That makes integration and error handling inconsistent.
@@ -361,7 +328,7 @@ PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit tes
 
 **Evidence to close:** Passing current CI for the exact commit, API results for both invalid requests, and a read-back confirming the original date remains unchanged. CI run `38215898127` passed all eight jobs for commit `9b00f76863b48686bb5fe232926e20ee1d383eb0`, including the new expense date regression test.
 
-### 34. Backend: enforce the documented budget month format
+### 31. Backend: enforce the documented budget month format
 **What happens:** Budget create/update previously accepted compact date strings such as `20261101`, although the API says the month must use `YYYY-MM-DD` and be the first day of the month.
 
 **Why it matters:** The API accepts undocumented input, which makes client-side validation and integration inconsistent.
@@ -372,7 +339,7 @@ PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit tes
 
 **Evidence to close:** Passing current CI for the exact commit, API results for create/update, and read-back showing no change after the rejected update. CI run `38215898127` passed all eight jobs for commit `9b00f76863b48686bb5fe232926e20ee1d383eb0`, including the budget month regression assertions.
 
-### 35. Team lead + frontend/backend: decide whether overall monthly budgets are required
+### 32. Team lead + frontend/backend: decide whether overall monthly budgets are required
 
 **What happens:** The API/database support budgets with no category, but the browser form still requires a category and cannot create an overall monthly budget. The dashboard spending calculation has now been corrected in PR #54 to count all expenses in the same month for a whole-month budget; CI run `38272803374` passed the four new frontend tests.
 
@@ -385,7 +352,7 @@ PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit tes
 **Evidence required:** Written product decision, passing browser/API tests or updated scope documentation, and a screenshot or recorded run showing the final behavior. CI does not prove the UI can create an overall budget.
 
 
-### 36. Backend: validate month filters and summary query formats
+### 33. Backend: validate month filters and summary query formats
 **What happens:** Expense filtering and monthly/category summaries previously converted the year/month pieces to integers without enforcing the exact `YYYY-MM` format. Inputs such as `2026-1` or `2026-010` could be interpreted as valid months.
 
 **Why it matters:** Invalid values may be silently interpreted instead of rejected, making filtering and reporting behavior inconsistent.
@@ -396,7 +363,7 @@ PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit tes
 
 **Evidence to close:** Passing current CI for the exact commit, responses for valid/invalid query values, and expected-vs-actual summary totals. CI run `38216409164` passed all eight jobs for commit `7c3eb3a08464ff9b97ce854f5a105383db8646cb`; Flake8 and all 48 backend tests passed, including the month-query/summary regression test.
 
-### 37. Backend: reject category names that exceed 100 characters
+### 34. Backend: reject category names that exceed 100 characters
 **What happens:** The database limits category names to 100 characters, but the API previously did not enforce that limit before saving.
 
 **Why it matters:** A client input error can reach the database and return HTTP 500 instead of a clear HTTP 400. A failed update must leave the current category name intact.
@@ -407,7 +374,7 @@ PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit tes
 
 **Evidence to close:** Passing current CI for the exact commit, boundary-value API responses, and a read-back confirming the name did not change. Current CI is pending.
 
-### 38. Frontend: remove API-response debug logging
+### 35. Frontend: remove API-response debug logging
 **What happens:** The dashboard previously logged the full categories, expenses, and budgets API responses to the browser console.
 
 **Why it matters:** The responses include financial details such as amounts, dates, descriptions, and budget limits. Printing them adds avoidable exposure during screen-sharing/support and creates noisy production output.
@@ -418,7 +385,7 @@ PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit tes
 
 **Evidence to close:** Passing current CI for the exact commit, source-search result, and browser smoke-test evidence. Current CI is pending.
 
-### 39. Frontend: use local calendar dates consistently
+### 36. Frontend: use local calendar dates consistently
 **What happens:** The dashboard and transaction form previously used UTC date strings for the current month/default date. Reports parsed date-only values as UTC and then read local month fields.
 
 **Why it matters:** Near midnight or month boundaries, the dashboard may request the wrong month, a new expense may default to the previous local date, or Reports may group an expense into the previous month in timezones west of UTC.
@@ -429,7 +396,7 @@ PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit tes
 
 **Evidence to close:** Passing frontend lint/build for the exact commit and browser results with timezone, local date, dashboard query, default form date, and report month recorded. Frontend automated tests are not currently configured.
 
-### 40. Frontend: apply the saved currency preference consistently
+### 37. Frontend: apply the saved currency preference consistently
 **What happens:** The profile supports NGN, USD, EUR, and GBP, but several financial screens previously hardcoded the naira symbol. The dashboard chart tooltip also used the formatter's default currency instead of the saved preference.
 
 **Why it matters:** A user can select USD, EUR, or GBP in Settings but still see ₦ in Budgets, Transactions, Reports, or dashboard widgets. This makes the displayed amounts inconsistent with the selected preference.
@@ -440,7 +407,7 @@ PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit tes
 
 **Evidence to close:** Passing frontend lint/build for the exact commit and browser screenshots for each supported currency across the named screens. Automated frontend tests are not currently configured, so browser evidence is required.
 
-### 41. Backend/frontend/DevOps: make the Settings phone field persist
+### 38. Backend/frontend/DevOps: make the Settings phone field persist
 **What happens:** Settings showed a Phone Number field, but the backend did not store or return the value. The save message could appear even though the phone number disappeared after reload.
 
 **Why it matters:** A visible editable field must either save reliably or be clearly marked as unsupported. Silent data loss makes profile settings unreliable.
@@ -451,7 +418,7 @@ PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit tes
 
 **Evidence to close:** Passing CI for the exact commit, schema/migration logs, API read-back, and AWS staging/browser evidence.
 
-### 42. Product/backend: decide whether notification controls must send real alerts
+### 39. Product/backend: decide whether notification controls must send real alerts
 **What happens:** Settings offers in-app push notifications and weekly summary email alerts, but the reviewed code stores the preference flags without a delivery service, scheduler, or browser-push implementation.
 
 **Why it matters:** A saved checkbox can look like a working feature even when no notification is delivered.
@@ -462,7 +429,7 @@ PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit tes
 
 **Evidence to close:** Written scope decision, passing automated tests, and staging delivery evidence or approved UI wording.
 
-### 43. Product/backend: define currency behavior before changing account currency
+### 40. Product/backend: define currency behavior before changing account currency
 **What happens:** Expense and budget records store numeric amounts without a currency per record. The profile has one preferred currency, and the UI changes the displayed symbol without converting saved amounts.
 
 **Why it matters:** A value recorded as 10,000 NGN could later display as $10,000 after the preference changes, even though no conversion occurred. This can mislead users and distort the meaning of historical reports.
@@ -473,7 +440,7 @@ PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit tes
 
 **Evidence to close:** Written product decision, approved UI/data-model behavior, regression tests, and browser evidence across financial screens.
 
-### 44. Product/backend: connect the budget alert threshold to real behavior
+### 41. Product/backend: connect the budget alert threshold to real behavior
 **What happens:** Settings saves a “Budget Alert Threshold (%)”, but the budget and dashboard components do not use that value. The visible budget status changes at 100% of the limit, not at the user's selected threshold.
 
 **Why it matters:** A user who chooses 80% may expect an early warning, but the setting currently has no effect.
@@ -484,7 +451,7 @@ PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit tes
 
 **Evidence to close:** Written threshold rules, passing boundary/duplicate-prevention tests, and browser evidence or approved revised settings wording.
 
-### 45. DevOps: make the AWS stack recover after a VM reboot
+### 42. DevOps: make the AWS stack recover after a VM reboot
 **What happens:** The original Compose services had no restart policies. PR #54 now adds `restart: unless-stopped` to PostgreSQL, backend, frontend, and Nginx, and CI checks for all four. AWS reboot recovery still needs a staging test.
 
 **Why it matters:** A normal VM reboot or Docker daemon restart may leave the application offline until someone manually starts it.
@@ -495,7 +462,7 @@ PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit tes
 
 **Evidence to close:** Compose/systemd configuration, reboot and recovery logs, container/image version evidence, health checks, and a test-record persistence check.
 
-### 46. DevOps: prove database backups can be restored
+### 43. DevOps: prove database backups can be restored
 **What happens:** The application stores PostgreSQL data in a Compose volume on the AWS VM. The repository does not show a scheduled off-host backup, retention policy, or tested restore process. An AWS snapshot or backup may exist outside the repository, but it has not been evidenced here.
 
 **Why it matters:** VM/volume loss or a bad migration could permanently lose expense and budget records if there is no usable recovery copy.
@@ -506,7 +473,7 @@ PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit tes
 
 **Evidence to close:** Backup schedule/configuration, retention/access policy, redacted successful restore log, data-integrity checks, and pre-migration backup recovery evidence.
 
-### 47. Backend/DevOps: make rate limits correct for real clients
+### 44. Backend/DevOps: make rate limits correct for real clients
 **What happens:** PR #54 now configures Flask `ProxyFix` for exactly one trusted Nginx hop and adds a unit test for forwarded client identity. The deployment topology still needs runtime confirmation. The limiter still uses in-memory storage, which resets on restart and is not shared between backend instances.
 
 **Why it matters:** One user's login attempts can block other users, while restarts or multiple instances can weaken abuse protection.
@@ -517,7 +484,7 @@ PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit tes
 
 **Evidence to close:** Reviewed configuration, CI tests for client identity and spoofed headers, shared-store configuration, and AWS staging logs showing independent limits, restart behavior, and expected 429 responses.
 
-### 48. Backend/product/security: protect account email changes
+### 45. Backend/product/security: protect account email changes
 **What happens:** The authenticated profile endpoint saves a new login email immediately after basic validation and uniqueness checking. It does not require the current password/recent re-authentication or verify control of the new address.
 
 **Why it matters:** A typo can change the account's login identity, and a stolen valid session could change the email before the account owner notices.
@@ -528,7 +495,7 @@ PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit tes
 
 **Evidence to close:** Written policy, automated API tests, verification/expiry/duplicate tests, and a staging browser/API trace of a successful and rejected change.
 
-### 49. Backend + product/security: define and enforce password requirements
+### 46. Backend + product/security: define and enforce password requirements
 **What happens:** Registration only checks that the password is a non-empty string. No minimum or maximum password length is enforced in the route.
 
 **Why it matters:** Very short passwords can be registered, leaving accounts easier to guess.
@@ -539,7 +506,7 @@ PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit tes
 
 **Evidence required:** Approved policy, passing tests for the exact commit, browser validation, and proof rejected registrations create no account.
 
-### 50. Team lead + backend/security: decide on password change and recovery
+### 47. Team lead + backend/security: decide on password change and recovery
 **What happens:** No password-change or password-reset route/flow was found in the reviewed authentication API.
 
 **Why it matters:** Users cannot self-serve if they forget a password or suspect it was exposed.
@@ -551,7 +518,7 @@ PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit tes
 **Evidence required:** Written scope decision, passing security tests, and redacted browser/API evidence of the agreed flow.
 
 
-### 51. Backend: preserve the omitted name field during partial profile updates
+### 48. Backend: preserve the omitted name field during partial profile updates
 **What happens:** If a profile request changes only one name field, the previous API logic could erase the other part of the user's name or reject the update.
 
 **Why it matters:** A valid profile edit could unintentionally remove stored user information.
@@ -567,7 +534,7 @@ PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit tes
 Run `38270979144` stopped at Flake8 because one line in the new partial-name preservation code was one character too long. The line was wrapped in commit `2316a358ca37495ecc41eff8aaf48f888654e5b8`. CI run `38271222415` has now passed all eight jobs for that commit; the backend suite passed 60 tests, including the new profile-name regression. AWS/browser verification remains a separate requirement.
 
 
-### 52. Backend: return a conflict when a budget blocks category deletion
+### 49. Backend: return a conflict when a budget blocks category deletion
 **What happens:** A budget can be linked to a category after the API checks for references but before the database delete commits. PostgreSQL correctly blocks deletion, but the old handler did not recognize the budget foreign-key constraint and returned HTTP 500.
 
 **Why it matters:** A valid data conflict is reported as a server failure. The database keeps the data safe, but the API response is misleading.
@@ -580,7 +547,7 @@ Run `38270979144` stopped at Flake8 because one line in the new partial-name pre
 
 
 
-### 53. Frontend: calculate whole-month budget spending correctly and test it
+### 50. Frontend: calculate whole-month budget spending correctly and test it
 **What happens:** The previous dashboard calculation compares numeric category IDs. For a whole-month budget, its category is `null`, which becomes `0`; normal expenses have positive category IDs, so the displayed spending can remain zero.
 
 **Why it matters:** The overall budget card can under-report spending and show a false on-track status even after the user has entered expenses.
@@ -592,7 +559,7 @@ Run `38270979144` stopped at Flake8 because one line in the new partial-name pre
 **CI evidence:** Run `38273922288` passed all eight jobs for commit `77620d6547cad3ee3774657df9dd0b9256ed9ff6`; all seven frontend tests passed (four budget-spending and three search tests) and the backend suite passed 62 tests twice. **Still required:** A redacted browser test recording or screenshots showing the expected totals; CI does not prove the live UI or AWS deployment. AWS runtime verification is a separate release check.
 
 
-### 54. DevOps/documentation: show both environment-file setup steps
+### 51. DevOps/documentation: show both environment-file setup steps
 **What happens:** Compose requires both the root `.env` for PostgreSQL variables and `backend/.env` for the backend's application secrets. The Docker guide previously told readers to create only the root file.
 
 **Why it matters:** A clean setup following that guide alone can fail before the backend starts.
@@ -604,7 +571,7 @@ Run `38270979144` stopped at Flake8 because one line in the new partial-name pre
 **CI evidence:** Run `38273922288` passed all eight jobs for commit `77620d6547cad3ee3774657df9dd0b9256ed9ff6`. **Still required:** Follow the guide on a clean local checkout and retain the exact setup commands plus a redacted `docker compose ps` result showing all four services healthy.
 
 
-### 55. Frontend/QA: show only budgets that match global search
+### 52. Frontend/QA: show only budgets that match global search
 **What happens:** The earlier global search added every budget whenever any search text was entered, even if the budget title, category, month, and limit did not match the query.
 
 **Why it matters:** Irrelevant budgets appear in results and can make it harder to find the item the user actually searched for.
@@ -616,23 +583,7 @@ Run `38270979144` stopped at Flake8 because one line in the new partial-name pre
 **CI evidence:** Run `38273922288` passed all eight jobs for commit `77620d6547cad3ee3774657df9dd0b9256ed9ff6`; all three budget-search tests passed. **Still required:** Browser evidence for matching and non-matching searches.
 
 
-### 56. Team lead/product owner: decide whether whole-month budgets are in scope
-**What happens:** The API and database allow budgets with no category, but the browser form currently requires a category. The QA correction fixes spending calculation for a whole-month budget if one exists; it does not add UI creation because the product requirement has not been confirmed.
-
-**Why it matters:** Adding the option changes the user-facing feature scope. Removing API/database support would also be a design change and could affect existing data.
-
-**Required decision:** Confirm one of two options: (A) whole-month budgets are required—approve an explicit “All Categories” form option and UI regression tests; or (B) budgets are category-only—document that requirement consistently and decide whether unused whole-month API/schema support should be removed in a separately reviewed change.
-
-**How to verify:** Record the decision in the requirements/PR discussion. If option A is selected, verify create, duplicate conflict (HTTP 409), edit, reload, delete, and whole-month spending totals. If option B is selected, verify the UI and documentation say category-only and review the API/schema disposition.
-
-**Evidence required:** A written team decision and, for the selected option, passing CI plus API/browser evidence. Do not close QA-FIND-061 solely because the calculation helper passes.
-
-
-## Latest CI checkpoint — 2026-10-12
-Run `38273922288` passed all eight jobs for correction commit `77620d6547cad3ee3774657df9dd0b9256ed9ff6`. Backend lint passed and 62 backend tests passed twice. Frontend lint/build passed and all seven Node tests passed: four budget-spending tests and three budget-search tests. Database migrations 001–005, budget-category RESTRICT, the phone column, migration ordering, secret scan, both Docker builds, and aggregate CI passed. npm audit reported zero vulnerabilities. Flask-Limiter still uses in-memory storage, and AWS runtime, populated-volume migration, public health, browser journeys, reboot recovery, and backup restore evidence remain open.
-
-
-### 57. Frontend: protect the Reports CSV export from spreadsheet formulas
+### 53. Frontend: protect the Reports CSV export from spreadsheet formulas
 **What happens:** The report download previously escaped quotation marks but did not neutralize formula-leading descriptions or category names. The Transactions download already had this protection, so the two export paths behaved differently.
 
 **Why it matters:** Spreadsheet software may execute formula-like text from a downloaded report instead of displaying it as plain text.
@@ -644,7 +595,7 @@ Run `38273922288` passed all eight jobs for correction commit `77620d6547cad3ee3
 **Evidence to close:** CI run `38276034129` on commit `97e6515f00c15e240532da653235421a2c6fb055`, nine passing frontend tests, and a sanitized report export sample from both export paths. The browser portion remains open.
 
 
-### 58. Frontend: keep the report CSV download URL alive long enough
+### 54. Frontend: keep the report CSV download URL alive long enough
 **What happens:** The Reports export revoked its Blob URL immediately after starting the download, while the Transactions export waits one second before cleanup.
 
 **Why it matters:** Browser download handling can be asynchronous; early revocation may interrupt the report download.
@@ -662,7 +613,7 @@ Run `38273922288` passed all eight jobs for correction commit `77620d6547cad3ee3
 Run `38276034129` passed all eight jobs for code commit `97e6515f00c15e240532da653235421a2c6fb055`. Backend lint passed and 62 backend tests passed twice. Frontend lint/build passed and all nine Node tests passed, including budget spending, budget search, and CSV formula/quoting checks. Database migrations 001–005, secret scan, both Docker builds, and aggregate CI passed. AWS and browser runtime evidence remains open.
 
 
-### 59. Backend/security: disable the debugger outside explicit development modes
+### 55. Backend/security: disable the debugger outside explicit development modes
 **What happens:** Running `python app.py` previously enabled Flask debug mode unconditionally, even though the application defaults to production mode and the Docker image uses Gunicorn.
 
 **Why it matters:** Direct execution with production settings could expose development-only debugger behavior.
@@ -676,7 +627,7 @@ Run `38276034129` passed all eight jobs for code commit `97e6515f00c15e240532da6
 **Evidence to close:** Passing CI, tested commit SHA, test output, and production entry-point confirmation.
 
 
-### 60. Frontend: preserve UTF-8 text in report CSV downloads
+### 56. Frontend: preserve UTF-8 text in report CSV downloads
 **What happens:** Transactions exports include a UTF-8 BOM, but Reports exports previously did not.
 
 **Why it matters:** Some spreadsheet software may misread non-ASCII descriptions or category names in a CSV without a BOM.
@@ -688,7 +639,7 @@ Run `38276034129` passed all eight jobs for code commit `97e6515f00c15e240532da6
 **Evidence to close:** Passing CI, tested commit SHA, and a sanitized report sample showing the characters correctly.
 
 
-### 61. DevOps/backend/database: use a restricted PostgreSQL runtime account
+### 57. DevOps/backend/database: use a restricted PostgreSQL runtime account
 **What happens:** The Compose file previously passed the bootstrap PostgreSQL account to the backend.
 
 **Why it matters:** A backend compromise could gain far more database control than the application needs.
@@ -700,7 +651,7 @@ Run `38276034129` passed all eight jobs for code commit `97e6515f00c15e240532da6
 **Evidence to close:** Green current-head CI, role/grant output, migration logs, passing CRUD tests, and AWS staging evidence.
 
 
-### 62. Team lead/DevOps: verify the documented AWS URL and architecture against production
+### 58. Team lead/DevOps: verify the documented AWS URL and architecture against production
 **What happens:** PR #53 now includes the production domain recorded in the previous main README and embeds the architecture image already present in `docs/`. The documents are aligned to AWS EC2, but the audit has not yet verified the live domain or compared the diagram with the running AWS topology.
 
 **Why it matters:** A URL can remain in a README while the service is unavailable or points to a different release. A diagram can also become stale after infrastructure changes.
