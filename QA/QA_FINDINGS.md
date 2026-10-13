@@ -2,7 +2,7 @@
 
 Findings are evidence-based. QA is not judged by defect count.
 
-Latest green correction checkpoint: CI run 38418489243 passed all eight jobs for PR #54 commit 905f5db2ff17d968e220f890d90007ce74a42cc2, including the professional README and AWS architecture-document updates. Backend lint passed and 71 backend tests passed twice consecutively. Frontend lint/build passed and all nine Node tests passed; npm audit reported zero vulnerabilities. CI applied migrations 001–006, checked the budget-category RESTRICT rule and runtime database-role privileges, passed secret scanning, built both Docker images, and passed aggregate ci-success. Flask-Limiter still warns that the configured rate-limit storage is in-memory. This is CI evidence only; AWS live deployment, populated-volume migration, browser workflows, reboot recovery, backup restore, and shared production rate-limit storage remain unverified.
+Latest green correction checkpoint: CI run 38418979526 passed all eight jobs for PR #54 commit ae54eec01018a728f97bd7c77f7ccbcad3a96a05, including the professional README, AWS architecture guide, and static public health-route mapping guard. Backend lint passed and 71 backend tests passed twice consecutively. Frontend lint/build passed and all nine Node tests passed; npm audit reported zero vulnerabilities. CI applied migrations 001–006, checked the budget-category RESTRICT rule and runtime database-role privileges, passed secret scanning, built both Docker images, and passed aggregate ci-success. Flask-Limiter still warns that the configured rate-limit storage is in-memory. This is CI evidence only; AWS live deployment, populated-volume migration, browser workflows, reboot recovery, backup restore, and shared production rate-limit storage remain unverified.
 
 ## QA-FIND-001 — Duplicate frontend source structures
 Classification: Observation. Status: Open.
@@ -1215,7 +1215,7 @@ The latest failed correction run was caused by a test expectation issue, not a r
 
 
 ## Latest green correction checkpoint — 2026-10-13
-CI run 38418489243 passed all eight jobs for code/documentation commit 905f5db2ff17d968e220f890d90007ce74a42cc2. It includes 71 backend tests passing twice, nine frontend tests, npm audit with zero reported vulnerabilities, migrations 001–006, restricted database-role checks, secret scanning, both Docker builds, and aggregate ci-success. This supersedes the earlier 04fe7f2 checkpoint as the latest verified correction CI result. It does not prove that the live AWS host is running this commit or that populated-volume migrations, public health, browser journeys, backup restore, reboot recovery, or shared rate-limit storage have been verified.
+CI run 38418979526 passed all eight jobs for code/documentation commit ae54eec01018a728f97bd7c77f7ccbcad3a96a05. It includes 71 backend tests passing twice, nine frontend tests, npm audit with zero reported vulnerabilities, migrations 001–006, restricted database-role checks, secret scanning, both Docker builds, and aggregate ci-success. This supersedes the earlier 04fe7f2 checkpoint as the latest verified correction CI result. It does not prove that the live AWS host is running this commit or that populated-volume migrations, public health, browser journeys, backup restore, reboot recovery, or shared rate-limit storage have been verified.
 
 
 ## PR ownership clarification — 2026-10-13
