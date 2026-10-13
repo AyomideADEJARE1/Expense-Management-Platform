@@ -2,7 +2,7 @@
 
 Findings are evidence-based. QA is not judged by defect count.
 
-Latest verified source-code correction checkpoint: CI run `38420803176` passed all eight jobs for PR #54 head `8d781f3fb45cdce2a07e50ef3250b99ce0501333`, including the required test-enforcement change. Both backend runs passed 71 tests; frontend lint, nine Node tests, and build passed; migrations 001–006 and restricted runtime-role checks passed; secret scan, both Docker builds, and aggregate CI passed. PR #54 has since advanced to `425d435f08e1a11a0ca40060db8f285654ab54ad` for a README-only follow-up; CI run `38421606402` was pending at the last check. Flask-Limiter still warns that rate-limit storage is in-memory. AWS live deployment, populated-volume migration, browser workflows, reboot recovery, backup restore, and shared production rate-limit storage remain unverified.
+Latest verified correction CI: run `38421606402` passed all eight jobs for PR #54 head `425d435f08e1a11a0ca40060db8f285654ab54ad`. This head includes the professional root README clarification; the required-test enforcement itself was introduced on parent correction head `8d781f3fb45cdce2a07e50ef3250b99ce0501333` and passed run `38420803176`. The verified code checks include two backend runs of 71 passing tests, frontend lint, nine Node tests and build, migrations 001–006 and restricted runtime-role checks, secret scanning, both Docker builds, and aggregate CI. Flask-Limiter still warns that rate-limit storage is in-memory. This is CI evidence only; AWS live deployment, populated-volume migration, browser workflows, reboot recovery, backup restore, and shared production rate-limit storage remain unverified.
 
 ## QA-FIND-001 — Duplicate frontend source structures
 Classification: Observation. Status: Open.
@@ -1181,7 +1181,7 @@ Five non-active duplicate/consolidation placeholders have been removed from the 
 
 
 ## Current PR status — 2026-10-13
-The application-code and CI-enforcement changes in PR #54 passed run `38420803176` on commit `8d781f3fb45cdce2a07e50ef3250b99ce0501333`. The current PR #54 head `425d435f08e1a11a0ca40060db8f285654ab54ad` is a README-only follow-up; its run `38421606402` was pending at the last check. The latest PR #53 documentation head is tracked in its pull-request description and must have its own CI conclusion before the documentation PR is called green. Both PRs remain open and unmerged. Findings remain against upstream `main` until the corrections are merged; runtime-only gates remain open until AWS/browser evidence is captured.
+The application-code and CI-enforcement changes in PR #54 passed run `38420803176` on commit `8d781f3fb45cdce2a07e50ef3250b99ce0501333`. The current PR #54 head `425d435f08e1a11a0ca40060db8f285654ab54ad` is a README-only follow-up; its run `38421606402` passed all eight jobs. The latest PR #53 documentation head is tracked in its pull-request description and must have its own CI conclusion before the documentation PR is called green. Both PRs remain open and unmerged. Findings remain against upstream `main` until the corrections are merged; runtime-only gates remain open until AWS/browser evidence is captured.
 
 
 ## Duplicate-section cleanup — 2026-10-13
