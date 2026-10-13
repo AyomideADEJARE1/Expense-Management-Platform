@@ -21,8 +21,8 @@ services:
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
-      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in the root .env file}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the root .env file}
+      POSTGRES_USER: ${POSTGRES_APP_USER:?Set POSTGRES_APP_USER in the root .env file}
+      POSTGRES_PASSWORD: ${POSTGRES_APP_PASSWORD:?Set POSTGRES_APP_PASSWORD in the root .env file}
       POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in the root .env file}
     depends_on:
       postgres:
@@ -42,6 +42,9 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in the root .env file}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the root .env file}
       POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in the root .env file}
+      POSTGRES_BOOTSTRAP_USER: ${POSTGRES_USER:?Set POSTGRES_USER in the root .env file}
+      POSTGRES_APP_USER: ${POSTGRES_APP_USER:?Set POSTGRES_APP_USER in the root .env file}
+      POSTGRES_APP_PASSWORD: ${POSTGRES_APP_PASSWORD:?Set POSTGRES_APP_PASSWORD in the root .env file}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/migrations/001_initial_schema.sql:/docker-entrypoint-initdb.d/001_initial_schema.sql:ro
@@ -49,6 +52,7 @@ services:
       - ./database/migrations/003_budget_uniqueness.sql:/docker-entrypoint-initdb.d/003_budget_uniqueness.sql:ro
       - ./database/migrations/004_restrict_category_budget_delete.sql:/docker-entrypoint-initdb.d/004_restrict_category_budget_delete.sql:ro
       - ./database/migrations/005_user_phone.sql:/docker-entrypoint-initdb.d/005_user_phone.sql:ro
+      - ./database/migrations/006_app_runtime_role.sql:/docker-entrypoint-initdb.d/006_app_runtime_role.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U \"${POSTGRES_USER}\" -d \"${POSTGRES_DB}\""]
       interval: 10s
