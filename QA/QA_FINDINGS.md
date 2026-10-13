@@ -186,9 +186,9 @@ The correction requires a coordinated configuration change: use Compose environm
 ## QA-FIND-023 — Deployment health check verifies application reachability but not database readiness
 Classification: Observability/release-verification gap. Status: Nginx/CD correction proposed in PR #54; runtime route retest pending. Priority: Medium.
 
-The public Nginx health route `/api/health` maps to backend `/health`, which returns `status: ok` without checking PostgreSQL. A separate `/health/db` endpoint checks database connectivity, and Nginx also exposes it as `/api/health/db`; however, the deployment workflow's post-deployment health check currently calls only `/api/health`.
+The public Nginx health route `/api/health` maps to backend `/health`, which returns `status: ok` without checking PostgreSQL. A separate `/health/db` endpoint checks database connectivity, and Nginx exposes it as `/api/health/db`. PR #54 now configures the post-deployment workflow to check both public health endpoints.
 
-Additionally, the upstream Nginx configuration did not have an exact rewrite for `/api/health/db`; the generic `/api/` proxy passed that path through unchanged, so the backend's `/health/db` endpoint was not reachable at the documented public path. PR #54 adds the exact Nginx route and changes CD to check both `/api/health` and `/api/health/db`. Retest the routes through Nginx and the deployed URL before closing this finding.
+Additionally, the upstream Nginx configuration did not have an exact rewrite for `/api/health/db`; the generic `/api/` proxy passed that path through unchanged, so the backend's `/health/db` endpoint was not reachable at the documented public path. PR #54 adds the exact Nginx route and changes CD to check both `/api/health` and `/api/health/db`. The correction branch now also adds a CI assertion for both Nginx path-to-backend mappings. These are source/CI checks; retest the routes through a running Compose stack and the deployed AWS URL before closing this finding.
 
 
 ## QA-FIND-024 — User-settings migration is not applied consistently by Compose and deployment
@@ -298,7 +298,7 @@ This addendum records a direct comparison of the upstream `main` branch, upstrea
 - Upstream `main` `docker-compose.yml` still hard-codes the PostgreSQL username/password/database for both backend and database service, and requires `backend/.env`. This remains QA-FIND-022 and the clean-checkout setup concern recorded under QA-FIND-014. Do not duplicate these as new findings.
 - Upstream `main` `frontend/src/pages/Transactions.jsx` exposes search and transaction-type selection but no date-range/category controls or direct CSV export action. These remain the requirement gaps in QA-FIND-005/006 and are proposed for correction by PR #54.
 The tutor-approved deployment target for this audit is AWS EC2. QA-FIND-008 records that decision; AWS deployment evidence is still required.
-- The upstream `main` Nginx configuration explicitly maps `/api/health` to backend `/health`, but has no exact mapping for `/api/health/db`. PR #54 proposes the missing route and CD check. Runtime verification is still pending.
+- The upstream `main` Nginx configuration explicitly maps `/api/health` to backend `/health`, but has no exact mapping for `/api/health/db`. PR #54 adds the missing route and checks both endpoints in CD. A CI assertion now protects the exact mappings. Runtime verification through a running Compose stack and the live AWS URL is still pending.
 - The upstream `main` budget model has no database-level uniqueness constraint for (user, month, category), including the separate whole-month budget case when category is NULL. This remains QA-FIND-030; application-level pre-checks alone do not prevent concurrent duplicate inserts.
 
 ### PR #54 correction review
@@ -331,7 +331,7 @@ Evidence: upstream `main` `backend/routes/budgets.py` checks for an existing (us
 ### QA-FIND-034 — Nginx database-health route differs between main and correction branch
 Classification: Deployment/health-check gap. Status: Open on upstream main; correction proposed in PR #54.
 
-Evidence: upstream `main` `nginx/default.conf` has an exact mapping for `/api/health` but no exact mapping for `/api/health/db`. The general `location /api/` forwards the latter path as `/api/health/db` to Flask, whereas the backend health endpoint is `/health/db`; therefore the documented public path is not explicitly mapped to the backend path on main. PR #54 adds the route mapping and checks it in CD. Verify both endpoints through Nginx in a running Compose environment before closure.
+Evidence: upstream `main` `nginx/default.conf` has an exact mapping for `/api/health` but no exact mapping for `/api/health/db`. The general `location /api/` forwards the latter path as `/api/health/db` to Flask, whereas the backend health endpoint is `/health/db`; therefore the documented public path is not explicitly mapped to the backend path on main. PR #54 adds the route mapping and checks both endpoints in CD. A CI assertion now checks the route mapping strings, but that is not an HTTP runtime test. Verify both endpoints through Nginx in a running Compose environment and through the deployed AWS URL before closure.
 
 ### QA-FIND-035 — Compose credentials are hard-coded in the original main branch
 Classification: Security/configuration finding. Status: Open on upstream main; correction design still required.
@@ -1228,3 +1228,7 @@ CI run 38418489243 passed all eight jobs for code/documentation commit 905f5db2f
 
 ## PR ownership clarification — 2026-10-13
 The earlier notes that attributed the README and architecture edits to PR #53 are historical and have been corrected. PR #54 is the single owner of those root documentation changes; PR #53 contains the audit evidence and release traceability documents. This avoids duplicated README/architecture edits across open PRs.
+
+
+## Nginx health-route regression guard — 2026-10-13
+PR #54 now includes a CI check that asserts the public `/api/health` and `/api/health/db` Nginx locations point to `/health` and `/health/db` respectively, and that CD checks both public URLs. This guards against accidental removal or path mismatch. It does not replace a running Compose or live AWS HTTP test.
