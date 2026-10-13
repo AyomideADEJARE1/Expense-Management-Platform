@@ -1186,3 +1186,18 @@ The application-code and required-test-gate changes passed CI run `38420803176` 
 
 ## Duplicate-section cleanup — 2026-10-13
 Removed the older “Additional source audit — targeted retest notes” appendix because it reused QA-FIND-031 through QA-FIND-035 for different defects than the canonical numbered findings, creating conflicting duplicate IDs. The unique issues remain tracked in their canonical entries: category input validation, category authorization, budget uniqueness, Nginx health routing, and database credentials. Stable canonical IDs were retained; the duplicate appendix is not part of the active register.
+
+
+## QA-FIND-089 — AWS deployment does not explicitly rebuild the Nginx image
+
+**Classification:** Deployment correctness / stale configuration risk. **Priority:** High because Nginx routes and security headers affect the public application. **Status:** Confirmed on upstream `main`; correction proposed in PR #54; latest correction CI pending.
+
+**Evidence:** Upstream `.github/workflows/cd.yml` checks out the target commit and runs `docker compose pull`, followed by `docker compose up -d`, but it does not explicitly rebuild the Nginx image. The Compose Nginx service uses `build: ./nginx` and is not part of the GHCR publish matrix. On a VM that already has an Nginx image, `docker compose up` is not a reliable guarantee that a changed `nginx/default.conf` will be rebuilt and used. This matters because the correction changes public health routing and browser security headers.
+
+**Impact:** The deployed backend/frontend may be updated while Nginx continues serving an older proxy configuration. A green source/CI check could therefore coexist with stale live routes or missing response headers.
+
+**Correction proposed in PR #54:** The CD workflow now runs `docker compose build nginx` from the checked-out commit before database migrations and before restarting services. CI includes Nginx in the Docker build matrix, runs `nginx -t` against the built image, and checks that the Nginx build occurs before migrations and service replacement. Current correction head `83352b2ff90551a896113385f036b66d77f1009c` has CI run `38423159920` pending at the last check; do not call this new correction verified until that exact run passes.
+
+**How QA will verify:** On a controlled AWS staging VM, deploy a commit that changes a harmless Nginx response header or route marker. Capture the running Nginx image ID and `nginx -T` output before/after deployment. Confirm the new configuration appears in the running container and that `/api/health`, `/api/health/db`, and expected security headers respond through the public endpoint. Confirm a failed Nginx build prevents service replacement.
+
+**Closure evidence:** Green CI for the exact correction head, log evidence showing `docker compose build nginx` before migration/restart, running container/image identity, sanitized `nginx -T` output, and public AWS staging responses showing the changed route/header. CI source checks alone do not close the live deployment finding.
