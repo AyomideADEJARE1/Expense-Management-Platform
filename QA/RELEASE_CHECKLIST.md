@@ -67,4 +67,4 @@ Evidence:
 
 
 ## Repository metadata
-- [ ] GitHub About/description field names AWS EC2, not Azure, and matches the README/CD workflow. Capture the repository header as evidence after the repository administrator updates it.
+- [ ] GitHub About/description field names AWS EC2 consistently and matches the README/CD workflow. Capture the repository header as evidence after the repository administrator updates it.
