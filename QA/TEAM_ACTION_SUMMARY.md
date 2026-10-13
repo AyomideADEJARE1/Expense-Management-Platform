@@ -10,7 +10,7 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Status rule:** “Found” means the code has a problem. “Correction proposed” means code has been changed but still needs review and tests. “CI passed” means automated checks passed for the named commit. “Runtime pending” means the app still needs to be run and checked. These statuses must not be treated as the same thing.
 
-**Current audit size:** 85 distinct findings/observations, 59 distinct team actions, and 48 runtime verification gates. CI run `38418979526` passed all eight jobs for correction commit `ae54eec01018a728f97bd7c77f7ccbcad3a96a05`, which also includes the professional README and AWS architecture updates: 71 backend tests passed twice, nine frontend tests passed, npm audit reported zero vulnerabilities, migrations 001–006 and runtime-role checks passed, secret scanning and both Docker builds passed. Flask-Limiter still warns about in-memory storage. AWS live/runtime evidence remains separate from CI evidence.
+**Current audit size:** 85 distinct findings/observations, 60 distinct team actions, and 49 runtime verification gates. CI run `38418979526` passed all eight jobs for correction commit `ae54eec01018a728f97bd7c77f7ccbcad3a96a05`, which also includes the professional README and AWS architecture updates: 71 backend tests passed twice, nine frontend tests passed, npm audit reported zero vulnerabilities, migrations 001–006 and runtime-role checks passed, secret scanning and both Docker builds passed. Flask-Limiter still warns about in-memory storage. AWS live/runtime evidence remains separate from CI evidence.
 
 ## Actions for the team
 
@@ -682,3 +682,15 @@ PR #54 owns the root README and architecture documentation because they must sta
 **How to verify:** Refresh the repository home page and confirm the description says AWS EC2 and agrees with the root README and .github/workflows/cd.yml.
 
 **Evidence required:** The updated repository header and confirmation that README, architecture guide, and CD workflow all name AWS EC2. This metadata change is outside a code-file commit.
+
+
+### 60. CI owner: fail the build when tests do not run
+**What happens:** The original CI workflow allowed a green backend job when pytest collected zero tests, and the frontend test step was optional. The QA-only branch's run `38420555104` demonstrated this: zero backend tests were collected but the job emitted only a warning.
+
+**Why it matters:** A green check can hide a missing test suite and give the team false confidence that regressions were checked.
+
+**Required correction:** PR #54 removes the backend empty-suite allowance, runs backend tests twice, and now makes frontend lint and test commands mandatory by removing `--if-present`.
+
+**How to verify:** The current PR #54 CI run must pass after this change. Confirm the backend job reports a real test count twice and the frontend job reports a real test count. Confirm there is no no-tests-allowed branch in CI.
+
+**Evidence required:** Green current-head CI, backend test collection/pass counts, frontend test count, and the workflow diff showing mandatory commands. The previous green run predates the latest workflow edit.
