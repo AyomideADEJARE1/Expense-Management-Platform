@@ -202,6 +202,12 @@ jobs:
               config = json.load(handle)
           backend = config['services']['backend']['environment']
           postgres = config['services']['postgres']['environment']
+          print('Resolved credential wiring:', {
+              'backend_user': backend.get('POSTGRES_USER'),
+              'backend_password_matches_app': backend.get('POSTGRES_PASSWORD') == 'ci-compose-app-password-strong-123456789',
+              'postgres_user': postgres.get('POSTGRES_USER'),
+              'bootstrap_password_matches': postgres.get('POSTGRES_PASSWORD') == 'ci-bootstrap-password-for-compose-test',
+          })
           assert backend['POSTGRES_USER'] == 'ci_app_user'
           assert backend['POSTGRES_PASSWORD'] == 'ci-compose-app-password-strong-123456789'
           assert postgres['POSTGRES_USER'] == 'ci_user'
