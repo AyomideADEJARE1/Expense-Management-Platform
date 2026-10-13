@@ -727,3 +727,7 @@ Current PR #54 commit 04fe7f2ea0942c467b1c0af29d7e60d63b3791e2 has passed the fi
 
 ## Current green correction checkpoint — 2026-10-13
 CI run 38416894925 passed all eight jobs for commit 04fe7f2ea0942c467b1c0af29d7e60d63b3791e2. Backend lint passed and both consecutive runs passed 71 tests. Frontend lint/build and nine Node tests passed; npm audit reported zero vulnerabilities. The database job applied migrations 001–006 and verified the restricted runtime role. Both Docker builds, secret scanning, and aggregate CI passed. AWS existing-volume migration, live deployment, public health checks, and browser journeys remain pending.
+
+
+## Documentation ownership checkpoint — 2026-10-13
+PR #54 is the sole owner of the root README and architecture document changes. PR #53 contains QA findings, traceability, test planning, runtime gates, and the release checklist only. This removes duplicated root-document changes across the two open PRs. Live AWS verification remains pending.
