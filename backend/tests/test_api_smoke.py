@@ -22,12 +22,10 @@ def client():
     # Clear committed API data between tests.
     with app.app_context():
         db.session.rollback()
-        db.session.execute(
-            db.text(
-                "TRUNCATE TABLE monthly_expense_summary, budgets, expenses, "
-                "expense_categories, users RESTART IDENTITY CASCADE"
-            )
-        )
+        # Delete parent rows so database cascades clean up child rows. The
+        # runtime role intentionally does not have the powerful TRUNCATE privilege.
+        db.session.execute(db.text("DELETE FROM users"))
+        db.session.execute(db.text("DELETE FROM expense_categories"))
         db.session.commit()
 
 
