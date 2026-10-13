@@ -23,7 +23,7 @@ def client():
     with app.app_context():
         db.session.rollback()
         # Delete parent rows so database cascades clean up child rows. The
-        # runtime role intentionally does not have the powerful TRUNCATE privilege.
+        # runtime role intentionally lacks the powerful TRUNCATE privilege.
         db.session.execute(db.text("DELETE FROM users"))
         db.session.execute(db.text("DELETE FROM expense_categories"))
         db.session.commit()
