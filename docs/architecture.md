@@ -2,7 +2,7 @@
 
 The Enhanced Personal Expense Management Platform is a React, Nginx, Flask, PostgreSQL 16, and Docker Compose application. AWS EC2 is the approved deployment target.
 
-Current production runs on AWS EC2 Ubuntu. Cloudflare provides the public DNS/proxy layer and HTTPS is active.
+The approved deployment target is AWS EC2 Ubuntu. The documented topology places Cloudflare in front of the application for public DNS/proxying and HTTPS. The current live deployment, DNS, certificate status, and public health responses must be verified before they are reported as operational.
 
 ## Architecture
 
