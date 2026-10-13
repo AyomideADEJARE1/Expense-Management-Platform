@@ -2,7 +2,7 @@
 
 Findings are evidence-based. QA is not judged by defect count.
 
-Latest green correction checkpoint: CI run `38420803176` passed all eight jobs for PR #54 head `8d781f3fb45cdce2a07e50ef3250b99ce0501333`. It verified the required test gates: both backend test runs passed 71 tests, the frontend job ran lint, all nine Node tests, and build; migrations 001–006 and restricted runtime-role checks passed; secret scan, both Docker builds, and aggregate `ci-success` passed. This head adds mandatory backend test collection and mandatory frontend lint/test commands, removing the empty-suite and `--if-present` success paths. Flask-Limiter still warns that configured rate-limit storage is in-memory. This is CI evidence only; AWS live deployment, populated-volume migration, browser workflows, reboot recovery, backup restore, and shared production rate-limit storage remain unverified.
+Latest verified source-code correction checkpoint: CI run `38420803176` passed all eight jobs for PR #54 head `8d781f3fb45cdce2a07e50ef3250b99ce0501333`, including the required test-enforcement change. Both backend runs passed 71 tests; frontend lint, nine Node tests, and build passed; migrations 001–006 and restricted runtime-role checks passed; secret scan, both Docker builds, and aggregate CI passed. PR #54 has since advanced to `425d435f08e1a11a0ca40060db8f285654ab54ad` for a README-only follow-up; CI run `38421606402` was pending at the last check. Flask-Limiter still warns that rate-limit storage is in-memory. AWS live deployment, populated-volume migration, browser workflows, reboot recovery, backup restore, and shared production rate-limit storage remain unverified.
 
 ## QA-FIND-001 — Duplicate frontend source structures
 Classification: Observation. Status: Open.
@@ -1225,3 +1225,7 @@ Two duplicate placeholder sections for category-write authorization have been re
 **How QA will verify:** Confirm the backend job runs pytest twice and fails on zero collected tests. Confirm frontend lint and test steps do not use `--if-present`, and that npm reports a nonzero test count. Review the job logs for the exact tested commit.
 
 **Closure evidence obtained:** Green CI run `38420803176` for commit `8d781f3fb45cdce2a07e50ef3250b99ce0501333`, backend 71 tests passed twice, frontend nine tests passed, and source review confirms pytest exit code 5 is no longer converted to success and frontend lint/test are mandatory. **Still outstanding:** merge/review of PR #54 into upstream main; the QA-only PR #53 branch can still show zero tests because it is based on the upstream implementation being audited.
+
+
+## Current PR status — 2026-10-13
+The application-code and CI-enforcement changes in PR #54 passed run `38420803176` on commit `8d781f3fb45cdce2a07e50ef3250b99ce0501333`. The current PR #54 head `425d435f08e1a11a0ca40060db8f285654ab54ad` is a README-only follow-up; its run `38421606402` was pending at the last check. The latest PR #53 documentation head is tracked in its pull-request description and must have its own CI conclusion before the documentation PR is called green. Both PRs remain open and unmerged. Findings remain against upstream `main` until the corrections are merged; runtime-only gates remain open until AWS/browser evidence is captured.
