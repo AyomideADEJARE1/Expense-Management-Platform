@@ -1,636 +1,124 @@
-# CI/CD Pipeline
+# CI/CD
 
-This document describes the project's current Continuous Integration (CI) and Continuous Delivery (CD) workflows.
+This document describes the continuous integration (CI) and continuous delivery (CD) workflows, the required GitHub configuration, and the AWS EC2 deployment sequence.
 
-The CI pipeline validates changes on pull requests and pushes to the project's integration branches. The CD pipeline can publish Docker images to GitHub Container Registry (GHCR) and is prepared for AWS VM deployment when deployment is explicitly enabled.
+Related: [Architecture](architecture.md) · [Docker](docker.md) · [Nginx](nginx.md) · [Security](security.md) · [Contributing](../CONTRIBUTING.md)
 
-The team's Git workflow is described in [CONTRIBUTING.md](../CONTRIBUTING.md).
+## Overview
 
----
-
-## 1. Pipeline Overview
-
-```mermaid
-flowchart LR
-    D[Developer] --> B[Feature Branch]
-    B --> PR[Pull Request]
-    PR --> CI[CI Validation]
-    CI --> R[Review + Approval]
-    R --> M[Merge to main or nginx]
-    M --> CI2[CI Validation]
-    CI2 --> P[CD: Publish Images]
-    P --> G[GitHub Container Registry]
-    P --> DEP[AWS Deployment]
-    DEP --> H[Health Check]
-```
-
-The project separates validation from delivery:
-
-1. Developers work on feature or area branches.
-2. Pull requests trigger CI.
-3. CI checks secrets, database migrations, backend code, frontend code, and builds the backend, frontend, and Nginx images.
-4. Pull requests are reviewed and approved before merging.
-5. Pushes to `main` or `nginx` trigger CI again.
-6. A successful push to `main` can trigger the CD workflow.
-7. CD publishes commit-tagged backend/frontend images to GHCR; the AWS host builds Nginx from the checked-out commit.
-8. AWS deployment remains disabled unless `DEPLOY_ENABLED=true`.
-9. When AWS deployment is enabled, the workflow connects to the configured VM and performs a deployment and health check.
-
----
-
-## 2. Workflow Files
-
-| Workflow | File | Trigger |
+| Workflow | File | Runs when |
 |---|---|---|
-| Continuous Integration | `.github/workflows/ci.yml` | Pull requests and pushes to `main` or `nginx`; manual run |
-| Continuous Delivery | `.github/workflows/cd.yml` | Successful CI workflow on `main`; manual run |
-| Dependabot | `.github/dependabot.yml` | Scheduled dependency updates |
+| CI | `.github/workflows/ci.yml` | Pull requests into `main`, `nginx`, or `integration/deployable-main`; pushes to `main` or `nginx`; manual dispatch |
+| CD | `.github/workflows/cd.yml` | After a successful CI run for a push to `main`; manual dispatch |
+| Dependabot | `.github/dependabot.yml` | Scheduled dependency update checks |
 
----
+CI validates every change. CD publishes images to GHCR and, when enabled, deploys them to AWS EC2.
 
-# 3. Continuous Integration
+## Continuous integration
 
-The CI workflow is defined in:
+CI detects which components exist and runs the matching jobs.
 
-```text
-.github/workflows/ci.yml
-```
-
-CI runs for:
-
-- Pull requests targeting `main`
-- Pull requests targeting `nginx`
-- Pushes to `main`
-- Pushes to `nginx`
-- Manual workflow dispatch
-
-The workflow uses:
-
-- Python 3.12
-- Node.js 20
-- PostgreSQL 16
-- GitHub Actions
-- Docker Buildx
-- Gitleaks
-
----
-
-## 4. CI Pipeline
-
-```mermaid
-flowchart TD
-    A[CI Trigger] --> B[Detect Components]
-    A --> C[Secret Scan]
-    A --> D[Database Migrations]
-
-    B --> E[Backend]
-    B --> F[Frontend]
-    B --> G[Docker Build]
-
-    C --> H[ci-success]
-    D --> H
-    E --> H
-    F --> H
-    G --> H
-```
-
-The workflow is designed to detect which application components exist and run the relevant jobs automatically.
-
----
-
-# 5. Detect Project Components
-
-The `detect` job checks whether the repository contains:
-
-- `backend/requirements.txt`
-- `frontend/package.json`
-- A backend or frontend Dockerfile
-
-The results determine whether the corresponding backend, frontend, and Docker jobs run.
-
-This allows CI to continue working as the project structure evolves without requiring the workflow to be rewritten whenever a component is added.
-
----
-
-# 6. Secret Scan
-
-The `secret-scan` job performs two checks.
-
-### Environment files
-
-The workflow checks Git's tracked files and fails if a `.env` file has been committed.
-
-`.env.example` is allowed.
-
-The project's actual development environment file:
-
-```text
-backend/.env
-```
-
-must remain untracked.
-
-### Gitleaks
-
-The workflow also runs Gitleaks against the repository's Git history.
-
-This helps detect accidentally committed credentials, tokens, API keys, passwords, and other sensitive values.
-
-If a secret is exposed, it should be removed from the repository and rotated where applicable. Removing it only from the latest commit does not remove it from Git history.
-
----
-
-# 7. Database Migration Checks
-
-The `database` job starts PostgreSQL 16 as a GitHub Actions service.
-
-CI uses a dedicated test database:
-
-```text
-Database: expense_management_test
-User:     ci_user
-Password: ci_password
-Host:     localhost
-Port:     5432
-```
-
-The workflow applies SQL files from:
-
-```text
-database/migrations/
-```
-
-in filename order.
-
-The job then verifies that the expected tables exist:
-
-```text
-budgets
-expense_categories
-expenses
-monthly_expense_summary
-users
-```
-
-This provides an automated check that the database migrations can be applied successfully.
-
----
-
-# 8. Backend CI
-
-The backend job runs when:
-
-```text
-backend/requirements.txt
-```
-
-exists.
-
-The job:
-
-1. Sets up Python 3.12.
-2. Installs backend dependencies.
-3. Installs `flake8` and `pytest`.
-4. Runs Flake8.
-5. Runs the backend test suite.
-
-The CI test environment provides database and application variables specifically for the CI environment.
-
-The current CI workflow defines:
-
-```text
-FLASK_ENV=testing
-SECRET_KEY=ci-test-secret
-JWT_SECRET=ci-test-jwt-secret
-DATABASE_URL=postgresql://ci_user:ci_password@localhost:5432/expense_management_test
-```
-
-These values are **CI test configuration** and are not the same as the Docker Compose runtime configuration used by the application.
-
-The application runtime currently uses PostgreSQL connection variables such as:
-
-```text
-POSTGRES_HOST
-POSTGRES_PORT
-POSTGRES_USER
-POSTGRES_PASSWORD
-POSTGRES_DB
-```
-
-and Flask's:
-
-```text
-SECRET_KEY
-```
-
-Production credentials must never use the test values above.
-
----
-
-# 9. Frontend CI
-
-The frontend job runs when:
-
-```text
-frontend/package.json
-```
-
-exists.
-
-The job:
-
-1. Sets up Node.js 20.
-2. Runs `npm ci`.
-3. Runs the lint script when available.
-4. Runs the test script when available.
-5. Runs the production build.
-
-The current workflow uses:
-
-```bash
-npm run lint --if-present
-npm test --if-present
-npm run build
-```
-
-The `--if-present` behavior means the absence of a lint or test script does not cause the workflow to fail solely because the script is missing.
-
-The frontend build remains required.
-
----
-
-# 10. Docker Build Validation
-
-The `docker-build` job validates Dockerfiles without publishing images.
-
-The workflow checks:
-
-```text
-backend/Dockerfile
-frontend/Dockerfile
-```
-
-when present.
-
-Each image is built using its respective directory as the Docker build context.
-
-For example:
-
-```text
-backend/Dockerfile
-    ↓
-backend/ build context
-
-frontend/Dockerfile
-    ↓
-frontend/ build context
-```
-
-Images are built with:
-
-```text
-push: false
-```
-
-so this CI job does not publish them to a registry.
-
-This job verifies that the application images can be built successfully before delivery.
-
----
-
-# 11. Required CI Result
-
-The final CI job is:
-
-```text
-ci-success
-```
-
-It waits for the other CI jobs and fails if any required job reports:
-
-- `failure`
-- `cancelled`
-
-Skipped component-specific jobs are allowed when those components are not present.
-
-`ci-success` is therefore the single aggregate check intended for branch protection.
-
----
-
-# 12. Continuous Delivery
-
-The CD workflow is defined in:
-
-```text
-.github/workflows/cd.yml
-```
-
-CD is separate from CI.
-
-The workflow listens for completion of the CI workflow on `main`.
-
-For an ordinary automated run, publishing proceeds only when:
-
-1. CI completed successfully.
-2. The CI run was associated with a push to `main`.
-
-A manual CD workflow run is also supported.
-
----
-
-# 13. Publishing Docker Images
-
-The `publish` job builds and pushes Docker images to:
-
-```text
-GitHub Container Registry
-```
-
-using the repository's `GITHUB_TOKEN`.
-
-Images are generated for:
-
-```text
-backend
-frontend
-```
-
-when their respective Dockerfiles exist.
-
-The image naming pattern is:
-
-```text
-ghcr.io/<repository>-<service>
-```
-
-For this project, the repository-based image names follow the pattern:
-
-```text
-ghcr.io/ayomideadejare1/expense-management-platform-backend
-ghcr.io/ayomideadejare1/expense-management-platform-frontend
-```
-
-Images receive:
-
-- A short commit SHA tag
-- A `latest` tag
-
-The commit-tagged image identifies a specific build. The workflow also publishes `latest` for convenience, but deployment must use the `sha-<short commit>` tag tied to the CI-tested commit, with registry tag immutability enforced or the image digest pinned for stronger guarantees.
-
----
-
-# 14. AWS Deployment
-
-The CD workflow contains an AWS VM deployment job, but deployment is **not automatically enabled by default**.
-
-Deployment runs only when the repository variable:
-
-```text
-DEPLOY_ENABLED
-```
-
-is set to:
-
-```text
-true
-```
-
-and the CD workflow is running against:
-
-```text
-main
-```
-
-The deployment job uses SSH to connect to the configured AWS EC2 VM. It forwards the GHCR read-only credentials to the remote script through the action's environment forwarding, logs in with `--password-stdin`, pulls the commit-tagged backend/frontend images, builds the Nginx image from the checked-out commit, and logs out on exit. The Nginx build happens before migrations and does not replace the currently running proxy until the application-service restart after successful migrations. The runner's own GHCR login does not authenticate the EC2 host. The remote script derives the short commit tag with POSIX-compatible shell commands so it does not depend on Bash-only substring expansion.
-
-The corrected deployment process checks out the commit associated with the successful CI run, selects the corresponding `sha-<short commit>` backend/frontend image tags, pulls those images, and builds the Nginx image from that same checked-out commit. It waits for PostgreSQL to become healthy, applies the idempotent user-settings migration (002), budget uniqueness migration (003), category-budget deletion restriction migration (004), optional profile-phone migration (005), and restricted application database role migration (006). Only after these steps succeed does it restart the backend, frontend, and Nginx services, then check both public health endpoints. Migration 003 intentionally fails if legacy duplicate budgets exist, stopping deployment until the data is reviewed and remediated. Migration 004 ensures deleting a category cannot silently convert linked budgets into whole-month budgets. Migration 005 adds the nullable `users.phone` column used by the profile API; it must complete before application services restart. The Compose services also use `restart: unless-stopped`; this helps recover containers after Docker or EC2 restarts, but a staging reboot test must still prove the host starts Docker and both public health endpoints recover. Migration 006 reads `POSTGRES_APP_USER` and `POSTGRES_APP_PASSWORD` from the protected environment, rejects placeholder/weak runtime passwords, and grants the application role no database/role creation privileges. Add these variables to an existing AWS host before deploying this migration.
-
-The image tag is commit-specific but is not inherently immutable. For stronger release integrity, configure registry tag immutability or pin and record each image digest.
-
-The application runtime account is separate from the bootstrap/migration account. The backend container must receive only the runtime credentials; migration commands run with the bootstrap account. A disposable AWS staging test must prove the role can perform application CRUD and cannot create roles, databases, or schema objects.
-
-The deployment path defaults to:
-
-```text
-~/expense-management-platform
-```
-
-unless `DEPLOY_PATH` is configured.
-
-### Current status
-
-The AWS deployment infrastructure is **planned/configurable rather than confirmed as an active production deployment**.
-
-The repository should therefore not be described as currently running in production on AWS until the AWS VM, production configuration, deployment secrets, and deployment workflow have been configured and verified.
-
----
-
-# 15. CD Configuration
-
-When AWS deployment is ready to be enabled, the repository requires the following configuration.
-
-### Repository secrets
-
-| Name | Purpose |
+| Job | What it checks |
 |---|---|
-| `AWS_EC2_HOST` | AWS VM public IP address or hostname |
-| `AWS_EC2_USER` | SSH user |
-| `AWS_EC2_SSH_KEY` | Private SSH key used for deployment |
-| `GHCR_READ_USERNAME` | Account name used by the AWS host to authenticate to GHCR |
-| `GHCR_READ_TOKEN` | Protected read-only token that permits the AWS host to pull the required images |
+| Detect components | Presence of backend, frontend, and Dockerfiles |
+| Secret scan | Fails if a `.env` file is tracked (`.env.example` is allowed). Runs Gitleaks against the repository history |
+| Database migrations | Applies `database/migrations/*.sql` in order to PostgreSQL 16. Verifies expected tables, the `RESTRICT` delete rule on budget categories, the `users.phone` column, and that the runtime role has no administrative privileges and cannot create roles, databases, or tables |
+| Duplicate-budget check | Confirms migration 003 rejects duplicate legacy budgets with a clear diagnostic |
+| Compose configuration | Validates that the bootstrap and runtime database credentials are wired to separate services, and that every service uses `restart: unless-stopped` |
+| Public Nginx routes | Confirms `/api/health` and `/api/health/db` are mapped in Nginx and checked by CD |
+| Deployment order | Confirms the Nginx build and each migration run before application services restart |
+| Backend | Applies migrations, runs flake8, and runs `pytest` twice. Zero collected tests fail the job |
+| Frontend | `npm ci`, dependency audit report, ESLint, `npm test`, and `npm run build`. All steps are required |
+| Docker build | Checks `.dockerignore` rules, builds backend, frontend, and Nginx images, and confirms local `.env` files are not packaged |
+| `ci-success` | Aggregate result. Use this as the single required status check |
 
-### Repository variables
+The CI database and credentials are test-only values. They must never be used outside CI.
 
-| Name | Purpose |
-|---|---|
-| `DEPLOY_ENABLED` | Enables AWS deployment when set to `true` |
-| `APP_URL` | Public application URL used by the health check |
-| `DEPLOY_PATH` | Application directory on the AWS VM |
+## Continuous delivery
 
-The production environment should also be configured in:
+### Publish
 
-```text
-Settings → Environments
-```
+The `publish` job runs for backend and frontend when their Dockerfiles exist. It pushes two tags to GHCR:
 
-with the environment name:
+- `sha-<short commit>`: identifies the exact CI-tested commit. Deployment uses this tag.
+- `latest`: convenience only. Deployment does not use it.
 
-```text
-production
-```
+Image names follow the pattern `ghcr.io/<owner>/<repository>-<service>` in lowercase. The owner and repository are taken from the running repository, so forks publish to their own registry namespace.
 
-Production secrets such as database passwords and application secret keys must remain outside the Git repository.
+A commit tag is not immutable. For stronger release integrity, enable tag immutability in the registry or record image digests.
 
----
+### Deploy
 
-# 16. Deployment Health Check
+The `deploy` job runs only when:
 
-After deployment, the corrected CD workflow checks both public health endpoints:
+- the workflow runs on `main`, and
+- the repository variable `DEPLOY_ENABLED` is `true`.
 
-```text
-<APP_URL>/api/health
-<APP_URL>/api/health/db
-```
+It runs in the `production` environment and performs these steps on the EC2 host:
 
-The first endpoint verifies that the application is responding. The second verifies that the backend can reach PostgreSQL. The workflow retries each endpoint and fails deployment verification if either request does not succeed.
+1. Logs in to GHCR with the read-only `GHCR_READ_USERNAME` and `GHCR_READ_TOKEN`, using `--password-stdin`. The login is removed when the script exits.
+2. Checks out the CI-tested commit.
+3. Pulls the `sha-<short commit>` backend and frontend images.
+4. Builds the Nginx image from the same checked-out commit. Nginx is not published to GHCR.
+5. Starts PostgreSQL and waits until it is healthy.
+6. Applies migrations 002 through 006 to the database. If a migration fails, the script stops and the running application is unchanged.
+7. Restarts the backend, frontend, and Nginx services and removes unused images.
 
-### Important endpoint distinction
+After the SSH step, the workflow checks `<APP_URL>/api/health` and `<APP_URL>/api/health/db`. Both must return success. The checks retry before failing.
 
-The backend exposes:
+## Required GitHub configuration
 
-```text
-/health
-/health/db
-```
+Configure these under **Settings → Secrets and variables → Actions**, and create a `production` environment under **Settings → Environments**.
 
-The correction branch's Nginx configuration maps these publicly as:
+| Type | Name | Purpose |
+|---|---|---|
+| Secret | `AWS_EC2_HOST` | Public IP or hostname of the EC2 instance |
+| Secret | `AWS_EC2_USER` | SSH user on the instance |
+| Secret | `AWS_EC2_SSH_KEY` | Private key used for deployment |
+| Secret | `GHCR_READ_USERNAME` | Account the EC2 host uses to pull images |
+| Secret | `GHCR_READ_TOKEN` | Read-only package token for that account |
+| Variable | `DEPLOY_ENABLED` | Set to `true` to enable deployment |
+| Variable | `APP_URL` | Public application URL, used by the health checks |
+| Variable | `DEPLOY_PATH` | Application directory on the host. Defaults to `~/expense-management-platform` |
 
-```text
-/api/health
-/api/health/db
-```
+Production passwords and signing keys belong on the server or in a secret store, never in the repository.
 
-The mapping must be tested through the deployed Nginx service. A source-level mapping or a healthy container alone is not sufficient evidence that both public endpoints work.
+## Branch protection
 
----
+Protect `main` and `nginx` with these settings:
 
-# 17. Docker Compose and CD
-
-Local development currently uses Docker Compose to build the application services from the repository.
-
-The local architecture is:
-
-```text
-Nginx
-  ↓
-Frontend / Backend
-  ↓
-PostgreSQL
-```
-
-The CD workflow publishes only the commit-tagged backend and frontend images to GHCR. On the AWS VM, it pulls those two images and runs:
-
-```bash
-docker compose build nginx
-```
-
-against the checked-out deployment commit. Nginx is intentionally built locally because it is not published to GHCR. This build must complete before database migrations and service replacement; CI checks this order and runs `nginx -t` against the built image.
-
-Local Docker Compose behavior and production image-pull behavior should not be assumed to be identical. A passing CI run still does not prove that the rebuilt Nginx image is live on AWS; the deployed image/configuration and public routes must be checked separately.
-
-See:
-
-- [Docker documentation](docker.md)
-- [Nginx documentation](nginx.md)
-- [Architecture documentation](architecture.md)
-
-for the respective service configurations.
-
----
-
-# 18. Branch Protection
-
-The repository's protected integration branch should require the aggregate CI check:
-
-```text
-ci-success
-```
-
-Recommended protections include:
-
-- Require a pull request before merging.
-- Require at least one approval.
+- Require a pull request before merging, with at least one approval.
 - Dismiss stale approvals when new commits are pushed.
-- Require required status checks to pass.
-- Require branches to be up to date before merging where appropriate.
+- Require the `ci-success` status check to pass.
+- Require branches to be up to date before merging.
 - Require conversation resolution.
-- Block force pushes.
-- Restrict branch deletion.
+- Block force pushes and branch deletion.
 
-The exact protected branch should match the team's current integration workflow.
+## Verification levels
 
----
+Each level proves something different. Report only the levels you have actually checked.
 
-# 19. Development Branch Workflow
-
-Developers should normally:
-
-1. Create or use an appropriate feature/area branch.
-2. Make the assigned changes.
-3. Push the branch to GitHub.
-4. Open a pull request against the project's designated integration branch.
-5. Allow CI to run.
-6. Address review comments and CI failures.
-7. Obtain the required approval.
-8. Merge the pull request.
-
-Branches should be kept synchronized with the current integration branch before beginning substantial new work.
-
-The repository currently uses `nginx` as an important integrated application branch, while `main` is also used by the CI/CD workflow. The actual target branch for a pull request should therefore follow the team's current GitHub branch configuration rather than assuming every feature branch must target `main`.
-
----
-
-# 20. Troubleshooting
-
-| Problem | What to check |
+| Level | Meaning |
 |---|---|
-| `ci-success` fails | Open the CI run and inspect the failed job that caused the aggregate check to fail. |
-| Secret scan fails | Check for tracked `.env` files or credentials detected by Gitleaks. Remove and rotate exposed secrets as necessary. |
-| Database migration job fails | Run the affected migration locally against PostgreSQL and check for SQL errors. |
-| Backend lint fails | Run `flake8` locally and correct the reported Python issues. |
-| Backend tests fail | Run `pytest -v` from the `backend/` directory and inspect the failing test. |
-| `npm ci` fails | Confirm `frontend/package-lock.json` is committed and synchronized with `package.json`. |
-| Frontend build fails | Run `npm run build` from `frontend/` and inspect the build error. |
-| Docker build fails | Build the affected Dockerfile locally using its service directory as the build context. |
-| CD does not publish images | Confirm CI succeeded for the relevant `main` push or run CD manually. |
-| AWS deployment is skipped | Confirm `DEPLOY_ENABLED=true` and that the workflow is running against `main`. |
-| AWS SSH deployment fails | Check `AWS_EC2_HOST`, `AWS_EC2_USER`, `AWS_EC2_SSH_KEY`, VM SSH access, and `DEPLOY_PATH`. |
-| Docker image pull fails on AWS | Confirm `GHCR_READ_USERNAME` and `GHCR_READ_TOKEN` are configured, the token can read both packages, and the remote login/pull succeeds without printing the token. |
-| Deployment health check fails | Verify `APP_URL`, the application's exposed health endpoint, Nginx routing, and the running containers on the VM. |
+| CI passes | Checks passed for that commit |
+| Images published | Images reached GHCR under the commit tag |
+| EC2 deployment | The host runs the commit-tagged images |
+| Health checks pass | Both public health endpoints respond on the deployed host |
+| Browser checks pass | The main user flows work on the live site |
 
----
+A green CI run is not evidence of a live release.
 
-# 21. CI/CD Security
+## Troubleshooting
 
-The CI/CD pipeline follows these principles:
-
-- Secrets are not committed to Git.
-- `.env` files are blocked from being tracked.
-- Gitleaks scans repository history.
-- CI uses dedicated test credentials.
-- Production credentials remain outside the repository.
-- GHCR publishing uses GitHub's `GITHUB_TOKEN`.
-- AWS deployment uses a dedicated SSH key.
-- Deployment is disabled until explicitly enabled.
-- Production deployment should use a dedicated environment and appropriate approval controls.
-
----
-
-# 22. Current CI/CD Status
-
-| Capability | Status |
+| Symptom | Check |
 |---|---|
-| CI on pull requests | Implemented |
-| CI on `main` | Implemented |
-| CI on `nginx` | Implemented |
-| Secret scanning | Implemented |
-| Database migration validation | Implemented |
-| Backend lint/test | Implemented |
-| Frontend lint/test/build | Implemented |
-| Docker image build validation | Implemented |
-| Aggregate `ci-success` check | Implemented |
-| GHCR image publishing | Implemented in CD workflow |
-| AWS VM deployment workflow | Implemented/configurable |
-| AWS production environment | Documented in README; current-release deployment evidence pending in this audit |
-| Production health-check verification | Not confirmed |
-| Commit-tagged Compose image configuration | Updated in correction branch; CI/runtime verification pending |
-
----
-
-## 23. Related Documentation
-
-- [Architecture](architecture.md)
-- [Security](security.md)
-- [Docker](docker.md)
-- [Nginx](nginx.md)
-- [Contributing](../CONTRIBUTING.md)
+| `ci-success` fails | Open the first failed job in the CI run |
+| Secret scan fails | Tracked `.env` file, or a Gitleaks finding. Remove the secret and rotate it |
+| Migration job fails | Run the failing migration locally against a disposable PostgreSQL 16 database |
+| Frontend job fails | Run `npm ci`, `npm run lint`, `npm test`, and `npm run build` in `frontend/` |
+| CD skips publishing | CI must succeed on a push to `main`, or run CD manually |
+| Deployment is skipped | `DEPLOY_ENABLED` must be `true`, and the workflow must run on `main` |
+| SSH step fails | `AWS_EC2_HOST`, `AWS_EC2_USER`, `AWS_EC2_SSH_KEY`, and the host's SSH access |
+| GHCR pull fails on EC2 | The read token must be able to read both packages. Check the username and token |
+| Migration fails during deploy | Read the psql error. Restore from backup if the data is partly changed. The running app stays up |
+| Health check fails | Confirm `APP_URL`, Nginx routes, and running containers on the host |
