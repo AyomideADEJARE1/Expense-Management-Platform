@@ -267,3 +267,7 @@ The root README and `docs/architecture.md` are updated to describe AWS EC2, curr
 
 ## Current correction test retest
 CI run 38416621129 failed one API test because the malformed-category-body check called a protected category route without authentication and received 401 instead of 400. The test now authenticates that request in correction commit 04fe7f2ea0942c467b1c0af29d7e60d63b3791e2. CI run 38416894925 was queued at the last check. Treat this as open until the current-head workflow and its repeatability run pass.
+
+
+## Latest correction CI evidence — 2026-10-13
+CI run 38416894925 passed all eight jobs for PR #54 commit 04fe7f2ea0942c467b1c0af29d7e60d63b3791e2. Both backend test passes completed with 71 passed tests; frontend lint/build and nine tests passed; npm audit reported zero vulnerabilities; migrations 001–006 and runtime-role checks passed; both Docker builds and aggregate ci-success passed. AWS runtime and browser verification remain separate, open gates.
