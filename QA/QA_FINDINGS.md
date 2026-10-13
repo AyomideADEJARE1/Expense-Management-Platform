@@ -2,7 +2,7 @@
 
 Findings are evidence-based. QA is not judged by defect count.
 
-Latest historical green correction checkpoint: CI run 38381389211 passed all eight jobs for code commit 85871877850b81b367be2acb1135dced73a95255, including migrations 001–006, 69 backend tests, nine frontend tests, secret scanning, both Docker builds, and aggregate CI. This is not the current PR #54 head. The current correction branch has since changed its test harness; CI run 38416621129 is queued for commit 02e0a4a6e30e3fdee45df4238d6649670cd2668b after fixing the test imports/client fixture and a lint-only docstring issue. Do not treat the queued run as passing. AWS live deployment, populated-volume migration, browser workflows, reboot recovery, backup restore, and shared production rate-limit storage remain unverified.
+Latest historical green correction checkpoint: CI run 38381389211 passed all eight jobs for code commit 85871877850b81b367be2acb1135dced73a95255, including migrations 001–006, 69 backend tests, nine frontend tests, secret scanning, both Docker builds, and aggregate CI. This is not the current PR #54 head. Run 38416621129 for commit 02e0a4a6e30e3fdee45df4238d6649670cd2668b failed one backend assertion because the malformed-category-body test lacked authentication and received 401 instead of 400. The test was corrected in commit 04fe7f2ea0942c467b1c0af29d7e60d63b3791e2; CI run 38416894925 for that head was queued at the last check. Do not treat it as passing until all jobs and the repeatability test complete. AWS live deployment, populated-volume migration, browser workflows, reboot recovery, backup restore, and shared production rate-limit storage remain unverified.
 
 ## QA-FIND-001 — Duplicate frontend source structures
 Classification: Observation. Status: Open.
@@ -1216,3 +1216,7 @@ PR #54 now includes `database/migrations/006_app_runtime_role.sql`, Compose cred
 PR #53 now updates the root README and `docs/architecture.md` on the documentation branch. The README uses the project name “Expense Tracker” with “Enhanced Personal Expense Management Platform”, documents AWS EC2, the current four-service Compose architecture, both environment files, migration behavior, tests, health endpoints, protected deployment settings, and release evidence. It embeds the architecture image that already exists in `docs/Expense Platform System Architecture.png` and retains the public domain recorded in the previous main README, explicitly requiring live verification.
 
 The architecture document now reflects the current host mapping `80:80`, private PostgreSQL port, restricted runtime database role, migration sequence 002–006 for existing deployments, and the AWS EC2/GHCR release path. Source/document review is complete; current-head CI and live AWS verification are separate gates.
+
+
+## Current correction CI checkpoint — 2026-10-13
+The latest failed correction run was caused by a test expectation issue, not a reported production-route failure: category mutation requires authentication, so the malformed-body test must authenticate before it can test JSON-shape validation. The test now supplies the test user's authorization header. Current-head CI run 38416894925 is the required recheck. The previous green run is historical and must not be presented as current-head success.
