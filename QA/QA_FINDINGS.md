@@ -1207,6 +1207,6 @@ QA-FIND-082 through QA-FIND-085 now have source-level corrections covered by CI.
 **Closure evidence:** Reviewed role/privilege design, migration SQL or provisioning script, least-privilege permission test output, successful application CRUD tests using the runtime role, AWS staging migration logs, and proof that the backend container receives no bootstrap-admin password. This finding is not closed by a green application CI run alone.
 
 
-## QA-FIND-086 correction update — 2026-10-13
+### Status update — QA-FIND-086 (2026-10-13)
 
 PR #54 now includes `database/migrations/006_app_runtime_role.sql`, Compose credential separation, a CD step that applies migration 006 before application restart, and CI privilege-boundary checks. The backend test job is configured to connect using the restricted application role, while the migration connection uses the bootstrap account. Current-head CI run and AWS populated-database verification remain pending. Do not close this finding until the current CI passes and the disposable AWS staging checks confirm CRUD works while privileged operations fail.
