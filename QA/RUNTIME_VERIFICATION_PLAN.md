@@ -703,15 +703,19 @@ CI run 38273922288 passed all eight jobs for correction commit 77620d6547cad3ee3
 **Evidence:** Sanitized role/grant listing, test results, migration logs, and AWS staging commit/schema evidence. Never include passwords or secret values in evidence. Do not close based on source inspection alone.
 
 
-## RV-57 — Verify AWS submission URL and architecture diagram
+## RV-57 — Verify the documented AWS URL and architecture against production
 **Owner:** Team lead/DevOps. **Environment:** Deployed AWS environment and repository.
 
-**Steps:** After a deployment has been verified, add the public application URL and the final architecture diagram to README.md. Test the URL from outside the EC2 host, check `/api/health` and `/api/health/db`, record the running commit/image digest, and compare the diagram with the actual AWS topology.
+**Steps:** The README now includes the production domain recorded in the previous main README and embeds the architecture image already present in `docs/`. Test the domain from outside the EC2 host, check `/api/health` and `/api/health/db`, record the running commit/image digest, and compare the diagram with the actual AWS topology. Update the URL or diagram only if runtime evidence shows a mismatch.
 
-**Pass criteria:** The URL resolves to the reviewed application; both health checks pass; the diagram includes the actual cloud entry point, host/network, Nginx, frontend, Flask API, PostgreSQL, and CI/CD flow; the diagram file is committed and embedded in README.md.
+**Pass criteria:** The URL resolves to the reviewed application; both health checks pass; the deployed commit/image is recorded; and the diagram matches the actual cloud entry point, host/network, Nginx, frontend, Flask API, PostgreSQL, and CI/CD flow.
 
-**Evidence:** URL, sanitized health responses, deployed commit/image digest, diagram path and commit. Do not close using an unverified URL or a placeholder diagram.
+**Evidence:** Timestamped URL and sanitized health responses, deployed commit/image digest, and the diagram path/commit. README text or source inspection alone does not close the runtime gate.
 
 
 ### Status update — RV-56 (2026-10-13)
 CI run `38381389211` passed all eight jobs for code commit `85871877850b81b367be2acb1135dced73a95255`. The database job applied migrations 001–006 and confirmed the application role has required table/sequence privileges while prohibited role/database/schema creation fails. The backend suite passed 69 tests and the frontend suite passed nine tests. This closes the CI portion of RV-56 only. A disposable populated AWS database, actual deployment, and post-deployment CRUD/privilege checks are still required.
+
+
+### Documentation source check — 2026-10-13
+The README and architecture document are updated in PR #53 to use AWS EC2, the current Compose host port 80, the existing architecture image, the restricted runtime database account, and the current CI/CD migration path. This is documentation/source evidence only; the public domain and live AWS release still need runtime verification.
