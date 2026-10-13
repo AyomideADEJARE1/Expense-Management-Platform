@@ -186,7 +186,7 @@ The missing shared production store remains open and is tracked in action 47 alo
 
 ### 18. Frontend: add automated UI tests
 
-**What happens:** The frontend package has no test script, while CI uses npm test with if-present behavior. Therefore, CI can pass without executing frontend tests.
+**Current status:** Upstream `main` did not define a frontend test script. PR #54 now adds `npm test` using Node's test runner, and correction CI run `38418979526` passed the frontend test job. The remaining action is to add or execute browser-level tests for complete user journeys; utility/unit tests do not prove the whole UI works.
 
 **Why it matters:** A green build does not prove that login state, navigation, budget editing, or key screens work when users interact with them.
 
