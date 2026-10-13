@@ -739,3 +739,6 @@ The repository's GitHub About description still names the previous cloud target 
 
 ## Current correction branch checkpoint — 2026-10-13
 CI run `38418979526` passed all eight jobs for `ae54eec01018a728f97bd7c77f7ccbcad3a96a05`: database migration/role checks, secret scan, component detection, backend lint and tests, frontend lint/tests/build, both Docker builds, and aggregate `ci-success`. The backend suite passed 71 tests and the frontend Node tests ran successfully; npm audit reported zero vulnerabilities. This confirms the CI environment only. AWS existing-volume migration, actual deployment/image version, public health checks, browser flows/downloads, reboot recovery, backup restore, and shared production rate-limit storage remain open.
+
+## Audit register hygiene
+Two duplicate category-write authorization placeholders were removed from QA/QA_FINDINGS.md; QA-FIND-010 remains the canonical entry. The register now has 85 distinct findings/observations. IDs remain stable to preserve traceability; numbering gaps are intentional.
