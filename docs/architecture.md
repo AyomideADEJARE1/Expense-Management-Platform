@@ -1,560 +1,79 @@
-# Personal Expense Management Platform — System Architecture
+# Expense Tracker — System Architecture
 
-## 1. Project Overview
+The Enhanced Personal Expense Management Platform is a React, Nginx, Flask, PostgreSQL 16, and Docker Compose application. AWS EC2 is the approved deployment target.
 
-The Personal Expense Management Platform is a web application that allows users to manage personal finances by recording expenses, organizing expenses into categories, setting budgets, and viewing spending summaries.
+Current production runs on AWS EC2 Ubuntu. Cloudflare provides the public DNS/proxy layer and HTTPS is active.
 
-The application uses a layered architecture consisting of:
+## Architecture
 
-- React frontend
-- Nginx reverse proxy
-- Flask REST API
-- PostgreSQL 16 database
+![Expense Tracker system architecture](Expense%20Platform%20System%20Architecture.png)
 
-The application is containerized with Docker Compose for local development and integration testing.
+    Internet
+       |
+    Cloudflare / HTTPS
+       |
+    AWS EC2
+       |
+    Nginx :80
+       |----------------|
+       v                v
+    React :80       Flask :5000
+                        |
+                        v
+                  PostgreSQL :5432
 
-The browser communicates with the application through Nginx. Nginx serves the React frontend and routes `/api` requests to the Flask backend. The Flask backend handles authentication, business logic, validation, and database operations.
+PostgreSQL is internal to the Docker network.
 
-PostgreSQL is accessible to the backend through the Docker Compose network and is not directly exposed to the browser.
+## Services
 
----
-
-## 2. System Architecture
-
-```mermaid
-flowchart TD
-    U[User / Web Browser] --> N[Nginx Reverse Proxy]
-
-    N --> F[React Frontend]
-    N --> A[Flask REST API]
-
-    A --> D[(PostgreSQL 16)]
-
-    F -->|HTTP Requests| N
-    N -->|/api/*| A
-```
-
-### Architecture Flow
-
-1. The user accesses the application through a web browser.
-2. Nginx provides the main application entry point.
-3. Nginx serves the React frontend.
-4. The React frontend sends API requests through Nginx.
-5. Nginx routes `/api/*` requests to the Flask backend.
-6. Flask handles authentication, validation, business logic, and API responses.
-7. Flask communicates with PostgreSQL through SQLAlchemy and Psycopg.
-8. PostgreSQL stores persistent application data.
-9. PostgreSQL is not directly accessible from the user's browser.
-
----
-
-## 3. Docker Compose Architecture
-
-The current local application stack consists of four services:
-
-```text
-                    Browser
-                       │
-                       ▼
-              ┌────────────────┐
-              │ Nginx Container│
-              │    Port 8080   │
-              └───────┬────────┘
-                      │
-             ┌────────┴────────┐
-             ▼                 ▼
-    ┌────────────────┐  ┌────────────────┐
-    │ React Container│  │ Flask Container│
-    │     Port 80    │  │    Port 5000   │
-    └────────────────┘  └───────┬────────┘
-                                │
-                                ▼
-                       ┌─────────────────┐
-                       │ PostgreSQL 16   │
-                       │     Port 5432   │
-                       └─────────────────┘
-```
-
-### Service Responsibilities
-
-| Service | Container | Internal Port | Purpose |
+| Service | Container | Port | Responsibility |
 |---|---|---:|---|
-| Nginx | `expense-nginx` | 80 | Application entry point and reverse proxy |
-| Frontend | `expense-frontend` | 80 | React application |
-| Backend | `expense-backend` | 5000 | Flask REST API |
-| PostgreSQL | `expense-postgres` | 5432 | Persistent relational database |
+| Nginx | expense-nginx | 80 | Entry point/reverse proxy |
+| Frontend | expense-frontend | 80 | React UI |
+| Backend | expense-backend | 5000 | Flask API |
+| PostgreSQL | expense-postgres | 5432 | Persistent data |
 
-Nginx maps its container port to host port `8080`, so the application is accessed locally through:
+The current docker-compose.yml publishes Nginx as 80:80. Earlier documentation describing 8080:80 is stale.
 
-```text
-http://localhost:8080
-```
+## Request Flow
 
-The frontend and backend are not intended to be accessed directly by the browser during normal application use.
+Browser -> Nginx -> Flask -> PostgreSQL for API requests.
 
----
+Browser -> Nginx -> React for frontend requests.
 
-## 4. Major Components
+The /api/health route maps to backend /health.
 
-### Frontend — React
+## Database
 
-The React frontend provides the user interface and communicates with the backend API.
+Database: configured by `POSTGRES_DB` in the protected root `.env`
+Bootstrap/migration user: configured by `POSTGRES_USER`
+Application runtime user: configured separately by `POSTGRES_APP_USER`
+Host: `postgres`
+Port: `5432`
+Version: PostgreSQL 16
+Volume: `postgres_data`
 
-Main responsibilities include:
+Initial schema: database/migrations/001_initial_schema.sql.
 
-- User registration and login interface
-- Expense management
-- Expense categories
-- Budget management
-- Monthly spending summaries
-- Charts and dashboard views
-- Filtering
-- CSV export
-- Authentication token handling
-- API communication
+## Health Checks
 
-The frontend communicates with the backend through the Nginx `/api` route.
+- /health
+- /health/db
+- /api/health
+- /api/health/db
 
----
+## Production
 
-### Reverse Proxy — Nginx
+Cloudflare -> expense-tracker.live -> AWS EC2 Ubuntu -> Docker Compose -> Nginx/React/Flask/PostgreSQL.
 
-Nginx acts as the application's entry point.
+Let's Encrypt/Certbot manages the production certificate in the deployment environment.
 
-Main responsibilities include:
+The repository Nginx container is HTTP-only on port 80; production TLS/domain handling is surrounding infrastructure.
 
-- Serving the React frontend
-- Routing `/api/*` requests to Flask
-- Providing a single application endpoint
-- Forwarding client request information to the backend
-- Supporting health-check routing
+The browser reaches the app through Nginx. Nginx serves React and routes `/api/*` to Flask. PostgreSQL remains private to the Docker Compose network. Only Nginx is published on host port `80` by the current Compose file.
 
-The current Nginx configuration routes:
+## CI/CD release path
 
-```text
-/api/health
-    │
-    ▼
-backend /health
+GitHub Actions validates the source, applies database migration checks, runs backend and frontend checks, and builds the container images. The configurable CD workflow publishes commit-tagged images to GHCR and can deploy to AWS EC2 when `DEPLOY_ENABLED=true` and the required protected AWS/GHCR credentials are configured. The workflow waits for PostgreSQL, applies migrations `002` through `006`, restarts application services only after migrations succeed, and checks both public health endpoints.
 
-/api/*
-    │
-    ▼
-backend
-
-/*
-    │
-    ▼
-frontend
-```
-
----
-
-### Backend — Flask
-
-The Flask application provides the REST API and application business logic.
-
-Main responsibilities include:
-
-- User registration
-- User authentication
-- Password hashing
-- JWT-based authentication
-- Expense CRUD operations
-- Category management
-- Budget management
-- Monthly summaries
-- Filtering
-- CSV export
-- Database communication
-- API validation
-- Rate limiting
-- Application health checks
-- Database health checks
-
-The backend listens on port `5000` inside its container.
-
----
-
-### Database — PostgreSQL 16
-
-PostgreSQL provides persistent storage for application data.
-
-The current database configuration uses:
-
-| Setting | Value |
-|---|---|
-| Database | `expense_db` |
-| User | `expense_user` |
-| PostgreSQL Version | 16 |
-| Container | `expense-postgres` |
-| Internal Port | `5432` |
-
-The database is initialized from:
-
-```text
-database/migrations/001_initial_schema.sql
-```
-
-The migration is mounted into PostgreSQL's initialization directory and is automatically executed when a new PostgreSQL data volume is initialized.
-
----
-
-## 5. Component Communication
-
-The main communication paths are:
-
-### User → Nginx
-
-The user's browser connects to the application through Nginx on host port `8080`.
-
-### Nginx → React
-
-Requests that do not match `/api/*` are forwarded to the React frontend container.
-
-### React → Nginx → Flask
-
-The React frontend sends API requests to the same application endpoint through the `/api` path.
-
-Nginx forwards these requests to the Flask backend.
-
-### Flask → PostgreSQL
-
-The Flask backend communicates with PostgreSQL through:
-
-```text
-Flask
-  │
-  ▼
-SQLAlchemy
-  │
-  ▼
-Psycopg
-  │
-  ▼
-PostgreSQL 16
-```
-
-### PostgreSQL → Flask → Nginx → Browser
-
-Database results are processed by Flask and returned through the API. Nginx forwards the API response to the browser.
-
----
-
-## 6. Database Architecture
-
-The application uses PostgreSQL as its persistent data store.
-
-The current schema contains:
-
-- `users` — application users
-- `expense_categories` — available expense categories
-- `expenses` — individual user expenses
-- `budgets` — user budget allocations
-- `monthly_expense_summary` — monthly expense totals
-
-The database is isolated from the browser and is accessed by the Flask backend over the Docker Compose network.
-
-The PostgreSQL data directory is persisted through the Docker volume:
-
-```text
-postgres_data
-```
-
-Stopping the containers normally preserves the database data.
-
-Removing the volume with:
-
-```bash
-docker compose down -v
-```
-
-recreates the database from the initial migration when the stack is started again.
-
----
-
-## 7. Health Checks
-
-The application includes health checks at multiple layers.
-
-### Backend Application Health
-
-Flask exposes:
-
-```text
-GET /health
-```
-
-which returns an application health response.
-
-Through Nginx, this is available as:
-
-```text
-GET /api/health
-```
-
-Example:
-
-```bash
-curl http://localhost:8080/api/health
-```
-
----
-
-### Backend Database Health
-
-Flask also exposes:
-
-```text
-GET /health/db
-```
-
-Through Nginx:
-
-```text
-GET /api/health/db
-```
-
-Example:
-
-```bash
-curl http://localhost:8080/api/health/db
-```
-
-The endpoint verifies that the Flask application can successfully execute a database query.
-
----
-
-### PostgreSQL Health
-
-The PostgreSQL container uses:
-
-```text
-pg_isready -U expense_user -d expense_db
-```
-
-as its Docker health check.
-
-The backend depends on PostgreSQL becoming healthy before the backend container is started.
-
----
-
-### Nginx Health
-
-Nginx uses the application health endpoint to verify that the application stack is responding.
-
-The Docker Compose configuration therefore provides health checks across the main service chain.
-
----
-
-## 8. Repository Structure
-
-The main repository structure is:
-
-```text
-Expense-Management-Platform/
-│
-├── backend/
-│   ├── app.py
-│   ├── models/
-│   ├── routes/
-│   ├── utils/
-│   ├── requirements.txt
-│   └── Dockerfile
-│
-├── frontend/
-│   ├── src/
-│   ├── package.json
-│   └── Dockerfile
-│
-├── database/
-│   ├── migrations/
-│   │   └── 001_initial_schema.sql
-│   ├── schema/
-│   │   └── schema.sql
-│   └── README.md
-│
-├── nginx/
-│   ├── nginx.conf
-│   ├── Dockerfile
-│   └── README.md
-│
-├── docs/
-│   └── architecture.md
-│
-├── docker-compose.yml
-├── README.md
-└── CONTRIBUTING.md
-```
-
-The repository may contain additional project documentation and configuration files as development continues.
-
----
-
-## 9. Security Architecture
-
-Security controls are implemented across the application layers.
-
-### Authentication
-
-The Flask backend uses JWT-based authentication for protected API endpoints.
-
-Authentication tokens are issued during login and supplied by the client when accessing protected resources.
-
-The application does not currently provide a server-side logout endpoint because JWT authentication is stateless. Client-side logout is performed by removing the stored token.
-
-### Password Security
-
-User passwords are not stored as plain text. Passwords are processed using secure password hashing before being stored.
-
-### Database Access
-
-The browser does not connect directly to PostgreSQL.
-
-Database access is restricted to the Flask backend through the Docker Compose network.
-
-### Secrets
-
-Sensitive configuration is supplied through environment variables and local environment files rather than being hard-coded into application source code.
-
-Local `.env` files containing secrets are excluded from version control.
-
-### Rate Limiting
-
-The Flask API includes rate limiting to reduce abuse of application endpoints.
-
-Detailed security controls are documented separately in:
-
-```text
-docs/security.md
-```
-
----
-
-## 10. Data and Request Flow
-
-A typical authenticated expense request follows this path:
-
-```text
-User
- │
- ▼
-Browser
- │
- ▼
-Nginx :8080
- │
- │ /api/expenses
- ▼
-Flask API :5000
- │
- ▼
-Authentication / Validation
- │
- ▼
-SQLAlchemy
- │
- ▼
-Psycopg
- │
- ▼
-PostgreSQL :5432
- │
- ▼
-Flask Response
- │
- ▼
-Nginx
- │
- ▼
-Browser
-```
-
-This separation keeps presentation, API/business logic, and persistent storage isolated from one another.
-
----
-
-## 11. Current Deployment Status
-
-The application is currently implemented and verified as a Docker Compose-based application.
-
-The following local integration has been verified:
-
-- React frontend container
-- Nginx reverse proxy
-- Flask backend
-- PostgreSQL 16
-- PostgreSQL initialization from the migration
-- Backend-to-database connectivity
-- Application health checks
-- Database health checks
-- Authentication flow
-- Expense CRUD operations
-- Category operations
-- Budget functionality
-- Monthly summaries
-- Filtering
-- CSV export
-- Protected API access
-
-All four application containers were successfully verified as healthy during local integration testing.
-
----
-
-## 12. AWS EC2 Deployment and Verification
-
-The project README documents AWS EC2 as the production environment, and the QA owner reports that the tutor approved AWS as the capstone deployment target. This audit has not independently verified that the latest reviewed commit is running on the EC2 instance.
-
-The intended deployment architecture is:
-
-```text
-Internet
-   │
-   ▼
-AWS EC2 VM
-   │
-   ▼
-Nginx Container
-   │
-   ├──────────────► React Container
-   │
-   └──────────────► Flask Container
-                         │
-                         ▼
-                  PostgreSQL Container
-```
-
-The AWS infrastructure, networking, secrets management, TLS configuration, monitoring, and production database strategy must be documented and verified against the actual EC2 environment.
-
-Treat the Docker Compose diagram as the application service architecture. Treat the AWS deployment as complete for a release only when the deployed commit/image, EC2/container status, public health checks, and end-to-end user journeys are supported by recorded evidence.
-
----
-
-## 13. Design Principles
-
-The architecture follows these principles:
-
-- Separation of frontend, backend, and database responsibilities
-- REST-based communication between frontend and backend
-- PostgreSQL as the persistent data store
-- Database access restricted to the backend
-- Environment-based configuration for sensitive values
-- Containerized application services
-- Nginx as the application reverse proxy
-- Health checks for service availability
-- Clear separation between application code and deployment configuration
-- Reproducible local development through Docker Compose
-
----
-
-## 14. Architecture Responsibility
-
-The Project Lead / Architect is responsible for:
-
-- Defining and maintaining the overall architecture
-- Coordinating dependencies between project components
-- Maintaining architecture documentation
-- Ensuring services integrate according to the agreed design
-- Reviewing major structural changes
-- Coordinating application integration
-- Keeping architecture documentation aligned with the implemented system
+A passing CI run does not prove that the latest commit is live. Release evidence should record the deployed commit/image and successful public health and browser checks.
