@@ -711,3 +711,14 @@ PR #54 owns the root README and architecture documentation because they must sta
 
 
 **Latest deployment correction status (2026-10-13):** The audit identified that upstream `main` did not explicitly rebuild the local Nginx image after checkout. PR #54 now runs `docker compose build nginx` before migrations/restart and includes Nginx in the CI Docker matrix with an `nginx -t` check and an order guard. Current PR #54 head is `83352b2ff90551a896113385f036b66d77f1009c`; CI run `38423159920` was pending at the last check. AWS staging verification remains open.
+
+### 62. Team lead/backend: decide and enforce shared-category permissions
+**What happens:** Categories are global records, but the current correction only requires a valid login to create, rename, or delete them. It does not require an administrator role or check ownership.
+
+**Why it matters:** One ordinary user may change category labels or remove categories that other users rely on. Login authentication does not by itself authorize changes to shared data.
+
+**Decision needed:** Choose either (A) shared categories managed only by a defined administrator role, or (B) per-user categories with ownership and user-scoped queries. Record the decision before implementing; existing expenses and budgets already reference category IDs.
+
+**Required correction:** Backend owner implements the chosen role/ownership checks. If choosing per-user categories, add a migration and define how existing categories and their expense/budget references are assigned. Add tests for anonymous requests, normal users, admins/owners, and cross-user ID tampering. Do not mark this solved merely because category mutation endpoints require a JWT.
+
+**Verification and evidence:** Two-account API/browser tests show one account cannot modify another account's categories or change its expense/budget labels. Attach the requirements decision, migration if applicable, test results, and current-head CI run.
