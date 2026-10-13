@@ -247,7 +247,7 @@ It uses these repository variables:
 
 The workflow checks out the commit associated with the successful CI run, authenticates the AWS host to GHCR using the read-only registry credentials, uses commit-tagged images, waits for PostgreSQL, applies migrations before restarting application services, and checks both public health endpoints. The SSH deployment step logs out of GHCR after the pull. A commit-specific tag is traceable but is not inherently immutable; recording image digests or enforcing registry tag immutability provides stronger release integrity.
 
-**Deployment status:** Do not claim that the latest commit is live until the team has captured the deployed commit/image, successful health checks, and end-to-end browser results. The verified public URL is intentionally pending team-lead confirmation in the submission section above.
+**Deployment status:** The production domain is recorded in the submission section, but its current DNS/HTTPS, deployed version, and health responses still require team-lead verification. Do not claim the latest commit is live until the team has captured the deployed commit/image, successful health checks, and end-to-end browser results.
 
 ## Security considerations
 
