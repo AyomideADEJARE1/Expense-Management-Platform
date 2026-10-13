@@ -74,6 +74,6 @@ The browser reaches the app through Nginx. Nginx serves React and routes `/api/*
 
 ## CI/CD release path
 
-GitHub Actions validates the source, applies database migration checks, runs backend and frontend checks, and builds the container images. The configurable CD workflow publishes commit-tagged images to GHCR and can deploy to AWS EC2 when `DEPLOY_ENABLED=true` and the required protected AWS/GHCR credentials are configured. The workflow waits for PostgreSQL, applies migrations `002` through `006`, restarts application services only after migrations succeed, and checks both public health endpoints.
+GitHub Actions validates the source, applies database migration checks, runs backend and frontend checks, and builds backend, frontend, and Nginx images. The configurable CD workflow publishes commit-tagged backend/frontend images to GHCR and can deploy to AWS EC2 when `DEPLOY_ENABLED=true` and the required protected AWS/GHCR credentials are configured. After checking out the tested commit, the deployment host rebuilds Nginx locally from that commit, waits for PostgreSQL, applies migrations `002` through `006`, restarts application services only after migrations succeed, and checks both public health endpoints.
 
 A passing CI run does not prove that the latest commit is live. Release evidence should record the deployed commit/image and successful public health and browser checks.
