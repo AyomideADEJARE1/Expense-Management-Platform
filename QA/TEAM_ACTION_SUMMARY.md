@@ -224,7 +224,7 @@ The missing shared production store remains open and is tracked in action 47 alo
 
 ### 21. Backend/DevOps: make authentication rate limits proxy-aware (consolidated)
 
-PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit test for forwarded client identity. The AWS topology check and shared-store requirement remain open under action 47. Do not close this action until the public AWS test proves independent client quotas and safe forwarding-header handling.
+PR #54 configures ProxyFix for one trusted proxy hop, but the test covers only a synthetic single-proxy chain. The documented architecture includes Cloudflare before Nginx; if Cloudflare proxying is enabled, the rightmost forwarded address may be the Cloudflare edge rather than the visitor. Confirm the real AWS traffic path, normalize client IPs only from trusted Cloudflare ranges if applicable, prevent spoofed forwarding headers, and configure shared rate-limit storage. The public AWS test remains open.
 
 ### 22. Frontend: make the budget spending value read-only
 
@@ -476,11 +476,11 @@ PR #54 now configures ProxyFix for one trusted Nginx hop and includes a unit tes
 **Evidence to close:** Backup schedule/configuration, retention/access policy, redacted successful restore log, data-integrity checks, and pre-migration backup recovery evidence.
 
 ### 44. Backend/DevOps: make rate limits correct for real clients
-**What happens:** PR #54 now configures Flask `ProxyFix` for exactly one trusted Nginx hop and adds a unit test for forwarded client identity. The deployment topology still needs runtime confirmation. The limiter still uses in-memory storage, which resets on restart and is not shared between backend instances.
+**What happens:** PR #54 configures Flask `ProxyFix` for one trusted proxy hop and adds a unit test for a synthetic forwarded-header chain. The documented architecture also places Cloudflare before Nginx. If Cloudflare proxying is active, Nginx's `$proxy_add_x_forwarded_for` may append the Cloudflare edge address, so Flask may rate-limit by Cloudflare edge rather than visitor. The limiter still uses in-memory storage, which resets on restart and is not shared between backend instances.
 
 **Why it matters:** One user's login attempts can block other users, while restarts or multiple instances can weaken abuse protection.
 
-**Required correction:** Review the new one-hop `ProxyFix` configuration against the actual AWS topology, prevent direct/untrusted access from spoofing forwarded headers, and configure approved shared rate-limit storage for AWS through environment settings. Keep local development configuration separate.
+**Required correction:** Confirm whether Cloudflare proxying is active. If it is, configure Nginx to trust only Cloudflare's maintained official IP ranges, normalize the visitor address from the trusted Cloudflare header, and pass one normalized address to Flask. If traffic is direct to Nginx, overwrite untrusted forwarded headers so a caller cannot spoof identity. Keep the backend private and configure approved shared rate-limit storage for AWS through protected environment settings. Keep local development configuration separate.
 
 **How QA will verify:** Through AWS/Nginx, test two distinct clients, verify independent counters and the expected 429 limit, try spoofed forwarded headers, restart the backend, and verify the counter behavior. If more than one backend instance is used, verify counters are shared.
 
