@@ -10,7 +10,7 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Status rule:** “Found” means the code has a problem. “Correction proposed” means code has been changed but still needs review and tests. “CI passed” means automated checks passed for the named commit. “Runtime pending” means the app still needs to be run and checked. These statuses must not be treated as the same thing.
 
-**Current audit size:** 86 numbered findings/observations, 58 distinct team actions, and 48 runtime verification gates. CI run `38381389211` passed all eight jobs for code commit `85871877850b81b367be2acb1135dced73a95255`; 69 backend tests and nine frontend Node tests passed, both Docker builds succeeded, and npm audit reported zero vulnerabilities. A later category-authentication patch is now in PR #54 and requires its own current-head CI result. Flask-Limiter still warns about in-memory storage. AWS live/runtime evidence remains separate from CI evidence.
+**Current audit size:** 86 numbered findings/observations, 58 distinct team actions, and 48 runtime verification gates. Historical green checkpoint: CI run `38381389211` passed all eight jobs for commit `85871877850b81b367be2acb1135dced73a95255`, with 69 backend tests and nine frontend Node tests. Current PR #54 head is `04fe7f2ea0942c467b1c0af29d7e60d63b3791e2`; run `38416894925` is still in progress. The backend's first pass of 71 tests has passed, but the second repeatability pass and Docker builds must finish before the current head can be called green. Flask-Limiter still warns about in-memory storage. AWS live/runtime evidence remains separate from CI evidence.
 
 ## Actions for the team
 
@@ -55,7 +55,7 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Why it matters:** A test may pass once but fail the next time because old users or categories remain. A wrong local configuration could also point tests at a database that should not be changed.
 
-**Correction status:** The correction branch uses a dedicated test database, rejects unsafe database names, truncates test tables and resets identities after each test, and runs the backend suite twice. CI run 38219803561 passed all eight jobs and both 58-test runs.
+**Correction status:** The correction branch guards the database name and clears rows from budgets, expenses, categories, and users before each test. CI is configured to run the backend suite twice. Current-head run 38416894925 has passed the first 71-test backend pass; the repeatability pass and Docker builds are still pending.
 
 **QA check still required:** Confirm local/staging test database configuration is separate from production and retain the database guard, cleanup implementation, and repeated CI test results.
 
