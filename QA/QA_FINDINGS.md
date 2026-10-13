@@ -1247,3 +1247,7 @@ PR #54 now includes a CI check that asserts the public `/api/health` and `/api/h
 **How QA will verify:** Refresh the repository home page and confirm the About description names AWS EC2 and matches the README/CD workflow. Confirm the README, architecture guide, and CD workflow remain aligned.
 
 **Closure evidence:** Updated repository description visible on GitHub, plus the current README and CD workflow showing the same AWS target. This metadata item is separate from the two code/documentation PRs and does not require an application-code change.
+
+
+## Latest correction CI checkpoint — 2026-10-13 (commit ae54eec)
+CI run `38418979526` passed all eight jobs for correction commit `ae54eec01018a728f97bd7c77f7ccbcad3a96a05`. The database migration/role checks, secret scan, backend lint/tests (71 tests), frontend lint/test/build, both Docker builds, and aggregate CI passed; npm audit reported zero vulnerabilities. This supersedes earlier green checkpoints for PR #54 source/CI verification. It does not close AWS populated-volume migration, live deployment/version, public health, browser journeys/downloads, reboot recovery, backup restore, or shared production rate-limit storage. Findings with source corrections remain open for their stated browser/AWS verification until that evidence is retained.
