@@ -1,792 +1,130 @@
-# Docker Documentation
+# Docker
 
-This document describes the project's Docker and Docker Compose configuration for local development and application integration.
-
-The project runs four services:
+This document describes the Docker Compose configuration used for local development and integration testing, and how the same images are built and published.
 
 ```text
 Browser
    |
    v
-Nginx :80
-   |
-   +--------------------+
-   |                    |
-   v                    v
-Frontend :80         Backend :5000
-                          |
-                          v
-                    PostgreSQL :5432
+Nginx :80 (only published port)
+   |-- /api/* -> backend:5000 (Flask, gunicorn) -> postgres:5432
+   |-- /*     -> frontend:80 (React, served by nginx)
 ```
 
-Nginx is the application's host-facing entry point. The frontend, backend, and PostgreSQL services communicate over the Docker Compose network.
+## Services
 
----
+| Service | Build source | Container port | Published to host | Purpose |
+|---|---|---:|---|---|
+| `nginx` | `./nginx` (`nginx:alpine`) | 80 | **Yes, 80** | Single entry point and reverse proxy |
+| `frontend` | `./frontend` (`node:22-alpine` build, `nginx:alpine` runtime) | 80 | No | Serves the built React application |
+| `backend` | `./backend` (`python:3.12-slim`) | 5000 | No | Flask REST API, run by gunicorn |
+| `postgres` | `postgres:16-alpine` | 5432 | No | PostgreSQL database with the `postgres_data` volume |
 
-## 1. Docker Components
+The backend and PostgreSQL are reachable only inside the Compose network.
 
-| Service | Build / Image | Internal Port | Purpose |
-|---|---|---:|---|
-| `frontend` | `./frontend` | 80 | Builds and serves the React application |
-| `backend` | `./backend` | 5000 | Runs the Flask API |
-| `postgres` | `postgres:16-alpine` | 5432 | Stores application data |
-| `nginx` | `./nginx` | 80 | Reverse proxy and application entry point |
+## 1. Environment files
 
-Only Nginx publishes a host port:
-
-```text
-localhost
-```
-
-The backend and PostgreSQL ports are not directly published to the host.
-
----
-
-## 2. Docker Compose
-
-The main Docker configuration is:
-
-```text
-docker-compose.yml
-```
-
-The Compose file defines:
-
-- `frontend`
-- `backend`
-- `postgres`
-- `nginx`
-
-It also defines the persistent PostgreSQL volume:
-
-```text
-postgres_data
-```
-
-From the repository root, create both environment files:
+Create both files from the templates and keep them out of Git:
 
 ```bash
 cp .env.example .env
 cp backend/.env.example backend/.env
 ```
 
-Edit the root `.env` and set unique strong passwords for both the bootstrap database account and the restricted runtime account. The runtime password must be at least 32 characters and not a placeholder. In `backend/.env`, replace both Flask/JWT placeholders with separate strong random values. Do not commit either file. The root `.env` provides Compose interpolation for database credentials; `backend/.env` provides application signing secrets. The Compose configuration fails at startup if required database variables are missing.
+**Root `.env`** provides database settings to Compose:
 
-Then start the complete stack with:
+| Variable | Used by | Purpose |
+|---|---|---|
+| `POSTGRES_USER` | `postgres` | Bootstrap and migration account. Not passed to the backend |
+| `POSTGRES_PASSWORD` | `postgres` | Password for the bootstrap account |
+| `POSTGRES_DB` | `postgres`, `backend` | Database name |
+| `POSTGRES_APP_USER` | `backend` | Restricted runtime account |
+| `POSTGRES_APP_PASSWORD` | `backend` | Runtime password, at least 32 characters, not a placeholder |
 
-```bash
-docker compose up -d --build
-```
+Compose stops at startup if any of these is missing.
 
-Check the service status:
+**`backend/.env`** provides application secrets, loaded into the backend:
 
-```bash
-docker compose ps
-```
-
-The application is then available at:
-
-```text
-http://localhost
-```
-
-Stop the stack:
-
-```bash
-docker compose down
-```
-
-Stopping the stack this way does not remove the PostgreSQL named volume.
-
----
-
-## 3. Frontend Docker Image
-
-The frontend uses a multi-stage Docker build.
-
-The build stage uses:
-
-```text
-node:22-alpine
-```
-
-The production stage uses:
-
-```text
-nginx:alpine
-```
-
-The build process:
-
-1. Copies `package.json` and `package-lock.json`.
-2. Installs dependencies with `npm ci`.
-3. Copies the frontend source.
-4. Sets `VITE_API_BASE_URL=/api`.
-5. Builds the React application with `npm run build`.
-6. Copies the generated `dist` directory into the Nginx image.
-
-The resulting container serves the production frontend on port `80`.
-
-The frontend Dockerfile is:
-
-```text
-frontend/Dockerfile
-```
-
-The frontend's internal Nginx configuration is:
-
-```text
-frontend/nginx.conf
-```
-
-### Frontend API path
-
-The frontend is configured to use:
-
-```text
-/api
-```
-
-for backend requests.
-
-This allows the browser to communicate through the main Nginx reverse proxy rather than directly addressing the Flask container.
-
----
-
-## 4. Backend Docker Image
-
-The backend uses:
-
-```text
-python:3.12-slim
-```
-
-The Dockerfile:
-
-1. Sets `/app` as the working directory.
-2. Copies `requirements.txt`.
-3. Installs Python dependencies.
-4. Copies the backend source.
-5. Exposes port `5000`.
-6. Starts Flask on `0.0.0.0:5000`.
-
-The backend Dockerfile is:
-
-```text
-backend/Dockerfile
-```
-
-The container runs:
-
-```bash
-flask --app app run --host=0.0.0.0 --port=5000
-```
-
-The backend is accessible to other containers as:
-
-```text
-backend:5000
-```
-
-It is not directly published to the host.
-
----
-
-## 5. Backend Environment
-
-Docker Compose loads the backend environment from:
-
-```text
-backend/.env
-```
-
-This file must remain untracked. Create it with `cp backend/.env.example backend/.env` before starting the stack, and replace the `SECRET_KEY` and `JWT_SECRET` placeholders with distinct strong random values.
-
-Compose also provides the PostgreSQL connection configuration:
-
-```text
-POSTGRES_HOST=postgres
-POSTGRES_PORT=5432
-POSTGRES_USER=expense_user
-POSTGRES_PASSWORD=replace-with-a-strong-random-database-password
-POSTGRES_DB=expense_management
-```
-
-The hostname is `postgres` because Docker Compose provides service-name DNS within the Compose network.
-
-The backend should therefore connect to:
-
-```text
-postgres:5432
-```
-
-rather than `localhost:5432`.
-
----
-
-## 6. PostgreSQL Container
-
-PostgreSQL uses:
-
-```text
-postgres:16-alpine
-```
-
-The local development database settings are read from the repository-root `.env` file:
-
-```text
-POSTGRES_DB
-POSTGRES_USER
-POSTGRES_PASSWORD
-```
-
-Use a unique strong password and never reuse a local password in production. Do not paste secret values into tickets, logs, screenshots, or documentation.
-
-The PostgreSQL container is named:
-
-```text
-expense-postgres
-```
-
----
-
-## 7. Database Initialization
-
-The Compose configuration mounts these versioned SQL files:
-
-```text
-database/migrations/001_initial_schema.sql
-database/migrations/002_user_settings.sql
-database/migrations/003_budget_uniqueness.sql
-database/migrations/004_restrict_category_budget_delete.sql
-database/migrations/005_user_phone.sql
-```
-
-into:
-
-```text
-/docker-entrypoint-initdb.d/001_initial_schema.sql
-```
-
-The files are mounted read-only. PostgreSQL executes initialization scripts from this directory when a new database cluster is created, in filename order. Migration 001 creates the initial schema; migration 002 adds user settings; migration 003 adds database-level budget uniqueness, including separate handling for budgets with a NULL category. Migration 003 stops with an actionable error if duplicate legacy budgets exist, so those records must be reviewed and resolved before deployment can continue. Migration 004 changes the budget-to-category foreign key from `ON DELETE SET NULL` to `ON DELETE RESTRICT`; a category referenced by a budget cannot be deleted and silently turned into a whole-month budget. Migration 005 adds the optional `users.phone` column so the Settings phone field can persist for existing and fresh databases.
-
----
-
-## 8. PostgreSQL Persistence
-
-PostgreSQL uses the named Docker volume:
-
-```text
-postgres_data
-```
-
-mounted at:
-
-```text
-/var/lib/postgresql/data
-```
-
-Normal container recreation therefore does not delete the database.
-
-For example:
-
-```bash
-docker compose down
-docker compose up -d
-```
-
-preserves the database stored in `postgres_data`.
-
-### Resetting the database
-
-To completely recreate the local database:
-
-```bash
-docker compose down -v
-docker compose up -d
-```
-
-The `-v` option removes the Compose-managed volumes.
-
-**Warning:** this deletes the existing local PostgreSQL data.
-
----
-
-## 9. Nginx Container
-
-The Nginx reverse proxy is built from:
-
-```text
-nginx/Dockerfile
-```
-
-which uses:
-
-```text
-nginx:alpine
-```
-
-The configuration is:
-
-```text
-nginx/default.conf
-```
-
-The container listens on port:
-
-```text
-80
-```
-
-Docker Compose maps:
-
-```text
-80:80
-```
-
-Therefore:
-
-```text
-Host:      localhost
-Container: nginx:80
-```
-
----
-
-## 10. Nginx Routing
-
-The Nginx configuration defines two upstream services:
-
-```text
-frontend → frontend:80
-backend  → backend:5000
-```
-
-Requests are routed as follows:
-
-```text
-/api/health
-    ↓
-backend/health
-```
-
-```text
-/api/*
-    ↓
-backend:5000
-```
-
-```text
-/*
-    ↓
-frontend:80
-```
-
-The resulting request flow is:
-
-```text
-Browser
-   |
-   v
-localhost
-   |
-   v
-Nginx
-   |
-   +---- /api/* ------> Flask backend
-   |
-   +---- everything --> React frontend
-```
-
----
-
-## 11. Container Networking
-
-Docker Compose provides service-name DNS within the application network.
-
-Services communicate using their Compose service names.
-
-Examples:
-
-```text
-backend → postgres:5432
-nginx   → backend:5000
-nginx   → frontend:80
-```
-
-The containers should therefore use service names rather than host-specific addresses.
-
-For example:
-
-```text
-POSTGRES_HOST=postgres
-```
-
-is correct inside the backend container.
-
----
-
-## 12. Published Ports
-
-The current Compose configuration publishes only Nginx:
-
-| Service | Container Port | Host Port |
-|---|---:|---:|
-| Frontend | 80 | Not published |
-| Backend | 5000 | Not published |
-| PostgreSQL | 5432 | Not published |
-| Nginx | 80 | 80 |
-
-This keeps the application services behind the Nginx entry point.
-
----
-
-## 13. Health Checks
-
-All four services have Docker health checks and use `restart: unless-stopped` so Docker can restart them after a daemon or VM reboot. This depends on the Docker daemon starting on the host; verify recovery on AWS and do not assume the policy alone proves the public app is available.
-
-### Frontend
-
-Checks:
-
-```text
-http://127.0.0.1/
-```
-
-### Backend
-
-Checks:
-
-```text
-http://localhost:5000/health
-```
-
-### PostgreSQL
-
-Uses:
-
-```bash
-pg_isready -U expense_user -d expense_management
-```
-
-### Nginx
-
-Checks:
-
-```text
-http://127.0.0.1/api/health
-```
-
-Check service health with:
-
-```bash
-docker compose ps
-```
-
-A correctly running local stack should report all four services as healthy.
-
----
-
-## 14. Service Startup Dependencies
-
-The backend waits for PostgreSQL to become healthy:
-
-```yaml
-depends_on:
-  postgres:
-    condition: service_healthy
-```
-
-Nginx waits for both the frontend and backend:
-
-```yaml
-depends_on:
-  frontend:
-    condition: service_healthy
-  backend:
-    condition: service_healthy
-```
-
-This prevents dependent services from starting normal operation before their required services report healthy.
-
----
-
-## 15. Common Docker Commands
-
-### Start
-
-```bash
-docker compose up -d
-```
-
-### Start and rebuild
-
-```bash
-docker compose up -d --build
-```
-
-### Stop
-
-```bash
-docker compose down
-```
-
-### Check services
-
-```bash
-docker compose ps
-```
-
-### View all logs
-
-```bash
-docker compose logs
-```
-
-### Follow logs
-
-```bash
-docker compose logs -f
-```
-
-### View one service's logs
-
-```bash
-docker compose logs backend
-```
-
-```bash
-docker compose logs frontend
-```
-
-```bash
-docker compose logs postgres
-```
-
-```bash
-docker compose logs nginx
-```
-
-### Rebuild one service
-
-```bash
-docker compose up -d --build backend
-```
-
-or:
-
-```bash
-docker compose up -d --build frontend
-```
-
----
-
-## 16. Container Access
-
-Open a shell in the backend:
-
-```bash
-docker exec -it expense-backend /bin/bash
-```
-
-Open a shell in the frontend:
-
-```bash
-docker exec -it expense-frontend /bin/sh
-```
-
-Open a shell in Nginx:
-
-```bash
-docker exec -it expense-nginx /bin/sh
-```
-
-Connect directly to PostgreSQL:
-
-```bash
-docker exec -it expense-postgres \
-  psql -U expense_user -d expense_management
-```
-
----
-
-## 17. Database Verification
-
-List the PostgreSQL tables:
-
-```bash
-docker exec expense-postgres \
-  psql -U expense_user -d expense_management -c "\dt"
-```
-
-The current application schema contains:
-
-```text
-budgets
-expense_categories
-expenses
-monthly_expense_summary
-users
-```
-
-Test backend-to-database connectivity:
-
-```bash
-docker exec expense-backend python -c \
-"from app import app, db; app.app_context().push(); db.session.execute(db.text('SELECT 1')); print('Database connection: OK')"
-```
-
-Expected result:
-
-```text
-Database connection: OK
-```
-
----
-
-## 18. Application Health Verification
-
-Test the public Nginx health endpoint:
-
-```bash
-curl http://localhost/api/health
-```
-
-The backend's internal health endpoint is:
-
-```text
-/health
-```
-
-and Nginx exposes it externally as:
-
-```text
-/api/health
-```
-
-The backend response is:
-
-```json
-{
-  "status": "ok"
-}
-```
-
----
-
-## 19. Development Workflow
-
-A typical Docker development cycle is:
-
-```text
-Modify source
-    ↓
-Rebuild affected service
-    ↓
-Restart service
-    ↓
-Check health
-    ↓
-Check logs
-    ↓
-Test through localhost
-```
-
-For a backend change:
-
-```bash
-docker compose up -d --build backend
-```
-
-For a frontend change:
-
-```bash
-docker compose up -d --build frontend
-```
-
-For changes affecting the complete stack:
-
-```bash
-docker compose up -d --build
-```
-
----
-
-## 20. Troubleshooting
-
-| Problem | What to check |
+| Variable | Purpose |
 |---|---|
-| Container fails to start | Run `docker compose logs <service>`. |
-| Backend cannot reach PostgreSQL | Confirm `POSTGRES_HOST=postgres` and check PostgreSQL health. |
-| Tables are missing | Check whether the PostgreSQL volume was initialized before the migration was added. |
-| Frontend cannot reach API | Confirm the frontend uses `/api` and Nginx routes `/api/` to the backend. |
-| Nginx returns an error | Check `docker compose logs nginx` and verify the upstream service names. |
-| Service is unhealthy | Run `docker compose ps` and inspect that service's logs. |
-| Port 80 is already in use | Stop the process using port 80 or change the host-side port mapping. |
-| Changes are not appearing | Rebuild the affected service with `docker compose up -d --build <service>`. |
-| Local database needs a full reset | Use `docker compose down -v` followed by `docker compose up -d`. |
+| `SECRET_KEY` | Flask secret. At least 32 characters, not a placeholder |
+| `JWT_SECRET` | JWT signing key. Must differ from `SECRET_KEY` |
 
----
+`POSTGRES_*` values in `backend/.env` are overridden by Compose, so the backend always uses the root `.env` runtime account.
 
-## 21. Docker Security
+## 2. Start, check, and stop
 
-The current Docker configuration is primarily intended for development and project integration.
-
-Important considerations:
-
-- `backend/.env` must not be committed.
-- Development database credentials must not be reused in production.
-- PostgreSQL is not directly published to the host.
-- The backend is not directly published to the host.
-- Nginx is the host-facing application entry point.
-- Production credentials should be supplied through protected configuration or secret management.
-- Container dependencies should be kept updated.
-- Production images and configuration should be reviewed separately from the local development stack.
-
----
-
-## 22. Docker and CI/CD
-
-The GitHub Actions CI workflow validates the Dockerfiles by building the backend and frontend images without pushing them.
-
-The Docker build validation checks:
-
-```text
-backend/Dockerfile
-frontend/Dockerfile
+```bash
+docker compose up -d --build
+docker compose ps
+curl -i http://localhost/api/health
+curl -i http://localhost/api/health/db
+docker compose down
 ```
 
-The CD workflow separately publishes images to GitHub Container Registry when its conditions are met.
+`docker compose down` keeps the database volume. `docker compose down -v` deletes it, and **all local data with it**.
 
-See [CI/CD documentation](ci-cd.md) for the complete pipeline.
+Open the application at http://localhost/.
 
----
+## 3. Images
 
-## 23. Local Docker vs Production
+**Backend** (`backend/Dockerfile`): installs `requirements.txt`, copies the source, runs as the unprivileged user `appuser`, and starts `gunicorn --bind 0.0.0.0:5000 app:app`. A `.dockerignore` file excludes local `.env` files, which CI verifies.
 
-The current Compose configuration is the project's **local/integration environment**.
+**Frontend** (`frontend/Dockerfile`): builds the React application with Vite and serves the output with nginx. `frontend/nginx.conf` returns `index.html` for unknown paths, so client-side routes work on refresh.
 
-The repository also contains a configurable CD workflow for publishing images and deploying to the approved AWS EC2 target. Migration 006 provisions the restricted runtime database role. The PostgreSQL bootstrap credentials stay in the database container and are not passed to the Flask backend.
+**Nginx** (`nginx/Dockerfile`): copies `nginx/default.conf` into `nginx:alpine`.
 
-The AWS deployment should not be considered an active production deployment until the following have been configured and verified:
+## 4. Database initialization
 
-- Production environment variables.
-- Production database credentials.
-- GHCR image configuration.
-- AWS EC2 instance and SSH access configuration.
-- Docker Compose production configuration.
-- Nginx public routing.
-- Deployment secrets.
-- Production health checks.
+Compose mounts the migrations into PostgreSQL's init directory, in order:
 
-Local development credentials and local Docker settings must not simply be reused as production configuration.
+- `001_initial_schema.sql`
+- `002_user_settings.sql`
+- `003_budget_uniqueness.sql`
+- `004_restrict_category_budget_delete.sql`
+- `005_user_phone.sql`
+- `006_app_runtime_role.sql`
 
----
+PostgreSQL runs these only when it creates a new volume. Existing databases are updated by the AWS deployment workflow, which applies 002 to 006 explicitly. See [database/README.md](../database/README.md) for the account model and migration rules.
 
-## 24. Related Documentation
+Migration 003 stops if duplicate legacy budgets exist, so resolve them before retrying.
 
-- [Architecture](architecture.md)
-- [CI/CD](ci-cd.md)
-- [Security](security.md)
-- [Database](../database/README.md)
-- [Backend](../backend/README.md)
+## 5. Health checks and restart policy
+
+Every service has a health check, and every service uses `restart: unless-stopped`.
+
+| Service | Check |
+|---|---|
+| `frontend` | HTTP request to `http://127.0.0.1/` |
+| `backend` | HTTP request to `http://localhost:5000/health` |
+| `postgres` | `pg_isready` for the bootstrap database and user |
+| `nginx` | HTTP request to `http://127.0.0.1/api/health` |
+
+`restart: unless-stopped` restarts containers after a Docker daemon restart. It does not prove that the public site is available after an EC2 reboot. Test recovery on the host.
+
+## 6. Logs and inspection
+
+```bash
+docker compose logs -f backend
+docker compose logs nginx
+docker exec -it expense-backend sh
+docker exec -it expense-postgres psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+```
+
+Use the bootstrap account for database inspection. The backend itself uses the runtime account.
+
+## 7. Continuous integration and delivery
+
+CI builds the backend, frontend, and Nginx images without pushing, and checks that local `.env` files are not packaged. CD publishes the backend and frontend images to GHCR, tagged with the commit SHA, and the AWS host pulls those tags. The Nginx image is built on the host from the deployed commit. See [CI/CD](ci-cd.md).
+
+## 8. Troubleshooting
+
+| Symptom | Check |
+|---|---|
+| Compose refuses to start | A required variable is missing from the root `.env` or `backend/.env` |
+| Backend exits at startup | `SECRET_KEY` or `JWT_SECRET` is missing, too short, a placeholder, or equal to the other |
+| Backend cannot reach the database | Runtime variables match migration 006. The host must be `postgres`, not `localhost` |
+| `/api/health/db` fails | Backend logs and the runtime credentials |
+| Nginx is unhealthy | `docker compose logs nginx`, then both health URLs |
+| Port 80 is in use | Change the left-hand port in `docker-compose.yml`, for example `"8081:80"`, and use that URL |
+| Changes do not appear | Rebuild the affected service: `docker compose up -d --build <service>` |
