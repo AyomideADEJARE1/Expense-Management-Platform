@@ -10,7 +10,7 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Status rule:** “Found” means the code has a problem. “Correction proposed” means code has been changed but still needs review and tests. “CI passed” means automated checks passed for the named commit. “Runtime pending” means the app still needs to be run and checked. These statuses must not be treated as the same thing.
 
-**Current audit size:** 86 numbered findings/observations, 58 distinct team actions, and 48 runtime verification gates. Historical green checkpoint: CI run `38381389211` passed all eight jobs for commit `85871877850b81b367be2acb1135dced73a95255`, with 69 backend tests and nine frontend Node tests. Current PR #54 head is `04fe7f2ea0942c467b1c0af29d7e60d63b3791e2`; run `38416894925` is still in progress. The backend's first pass of 71 tests has passed, but the second repeatability pass and Docker builds must finish before the current head can be called green. Flask-Limiter still warns about in-memory storage. AWS live/runtime evidence remains separate from CI evidence.
+**Current audit size:** 86 numbered findings/observations, 58 distinct team actions, and 48 runtime verification gates. CI run `38416894925` passed all eight jobs for correction commit `04fe7f2ea0942c467b1c0af29d7e60d63b3791e2`: 71 backend tests passed twice, nine frontend tests passed, npm audit reported zero vulnerabilities, migrations 001–006 and runtime-role checks passed, secret scanning and both Docker builds passed. Flask-Limiter still warns about in-memory storage. AWS live/runtime evidence remains separate from CI evidence.
 
 ## Actions for the team
 
@@ -55,7 +55,7 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Why it matters:** A test may pass once but fail the next time because old users or categories remain. A wrong local configuration could also point tests at a database that should not be changed.
 
-**Correction status:** The correction branch guards the database name and clears rows from budgets, expenses, categories, and users before each test. CI is configured to run the backend suite twice. Current-head run 38416894925 has passed the first 71-test backend pass; the repeatability pass and Docker builds are still pending.
+**Correction status:** The correction branch guards the database name and clears rows from budgets, expenses, categories, and users before each test. CI run 38416894925 passed all eight jobs and both 71-test backend runs. The repeatability/cleanup portion is verified in CI; local/staging tests must still use a disposable test database.
 
 **QA check still required:** Confirm local/staging test database configuration is separate from production and retain the database guard, cleanup implementation, and repeated CI test results.
 
@@ -644,7 +644,7 @@ Run `38276034129` passed all eight jobs for code commit `97e6515f00c15e240532da6
 
 **Why it matters:** A backend compromise could gain far more database control than the application needs.
 
-**Correction in PR #54:** The backend now receives `POSTGRES_APP_USER` and `POSTGRES_APP_PASSWORD`; migration 006 configures a non-superuser role with required table/sequence access and no role/database creation privileges. CD applies migration 006 before restarting the app, and CI checks privilege boundaries. CI run `38381389211` passed all eight jobs for commit `85871877850b81b367be2acb1135dced73a95255`, including migration 006, runtime-role privilege checks, 69 backend tests, nine frontend tests, and both Docker builds. AWS existing-volume and live runtime checks remain open.
+**Correction in PR #54:** The backend now receives `POSTGRES_APP_USER` and `POSTGRES_APP_PASSWORD`; migration 006 configures a non-superuser role with required table/sequence access and no role/database creation privileges. CD applies migration 006 before restarting the app, and CI checks privilege boundaries. CI run `38416894925` passed all eight jobs for commit `04fe7f2ea0942c467b1c0af29d7e60d63b3791e2`, including migration 006, runtime-role privilege checks, 71 backend tests twice, nine frontend tests, npm audit with zero reported vulnerabilities, and both Docker builds. AWS existing-volume and live runtime checks remain open.
 
 **How to verify:** Confirm the backend test suite connects with the restricted role. Then test a fresh database and a disposable copy of an existing AWS database. Confirm normal app operations work while privileged operations fail, and confirm migrations run through the separate bootstrap account.
 
