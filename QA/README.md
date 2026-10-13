@@ -10,7 +10,7 @@ The upstream README documents a live URL, while earlier QA notes described the e
 
 ## Branch and pull-request scope
 
-The upstream repository's `main` branch is reviewed separately from `integration/deployable-main`. PR #53 proposes QA documentation for upstream `main`; PR #54 proposes code corrections against `integration/deployable-main` because that branch contains integration-specific profile settings and migration 002. The fork's `stephen/qa-findings-followup` and `stephen/qa-transaction-fixes` branches are the working copies behind those unmerged pull requests. Neither PR has been merged.
+The upstream repository's `main` branch is the target for both open pull requests. PR #53 adds the QA documentation package only. PR #54 proposes the application corrections, the professional root README, architecture/CI-CD documentation, and CI workflow updates. Both PRs use separate fork branches (`stephen/qa-findings-followup` and `stephen/qa-transaction-fixes`) so the QA record and application changes are not duplicated across the pull requests. Neither PR has been merged.
 
 Deployment decision: the QA owner reports that the project tutor approved AWS as an alternative deployment target. AWS EC2 is the target used in this audit. This records the target choice; it does not prove that the latest code is deployed or that the public health checks and browser flows pass.
 
