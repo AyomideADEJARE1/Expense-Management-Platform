@@ -271,3 +271,7 @@ CI run 38416621129 failed one API test because the malformed-category-body check
 
 ## Latest correction CI evidence — 2026-10-13
 CI run 38418489243 passed all eight jobs for PR #54 commit 905f5db2ff17d968e220f890d90007ce74a42cc2, including the professional README and architecture updates. Both backend test passes completed with 71 passed tests; frontend lint/build and nine tests passed; npm audit reported zero vulnerabilities; migrations 001–006 and runtime-role checks passed; both Docker builds and aggregate ci-success passed. AWS runtime and browser verification remain separate, open gates.
+
+
+## QA-FIND-087 — Repository About description alignment
+The GitHub repository description is separate from README and workflow files. It still names the previous cloud target, while the corrected README/CD workflow use AWS EC2. A repository administrator must update the About description field; QA cannot make a file commit change that metadata. Closure requires the refreshed repository header to name AWS EC2 consistently with PR #54.
