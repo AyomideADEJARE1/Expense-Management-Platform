@@ -224,6 +224,16 @@ jobs:
           fi
           echo "Compose has separate database roles, no fixed legacy password, and restart policies for all four services."
 
+      - name: Verify public Nginx health-route mappings
+        run: |
+          grep -Fq 'location = /api/health {' nginx/default.conf
+          grep -Fq 'proxy_pass http://backend/health;' nginx/default.conf
+          grep -Fq 'location = /api/health/db {' nginx/default.conf
+          grep -Fq 'proxy_pass http://backend/health/db;' nginx/default.conf
+          grep -Fq '/api/health"' .github/workflows/cd.yml
+          grep -Fq '/api/health/db"' .github/workflows/cd.yml
+          echo "Nginx maps both public health URLs to the matching backend endpoints, and CD checks both."
+
       - name: Verify deployment migrations run before app restart
         run: |
           db_start=$(grep -nF 'docker compose up -d --wait postgres' .github/workflows/cd.yml | cut -d: -f1)
