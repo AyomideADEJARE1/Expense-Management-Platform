@@ -162,7 +162,7 @@ Related finding: QA-FIND-043. Priority: Medium; test reliability gate.
 
 Why it matters: the API test fixture toggles test mode and resets rate limiting, but does not itself isolate the database or clean up records created by registration/category tests. Repeated or reordered runs can collide with leftovers, and a misconfigured local environment could target an unintended database.
 
-Historical checkpoint — 2026-10-12: CI run `38217288387` passed all eight jobs and both pytest runs passed 57 tests for an earlier commit. Current correction status — 2026-10-13: CI run `38418489243` passed all eight jobs for commit `905f5db2ff17d968e220f890d90007ce74a42cc2`. Both consecutive backend runs passed all 71 tests, both Docker builds passed, and frontend lint/build plus nine frontend tests passed. The test-database guard and cleanup fixture are verified in CI. This does not remove the requirement to use a disposable database for local/staging tests.
+Historical checkpoint — 2026-10-12: CI run `38217288387` passed all eight jobs and both pytest runs passed 57 tests for an earlier commit. Current correction status — 2026-10-13: CI run `38418979526` passed all eight jobs for current correction commit `ae54eec01018a728f97bd7c77f7ccbcad3a96a05`. Both consecutive backend runs passed all 71 tests, both Docker builds passed, and frontend lint/build plus nine frontend tests passed. The test-database guard and cleanup fixture are verified in CI. This does not remove the requirement to use a disposable database for local/staging tests.
 
 Action: confirm CI uses a dedicated disposable database, preserve the negative test-database guard, and verify the row-cleanup fixture and two consecutive backend runs.
 
@@ -735,3 +735,7 @@ PR #54 is the sole owner of the root README and architecture document changes. P
 
 ## Repository metadata alignment
 The repository's GitHub About description still says Azure even though the root README, architecture guide, and CD workflow on PR #54 now use AWS EC2. QA-FIND-087 and team action 59 record the required repository-admin update. This is metadata outside the code files; the team must update the repository description and retain evidence. PR #53 remains open and unmerged.
+
+
+## Current correction branch checkpoint — 2026-10-13
+CI run `38418979526` passed all eight jobs for `ae54eec01018a728f97bd7c77f7ccbcad3a96a05`: database migration/role checks, secret scan, component detection, backend lint and tests, frontend lint/tests/build, both Docker builds, and aggregate `ci-success`. The backend suite passed 71 tests and the frontend Node tests ran successfully; npm audit reported zero vulnerabilities. This confirms the CI environment only. AWS existing-volume migration, actual deployment/image version, public health checks, browser flows/downloads, reboot recovery, backup restore, and shared production rate-limit storage remain open.
