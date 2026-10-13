@@ -162,7 +162,7 @@ Related finding: QA-FIND-043. Priority: Medium; test reliability gate.
 
 Why it matters: the API test fixture toggles test mode and resets rate limiting, but does not itself isolate the database or clean up records created by registration/category tests. Repeated or reordered runs can collide with leftovers, and a misconfigured local environment could target an unintended database.
 
-Historical checkpoint — 2026-10-12: CI run `38217288387` passed all eight jobs and both pytest runs passed 57 tests for an earlier commit. Current correction status — 2026-10-13: CI run `38416894925` passed all eight jobs for commit `04fe7f2ea0942c467b1c0af29d7e60d63b3791e2`. Both consecutive backend runs passed all 71 tests, both Docker builds passed, and frontend lint/build plus nine frontend tests passed. The test-database guard and cleanup fixture are verified in CI. This does not remove the requirement to use a disposable database for local/staging tests.
+Historical checkpoint — 2026-10-12: CI run `38217288387` passed all eight jobs and both pytest runs passed 57 tests for an earlier commit. Current correction status — 2026-10-13: CI run `38418489243` passed all eight jobs for commit `905f5db2ff17d968e220f890d90007ce74a42cc2`. Both consecutive backend runs passed all 71 tests, both Docker builds passed, and frontend lint/build plus nine frontend tests passed. The test-database guard and cleanup fixture are verified in CI. This does not remove the requirement to use a disposable database for local/staging tests.
 
 Action: confirm CI uses a dedicated disposable database, preserve the negative test-database guard, and verify the row-cleanup fixture and two consecutive backend runs.
 
@@ -725,8 +725,8 @@ The README and architecture document are updated in PR #54 to use AWS EC2, the c
 Current PR #54 commit 04fe7f2ea0942c467b1c0af29d7e60d63b3791e2 has passed the first 71-test backend run. The workflow's second repeatability run and both Docker builds must finish before the current correction head is marked green. The fixture clears rows before each test; it does not reset database identity sequences, so test IDs must not be assumed to start at one.
 
 
-## Current green correction checkpoint — 2026-10-13
-CI run 38416894925 passed all eight jobs for commit 04fe7f2ea0942c467b1c0af29d7e60d63b3791e2. Backend lint passed and both consecutive runs passed 71 tests. Frontend lint/build and nine Node tests passed; npm audit reported zero vulnerabilities. The database job applied migrations 001–006 and verified the restricted runtime role. Both Docker builds, secret scanning, and aggregate CI passed. AWS existing-volume migration, live deployment, public health checks, and browser journeys remain pending.
+## Latest green correction checkpoint — 2026-10-13
+CI run 38418489243 passed all eight jobs for commit 905f5db2ff17d968e220f890d90007ce74a42cc2. Backend lint passed and both consecutive runs passed 71 tests. Frontend lint/build and nine Node tests passed; npm audit reported zero vulnerabilities. The database job applied migrations 001–006 and verified the restricted runtime role. Both Docker builds, secret scanning, and aggregate CI passed. AWS existing-volume migration, live deployment, public health checks, and browser journeys remain pending.
 
 
 ## Documentation ownership checkpoint — 2026-10-13
