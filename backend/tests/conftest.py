@@ -46,3 +46,25 @@ def refuse_non_test_database():
             "test-only database name (for example expense_management_test).",
             pytrace=False,
         )
+
+
+@pytest.fixture(autouse=True)
+def clean_test_database():
+    """Keep API tests independent by clearing rows from the disposable test DB."""
+    from app import app
+    from extensions import db
+
+    with app.app_context():
+        db.session.rollback()
+        for table_name in (
+            "budgets",
+            "expenses",
+            "expense_categories",
+            "users",
+        ):
+            db.session.execute(
+                db.text(f"DELETE FROM {table_name}")
+            )
+        db.session.commit()
+        yield
+        db.session.rollback()
