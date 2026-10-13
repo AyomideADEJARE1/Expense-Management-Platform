@@ -749,10 +749,10 @@ Two duplicate category-write authorization placeholders were removed from QA/QA_
 
 **Current evidence:** Upstream CI allowed pytest exit code 5 (zero tests collected) and used `npm test --if-present`. QA branch run `38420555104` showed zero backend tests collected while the job emitted a warning instead of failing. PR #54 changes the backend job to run pytest twice without a zero-test exception and changes frontend lint/test to mandatory commands.
 
-**Verification:** Wait for CI on the exact latest PR #54 head. Confirm backend tests are collected and pass twice, frontend tests run with a nonzero test count, and the workflow no longer allows a missing test command. If possible, run a disposable negative check in a temporary worktree where the test suite or frontend test script is removed and confirm the job fails; do not commit that destructive test change.
+**Verification completed for the correction branch:** CI run `38420803176` passed all eight jobs for PR #54 head `8d781f3fb45cdce2a07e50ef3250b99ce0501333`. The backend suite collected and passed 71 tests twice; frontend lint/build and nine Node tests passed; migrations/role checks, secret scan, and both Docker builds passed. If possible, run a disposable negative check in a temporary worktree where the test suite or frontend test script is removed and confirm the job fails; do not commit that destructive test change.
 
-**Pass evidence:** Current-head green CI, logs showing backend counts on both runs and frontend test count, and workflow source showing mandatory test commands. A prior CI run does not close this gate if it predates the workflow change.
+**Pass evidence obtained:** Green CI run `38420803176`, logs showing 71 backend tests passed twice and nine frontend tests, and workflow source showing mandatory test commands. The CI correction is verified on PR #54; upstream main remains unchanged until that PR is merged.
 
 
 ## Current audit counts
-The active register contains 85 distinct findings/observations, the team action summary contains 60 actions, and this plan contains 48 runtime verification gates. Two duplicate finding placeholders were removed; finding IDs remain stable for traceability.
+The active register contains 85 distinct findings/observations, the team action summary contains 60 actions, and this plan contains 58 runtime verification gates. Two duplicate finding placeholders were removed; finding IDs remain stable for traceability.
