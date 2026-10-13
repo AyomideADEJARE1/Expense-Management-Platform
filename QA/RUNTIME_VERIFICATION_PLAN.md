@@ -755,4 +755,4 @@ Two duplicate category-write authorization placeholders were removed from QA/QA_
 
 
 ## Current audit counts
-The active register contains 85 distinct findings/observations, the team action summary contains 60 actions, and this plan contains 58 runtime verification gates. Two duplicate finding placeholders were removed; finding IDs remain stable for traceability.
+The active register contains 85 distinct findings/observations, the team action summary contains 60 actions, and this plan contains 48 runtime verification gates. Two duplicate finding placeholders were removed; finding IDs remain stable for traceability.
