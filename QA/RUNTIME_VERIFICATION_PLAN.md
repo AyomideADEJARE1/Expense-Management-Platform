@@ -755,7 +755,7 @@ Five non-active duplicate/consolidation placeholders (QA-FIND-007, 016, 037, 039
 
 
 ## Current audit counts
-The active register contains 81 distinct findings/observations, the team action summary contains 61 actions, and this plan contains 49 runtime verification gates. Five duplicate/consolidation placeholders were removed; finding IDs remain stable for traceability.
+The active register contains 82 distinct findings/observations, the team action summary contains 62 actions, and this plan contains 50 runtime verification gates. Five duplicate/consolidation placeholders were removed; finding IDs remain stable for traceability.
 
 
 ## Current CI enforcement checkpoint — 2026-10-13
