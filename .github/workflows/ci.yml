@@ -189,21 +189,34 @@ jobs:
       - name: Validate Docker Compose environment configuration
         run: |
           cp backend/.env.example backend/.env
-          printf '%s\n' \
-            'POSTGRES_USER=ci_user' \
-            'POSTGRES_PASSWORD=ci-compose-test-password' \
-            'POSTGRES_DB=expense_management_test' > .env
-          docker compose config > /tmp/compose-resolved.yml
-          grep -q 'POSTGRES_USER: ci_user' /tmp/compose-resolved.yml
-          grep -q 'POSTGRES_PASSWORD: ci-compose-test-password' /tmp/compose-resolved.yml
-          grep -q 'POSTGRES_DB: expense_management_test' /tmp/compose-resolved.yml
-          if grep -q 'expense_password' /tmp/compose-resolved.yml; then
+          printf '%s\\n' \\
+            'POSTGRES_USER=ci_user' \\
+            'POSTGRES_PASSWORD=ci-bootstrap-password-for-compose-test' \\
+            'POSTGRES_DB=expense_management_test' \\
+            'POSTGRES_APP_USER=ci_app_user' \\
+            'POSTGRES_APP_PASSWORD=ci-compose-app-password-strong-123456789' > .env
+          docker compose config --format json > /tmp/compose-resolved.json
+          python - <<'PY'
+          import json
+          with open('/tmp/compose-resolved.json', encoding='utf-8') as handle:
+              config = json.load(handle)
+          backend = config['services']['backend']['environment']
+          postgres = config['services']['postgres']['environment']
+          assert backend['POSTGRES_USER'] == 'ci_app_user'
+          assert backend['POSTGRES_PASSWORD'] == 'ci-compose-app-password-strong-123456789'
+          assert postgres['POSTGRES_USER'] == 'ci_user'
+          assert postgres['POSTGRES_PASSWORD'] == 'ci-bootstrap-password-for-compose-test'
+          assert backend['POSTGRES_PASSWORD'] != postgres['POSTGRES_PASSWORD']
+          assert postgres['POSTGRES_APP_USER'] == 'ci_app_user'
+          print('Compose separates bootstrap credentials from backend runtime credentials.')
+          PY
+          if grep -q 'expense_password' /tmp/compose-resolved.json; then
             echo "::error::Resolved Compose configuration still contains the old fixed password."
             exit 1
           fi
-          restart_count=$(grep -c 'restart: unless-stopped' /tmp/compose-resolved.yml)
+          restart_count=$(grep -c 'restart: unless-stopped' /tmp/compose-resolved.json)
           test "$restart_count" -eq 4 || { echo "::error::Expected restart policies for all four services; found $restart_count."; exit 1; }
-          echo "Compose configuration resolves database variables, contains no fixed legacy password, and defines restart policies for all four services."
+          echo "Compose has separate database roles, no fixed legacy password, and restart policies for all four services."
 
       - name: Verify deployment migrations run before app restart
         run: |
