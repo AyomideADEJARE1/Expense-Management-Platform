@@ -28,11 +28,11 @@ The project separates validation from delivery:
 
 1. Developers work on feature or area branches.
 2. Pull requests trigger CI.
-3. CI checks secrets, database migrations, backend code, frontend code, and Docker builds.
+3. CI checks secrets, database migrations, backend code, frontend code, and builds the backend, frontend, and Nginx images.
 4. Pull requests are reviewed and approved before merging.
 5. Pushes to `main` or `nginx` trigger CI again.
 6. A successful push to `main` can trigger the CD workflow.
-7. CD publishes Docker images to GHCR.
+7. CD publishes commit-tagged backend/frontend images to GHCR; the AWS host builds Nginx from the checked-out commit.
 8. AWS deployment remains disabled unless `DEPLOY_ENABLED=true`.
 9. When AWS deployment is enabled, the workflow connects to the configured VM and performs a deployment and health check.
 
@@ -401,7 +401,7 @@ and the CD workflow is running against:
 main
 ```
 
-The deployment job uses SSH to connect to the configured AWS EC2 VM. It forwards the GHCR read-only credentials to the remote script through the action's environment forwarding, logs in with `--password-stdin`, pulls the commit-tagged images, and logs out on exit. The runner's own GHCR login does not authenticate the EC2 host. The remote script derives the short commit tag with POSIX-compatible shell commands so it does not depend on Bash-only substring expansion.
+The deployment job uses SSH to connect to the configured AWS EC2 VM. It forwards the GHCR read-only credentials to the remote script through the action's environment forwarding, logs in with `--password-stdin`, pulls the commit-tagged backend/frontend images, builds the Nginx image from the checked-out commit, and logs out on exit. The Nginx build happens before migrations and does not replace the currently running proxy until the application-service restart after successful migrations. The runner's own GHCR login does not authenticate the EC2 host. The remote script derives the short commit tag with POSIX-compatible shell commands so it does not depend on Bash-only substring expansion.
 
 The corrected deployment process checks out the commit associated with the successful CI run, selects the corresponding `sha-<short commit>` backend/frontend image tags, pulls those images, and restarts the Compose services. It then applies the idempotent user-settings migration (002), applies the budget uniqueness migration (003), applies category-budget deletion restriction migration (004), applies the optional profile-phone migration (005), provisions the restricted application database role (006), and checks both public health endpoints. Migration 003 intentionally fails if legacy duplicate budgets exist, stopping deployment until the data is reviewed and remediated. Migration 004 ensures deleting a category cannot silently convert linked budgets into whole-month budgets. Migration 005 adds the nullable `users.phone` column used by the profile API; it must complete before application services restart. The Compose services also use `restart: unless-stopped`; this helps recover containers after Docker or EC2 restarts, but a staging reboot test must still prove the host starts Docker and both public health endpoints recover. Migration 006 reads `POSTGRES_APP_USER` and `POSTGRES_APP_PASSWORD` from the protected environment, rejects placeholder/weak runtime passwords, and grants the application role no database/role creation privileges. Add these variables to an existing AWS host before deploying this migration.
 
@@ -508,17 +508,15 @@ Frontend / Backend
 PostgreSQL
 ```
 
-The CD workflow, however, is designed to publish images to GHCR and then use:
+The CD workflow publishes only the commit-tagged backend and frontend images to GHCR. On the AWS VM, it pulls those two images and runs:
 
 ```bash
-docker compose pull
+docker compose build nginx
 ```
 
-on the AWS VM.
+against the checked-out deployment commit. Nginx is intentionally built locally because it is not published to GHCR. This build must complete before database migrations and service replacement; CI checks this order and runs `nginx -t` against the built image.
 
-Therefore, the production Compose configuration must reference the published images correctly before AWS deployment is enabled.
-
-Local Docker Compose behavior and production image-pull behavior should not be assumed to be identical.
+Local Docker Compose behavior and production image-pull behavior should not be assumed to be identical. A passing CI run still does not prove that the rebuilt Nginx image is live on AWS; the deployed image/configuration and public routes must be checked separately.
 
 See:
 
