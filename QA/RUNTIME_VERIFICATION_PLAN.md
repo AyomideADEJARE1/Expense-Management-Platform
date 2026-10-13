@@ -718,7 +718,7 @@ CI run `38381389211` passed all eight jobs for code commit `85871877850b81b367be
 
 
 ### Documentation source check — 2026-10-13
-The README and architecture document are updated in PR #53 to use AWS EC2, the current Compose host port 80, the existing architecture image, the restricted runtime database account, and the current CI/CD migration path. This is documentation/source evidence only; the public domain and live AWS release still need runtime verification.
+The README and architecture document are updated in PR #54 to use AWS EC2, the current Compose host port 80, the existing architecture image, the restricted runtime database account, and the current CI/CD migration path. This is documentation/source evidence only; the public domain and live AWS release still need runtime verification.
 
 
 ## Test-isolation checkpoint — 2026-10-13
