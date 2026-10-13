@@ -10,7 +10,7 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Status rule:** “Found” means the code has a problem. “Correction proposed” means code has been changed but still needs review and tests. “CI passed” means automated checks passed for the named commit. “Runtime pending” means the app still needs to be run and checked. These statuses must not be treated as the same thing.
 
-**Current audit size:** 87 numbered findings/observations, 58 distinct team actions, and 48 runtime verification gates. CI run `38418489243` passed all eight jobs for correction commit `905f5db2ff17d968e220f890d90007ce74a42cc2`, which also includes the professional README and AWS architecture updates: 71 backend tests passed twice, nine frontend tests passed, npm audit reported zero vulnerabilities, migrations 001–006 and runtime-role checks passed, secret scanning and both Docker builds passed. Flask-Limiter still warns about in-memory storage. AWS live/runtime evidence remains separate from CI evidence.
+**Current audit size:** 87 numbered findings/observations, 58 distinct team actions, and 48 runtime verification gates. CI run `38418979526` passed all eight jobs for correction commit `ae54eec01018a728f97bd7c77f7ccbcad3a96a05`, which also includes the professional README and AWS architecture updates: 71 backend tests passed twice, nine frontend tests passed, npm audit reported zero vulnerabilities, migrations 001–006 and runtime-role checks passed, secret scanning and both Docker builds passed. Flask-Limiter still warns about in-memory storage. AWS live/runtime evidence remains separate from CI evidence.
 
 ## Actions for the team
 
@@ -669,3 +669,15 @@ The architecture document is also aligned with host port 80, private PostgreSQL,
 
 ### Documentation ownership checkpoint — 2026-10-13
 PR #54 owns the root README and architecture documentation because they must stay aligned with its code and migration changes. PR #53 contains the QA audit package only, avoiding duplicate root documentation edits across open PRs.
+
+
+### 59. Repository administrator: align the GitHub About description with AWS
+**What happens:** The repository's GitHub About description still says Azure, while the correction branch's root README, architecture guide, and CD workflow use AWS EC2.
+
+**Why it matters:** The repository header is often the first thing a tutor or reviewer sees. It can contradict the approved deployment target even when the code and documentation are correct.
+
+**Required correction:** A repository administrator should edit the GitHub repository About/description field to: “A full-stack personal expense management platform built with React, Flask, PostgreSQL, Docker, CI/CD, Nginx, and AWS EC2, with a focus on cloud architecture, DevOps, security, monitoring, and automated deployment.”
+
+**How to verify:** Refresh the repository home page and confirm the description says AWS EC2 and agrees with the root README and .github/workflows/cd.yml.
+
+**Evidence required:** Screenshot or recorded URL of the updated repository header, plus confirmation that the README and deployment workflow consistently identify AWS EC2. This is repository metadata, not a code-file change.
