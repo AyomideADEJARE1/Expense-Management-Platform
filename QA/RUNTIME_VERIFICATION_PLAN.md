@@ -760,3 +760,7 @@ The active register contains 80 distinct findings/observations, the team action 
 
 ## Current CI enforcement checkpoint — 2026-10-13
 CI run `38420803176` passed all eight jobs for PR #54 correction head `8d781f3fb45cdce2a07e50ef3250b99ce0501333`; the README-only follow-up head `425d435f08e1a11a0ca40060db8f285654ab54ad` also passed all eight jobs in run `38421606402`. Backend tests passed twice (71 each run); frontend lint, nine Node tests, and build passed; database migration/runtime-role checks, secret scanning, both Docker builds, and aggregate CI passed. This closes the CI test-execution gate for the correction branch, but not AWS deployment/version, populated-volume migrations, public health, browser journeys/downloads, reboot recovery, backup restore, or shared rate-limit storage. The correction remains in an open PR and is not yet on upstream `main`.
+
+
+## Latest PR #54 source checkpoint — 2026-10-13
+The professional root README follow-up at `425d435f08e1a11a0ca40060db8f285654ab54ad` passed CI run `38421606402`. The latest PR #54 head `0002b8a21e88e54917e7b6519ea07683d183001c` only changes architecture-document wording to distinguish intended AWS topology from live runtime evidence; CI run `38422688117` was in progress at the last check. Keep AWS runtime gates open regardless of CI result until live health, deployed commit/image, populated-volume migration, recovery, backup/restore, and browser evidence are recorded.
