@@ -495,7 +495,7 @@ Run `38221595123` passed all eight jobs for source-branch head `72ff22992e8561b5
 
 **Finding:** QA-FIND-073. **Owner:** Backend + DevOps. **Status:** Open.
 
-**Source-level concern:** PR #54 now configures `ProxyFix(x_for=1, x_proto=1)` and adds a unit test that verifies the rightmost forwarded address is selected for the documented single Nginx hop. Confirm that assumption against the actual AWS topology. The limiter still has no explicit shared storage URI, so in-memory counters reset on restart and are not shared across replicas.
+**Source-level concern:** PR #54 configures `ProxyFix(x_for=1, x_proto=1)`, but the documented topology includes Cloudflare before Nginx. If Cloudflare proxying is active, Nginx's `$proxy_add_x_forwarded_for` may append the Cloudflare edge IP, so the one-hop ProxyFix test does not prove Flask sees the end-user IP. Confirm the real traffic path first. If Cloudflare is active, trust only its official maintained IP ranges, normalize the client address in Nginx, and pass a single trusted value to Flask; otherwise overwrite untrusted incoming forwarding headers. The limiter still has no explicit shared storage URI, so in-memory counters reset on restart and are not shared across replicas.
 
 **Procedure:**
 1. Record the approved production rate-limit policy, Nginx proxy topology, and shared-store service/configuration. Do not put credentials in evidence.
