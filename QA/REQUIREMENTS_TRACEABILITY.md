@@ -270,4 +270,4 @@ CI run 38416621129 failed one API test because the malformed-category-body check
 
 
 ## Latest correction CI evidence — 2026-10-13
-CI run 38416894925 passed all eight jobs for PR #54 commit 04fe7f2ea0942c467b1c0af29d7e60d63b3791e2. Both backend test passes completed with 71 passed tests; frontend lint/build and nine tests passed; npm audit reported zero vulnerabilities; migrations 001–006 and runtime-role checks passed; both Docker builds and aggregate ci-success passed. AWS runtime and browser verification remain separate, open gates.
+CI run 38418489243 passed all eight jobs for PR #54 commit 905f5db2ff17d968e220f890d90007ce74a42cc2, including the professional README and architecture updates. Both backend test passes completed with 71 passed tests; frontend lint/build and nine tests passed; npm audit reported zero vulnerabilities; migrations 001–006 and runtime-role checks passed; both Docker builds and aggregate ci-success passed. AWS runtime and browser verification remain separate, open gates.
