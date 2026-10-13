@@ -251,11 +251,11 @@ Run `38277483412` passed all eight jobs for code commit `2cc775b4ddc514e8dea5c6c
 
 
 ## QA-FIND-086 trace — PostgreSQL runtime privilege separation
-The original Compose file gave the backend the bootstrap account. PR #54 now introduces `POSTGRES_APP_USER` / `POSTGRES_APP_PASSWORD`, migration 006, CD migration ordering, and CI checks for required CRUD privileges and prohibited administrative actions. The current-head CI result and AWS existing-volume verification remain pending.
+The original Compose file gave the backend the bootstrap account. PR #54 now introduces `POSTGRES_APP_USER` / `POSTGRES_APP_PASSWORD`, migration 006, CD migration ordering, and CI checks for required CRUD privileges and prohibited administrative actions. CI run `38381389211` passed all eight jobs for commit `85871877850b81b367be2acb1135dced73a95255`, including migration 006 and role privilege checks. AWS existing-volume verification remains pending.
 
 
 ## QA-FIND-031 trace — GHCR authentication on AWS
-The runner's GHCR login did not authenticate the remote EC2 host. PR #54 now forwards `GHCR_READ_USERNAME` and `GHCR_READ_TOKEN` to the SSH deployment step, logs in via `--password-stdin`, pulls commit-tagged images, and logs out. CI checks the workflow configuration. The AWS host must still demonstrate successful image pulls with the configured read-only token.
+The runner's GHCR login did not authenticate the remote EC2 host. PR #54 now forwards `GHCR_READ_USERNAME` and `GHCR_READ_TOKEN` to the SSH deployment step, logs in via `--password-stdin`, pulls commit-tagged images, and logs out. CI run `38381389211` passed all eight jobs for commit `85871877850b81b367be2acb1135dced73a95255` and checks the workflow configuration. The AWS host must still demonstrate successful image pulls with the configured read-only token.
 
 ## Submission trace — public URL and architecture diagram
 README.md now includes explicit placeholders for the verified public URL and final AWS architecture diagram. The team lead/DevOps must fill these from the running AWS environment after the public health checks and deployed commit/image have been verified. This is a submission evidence gate, not a source-code test.
