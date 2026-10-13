@@ -10,7 +10,7 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Status rule:** “Found” means the code has a problem. “Correction proposed” means code has been changed but still needs review and tests. “CI passed” means automated checks passed for the named commit. “Runtime pending” means the app still needs to be run and checked. These statuses must not be treated as the same thing.
 
-**Current audit size:** 80 distinct findings/observations, 60 distinct team actions, and 48 runtime verification gates. CI run `38420803176` passed all eight jobs for code commit `8d781f3fb45cdce2a07e50ef3250b99ce0501333`, including the required-test gate. Both backend test runs passed 71 tests; frontend lint, all nine Node tests, and build passed; migrations 001–006 and restricted runtime-role checks passed; secret scan, both Docker builds, and aggregate CI passed. The README-only follow-up commit `425d435f08e1a11a0ca40060db8f285654ab54ad` passed CI run `38421606402` across all eight jobs. Flask-Limiter still warns about in-memory storage. AWS live/runtime evidence remains separate from CI evidence. The root README follow-up passed run `38421606402`; the latest PR #54 head `0002b8a21e88e54917e7b6519ea07683d183001c` updates architecture-status wording and run `38422688117` passed all eight jobs for that exact head.
+**Current audit size:** 81 distinct findings/observations, 61 distinct team actions, and 49 runtime verification gates. CI run `38420803176` passed all eight jobs for code commit `8d781f3fb45cdce2a07e50ef3250b99ce0501333`, including the required-test gate. Both backend test runs passed 71 tests; frontend lint, all nine Node tests, and build passed; migrations 001–006 and restricted runtime-role checks passed; secret scan, both Docker builds, and aggregate CI passed. The README-only follow-up commit `425d435f08e1a11a0ca40060db8f285654ab54ad` passed CI run `38421606402` across all eight jobs. Flask-Limiter still warns about in-memory storage. AWS live/runtime evidence remains separate from CI evidence. The root README follow-up passed run `38421606402`; the latest PR #54 head `0002b8a21e88e54917e7b6519ea07683d183001c` updates architecture-status wording and run `38422688117` passed all eight jobs for that exact head.
 
 ## Actions for the team
 
@@ -694,3 +694,17 @@ PR #54 owns the root README and architecture documentation because they must sta
 **How to verify:** CI run `38420803176` passed all eight jobs for correction head `8d781f3fb45cdce2a07e50ef3250b99ce0501333`. Both backend test runs reported 71 passing tests, and the frontend job ran lint, nine Node tests, and build. The latest PR #54 head `425d435f08e1a11a0ca40060db8f285654ab54ad` only updates README content and has CI run `38421606402` pending at the last check. Confirm there is no no-tests-allowed branch in CI.
 
 **Evidence required:** Green current-head CI run `38420803176`, backend test collection/pass counts, frontend test count, and the workflow diff showing mandatory commands. This closes the CI-workflow correction gate in PR #54, but the finding remains against upstream main until PR #54 is merged.
+
+
+### 61. DevOps: rebuild and verify the Nginx image during AWS deployment
+
+**What happens:** The Nginx service is built from `./nginx`, but the previous CD workflow pulled only the frontend/backend GHCR images and did not explicitly rebuild Nginx after checking out the deployment commit.
+
+**Why it matters:** The application can update while Nginx keeps an older image/configuration. Public health routing or security headers added in the repository may then be missing from the running AWS service.
+
+**Required correction:** PR #54 adds `docker compose build nginx` after checkout and before migrations/service replacement. CI now includes Nginx in the Docker build matrix, tests the image configuration with `nginx -t`, and checks that the build occurs before database migrations and application restart.
+
+**How to verify:** Confirm CI for the exact PR #54 head passes. In AWS staging, deploy a commit with a deliberate, safe Nginx configuration change and verify the running Nginx container reflects it. Check `/api/health`, `/api/health/db`, and the expected security headers through the public endpoint. Simulate an Nginx build failure in a disposable staging environment and confirm existing services are not replaced.
+
+**Evidence required:** Current-head CI result, deployment log showing the Nginx build before migrations/restart, before/after image IDs or digests, sanitized `nginx -T` output, public response headers/health responses, and failure-path evidence.
+
