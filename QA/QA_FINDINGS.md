@@ -1224,3 +1224,7 @@ The latest failed correction run was caused by a test expectation issue, not a r
 
 ## Current green correction checkpoint — 2026-10-13
 CI run 38416894925 passed all eight jobs for code commit 04fe7f2ea0942c467b1c0af29d7e60d63b3791e2. It includes 71 backend tests passing twice, nine frontend tests, npm audit with zero reported vulnerabilities, migrations 001–006, restricted database-role checks, secret scanning, both Docker builds, and aggregate ci-success. This supersedes the older green checkpoint as the latest verified correction CI result. It does not prove that the live AWS host is running this commit or that populated-volume migrations, public health, browser journeys, backup restore, reboot recovery, or shared rate-limit storage have been verified.
+
+
+## PR ownership clarification — 2026-10-13
+The earlier notes that attributed the README and architecture edits to PR #53 are historical and have been corrected. PR #54 is the single owner of those root documentation changes; PR #53 contains the audit evidence and release traceability documents. This avoids duplicated README/architecture edits across open PRs.
