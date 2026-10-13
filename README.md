@@ -15,15 +15,15 @@ The goal is to make personal spending easier to record and review while demonstr
 
 | Item | Status |
 |---|---|
-| Application URL | **Pending team-lead confirmation after AWS deployment and public health checks.** Add the verified URL here before submission. |
-| AWS architecture diagram | **Pending team-lead delivery of the final diagram from the verified AWS deployment.** Add the diagram to the repository and embed it here before submission. |
+| Production domain | `https://expense-tracker.live` (recorded in the previous main-branch README; verify DNS, HTTPS, and health checks before final submission). |
+| Architecture diagram | `docs/Expense Platform System Architecture.png` (already present in the repository; compare it with the deployed AWS environment before final presentation). |
 | Project code | Available in this repository |
 | Local setup instructions | Included below |
 | Automated checks | GitHub Actions CI |
 | Deployment target | AWS EC2, as approved for this project |
 | Release verification | CI is available; final live-environment and end-to-end evidence must be recorded separately |
 
-The two pending submission items above must not be replaced with an unverified URL or a diagram that does not match the deployed environment.
+The listed domain and diagram are repository evidence, not proof that the latest commit is deployed. Record the deployed commit/image and successful public health checks before claiming release verification.
 
 ## Main features
 
@@ -54,7 +54,11 @@ Access control, budget rules, exports, and database behavior are covered by auto
 
 ## Architecture
 
-**Target request flow**
+![Expense Tracker system architecture](docs/Expense%20Platform%20System%20Architecture.png)
+
+The existing diagram is embedded here. Confirm it matches the actual AWS topology before using it as final deployment evidence.
+
+**Request flow**
 
 ```text
 User's browser
@@ -76,8 +80,6 @@ GitHub repository -> CI checks -> commit-tagged container images -> AWS EC2 depl
 ```
 
 The browser communicates with Nginx. The React application calls the Flask API through the `/api` prefix. The browser must never connect directly to PostgreSQL. The backend uses a restricted database runtime account; the separate bootstrap account is reserved for database initialization and controlled migrations.
-
-**Final AWS architecture diagram:** pending team-lead delivery. Add the verified diagram to the repository and replace this note with an embedded image before submission.
 
 ## Repository structure
 
@@ -285,4 +287,4 @@ Before final submission, capture:
 6. Evidence that the application runtime database role is restricted and that the bootstrap credential is not passed to the backend.
 7. The required presentation covering the problem, objectives, architecture, stack, CI/CD, deployment, challenges, solutions, outcomes, future improvements, and demonstration screenshots.
 
-The final architecture diagram and verified public URL are the only intentional placeholders in the submission section; they must be filled from the actual AWS deployment, not guessed.
+Before final submission, verify that the recorded production domain resolves to the intended AWS deployment and that both public health endpoints respond successfully. Update the diagram only if the actual AWS topology differs.
