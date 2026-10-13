@@ -755,7 +755,7 @@ Five non-active duplicate/consolidation placeholders (QA-FIND-007, 016, 037, 039
 
 
 ## Current audit counts
-The active register contains 80 distinct findings/observations, the team action summary contains 60 actions, and this plan contains 48 runtime verification gates. Five duplicate/consolidation placeholders were removed; finding IDs remain stable for traceability.
+The active register contains 81 distinct findings/observations, the team action summary contains 61 actions, and this plan contains 49 runtime verification gates. Five duplicate/consolidation placeholders were removed; finding IDs remain stable for traceability.
 
 
 ## Current CI enforcement checkpoint — 2026-10-13
@@ -764,3 +764,16 @@ CI run `38420803176` passed all eight jobs for PR #54 correction head `8d781f3fb
 
 ## Latest PR #54 source checkpoint — 2026-10-13
 The professional root README follow-up at `425d435f08e1a11a0ca40060db8f285654ab54ad` passed CI run `38421606402`. The latest PR #54 head `0002b8a21e88e54917e7b6519ea07683d183001c` only changes architecture-document wording to distinguish intended AWS topology from live runtime evidence; CI run `38422688117` passed all eight jobs for this exact head. Keep AWS runtime gates open regardless of CI result until live health, deployed commit/image, populated-volume migration, recovery, backup/restore, and browser evidence are recorded.
+
+
+## RV-58 — Verify Nginx is rebuilt and deployed from the target commit
+
+Related finding: QA-FIND-089. Owner: DevOps. Priority: High.
+
+**Source correction:** PR #54 now explicitly runs `docker compose build nginx` after checking out the target commit and before database migrations/service replacement. CI includes Nginx in the Docker build matrix, checks the built image with `nginx -t`, and verifies the Nginx build occurs before migration and service restart. The latest correction head `83352b2ff90551a896113385f036b66d77f1009c` has CI run `38423159920` pending at the last check.
+
+**Runtime procedure:** On AWS staging, record the current Nginx container ID/image ID and sanitized `nginx -T` output. Deploy a commit containing a safe, visible configuration change (for example, a temporary non-sensitive response header). Confirm the workflow builds Nginx from that checked-out commit before migrations, the running container is replaced only after migrations succeed, and the public response includes the expected change. Check both public health endpoints. In a disposable staging run, force the Nginx build to fail and verify the existing app/proxy containers are not replaced. Do not perform destructive failure injection on production.
+
+**Pass evidence:** Green CI for the exact current PR #54 head, deployment logs showing checkout/build/migration/restart order, before/after Nginx image IDs, sanitized `nginx -T` output, public health/header responses, and failure-path evidence.
+
+**Fail conditions:** The deployment skips the Nginx build, uses a stale image/configuration, replaces services before migrations succeed, loses either public health route, or lacks the expected response headers after deployment.
