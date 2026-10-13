@@ -713,4 +713,4 @@ Run `38276034129` passed all eight jobs for code commit `97e6515f00c15e240532da6
 ### Documentation update — README and architecture
 PR #53 updates the existing root README rather than creating a duplicate. It documents the project as Expense Tracker / Enhanced Personal Expense Management Platform, describes the implemented React/Vite, Flask, PostgreSQL 16, Nginx, Docker Compose, GitHub Actions, GHCR, and AWS EC2 path, and gives local setup/test commands and release evidence requirements. The existing architecture image is embedded rather than replaced with a second diagram. The public domain remains subject to live health verification.
 
-The architecture document is also aligned with host port 80, private PostgreSQL, restricted runtime database credentials, migrations 002–006 for existing AWS volumes, and the gated AWS deployment workflow. No Azure references remain in the reviewed documents.
+The architecture document is also aligned with host port 80, private PostgreSQL, restricted runtime database credentials, migrations 002–006 for existing AWS volumes, and the gated AWS deployment workflow. 
