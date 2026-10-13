@@ -2,7 +2,7 @@
 
 Findings are evidence-based. QA is not judged by defect count.
 
-Latest green correction checkpoint: CI run 38418979526 passed all eight jobs for PR #54 commit ae54eec01018a728f97bd7c77f7ccbcad3a96a05, including the professional README, AWS architecture guide, and static public health-route mapping guard. Backend lint passed and 71 backend tests passed twice consecutively. Frontend lint/build passed and all nine Node tests passed; npm audit reported zero vulnerabilities. CI applied migrations 001–006, checked the budget-category RESTRICT rule and runtime database-role privileges, passed secret scanning, built both Docker images, and passed aggregate ci-success. Flask-Limiter still warns that the configured rate-limit storage is in-memory. This is CI evidence only; AWS live deployment, populated-volume migration, browser workflows, reboot recovery, backup restore, and shared production rate-limit storage remain unverified.
+Latest green correction checkpoint: CI run `38420803176` passed all eight jobs for PR #54 head `8d781f3fb45cdce2a07e50ef3250b99ce0501333`. It verified the required test gates: both backend test runs passed 71 tests, the frontend job ran lint, all nine Node tests, and build; migrations 001–006 and restricted runtime-role checks passed; secret scan, both Docker builds, and aggregate `ci-success` passed. This head adds mandatory backend test collection and mandatory frontend lint/test commands, removing the empty-suite and `--if-present` success paths. Flask-Limiter still warns that configured rate-limit storage is in-memory. This is CI evidence only; AWS live deployment, populated-volume migration, browser workflows, reboot recovery, backup restore, and shared production rate-limit storage remain unverified.
 
 ## QA-FIND-001 — Duplicate frontend source structures
 Classification: Observation. Status: Open.
@@ -86,7 +86,7 @@ Required action: first verify the current PR #54 authentication guard and its ne
 ## QA-FIND-011 — Automated test coverage was missing/incomplete
 Classification: Confirmed baseline coverage gap. Status: PR #54 adds and runs backend/frontend automated tests; browser end-to-end coverage remains open. The latest correction head has a CI run pending. Priority: High.
 
-On upstream `main`, the earlier CI workflow accepted pytest exit code 5 (no tests collected), and the frontend package did not define a test script. PR #54 corrects these gaps: the backend job runs pytest twice without accepting an empty suite, and the frontend job runs `npm run lint` and `npm test` as required commands. CI run `38418979526` passed all eight jobs for the earlier correction head `ae54eec01018a728f97bd7c77f7ccbcad3a96a05`, including 71 backend tests on each run and nine frontend tests. The latest correction head `8d781f3fb45cdce2a07e50ef3250b99ce0501333` additionally tightens CI test enforcement; its run was queued at the last check, so the older green run does not verify that newest workflow change. These changes remain unmerged from upstream `main`.
+On upstream `main`, the earlier CI workflow accepted pytest exit code 5 (no tests collected), and the frontend package did not define a test script. PR #54 corrects these gaps: the backend job runs pytest twice without accepting an empty suite, and the frontend job runs `npm run lint` and `npm test` as required commands. CI run `38418979526` passed all eight jobs for the earlier correction head `ae54eec01018a728f97bd7c77f7ccbcad3a96a05`, including 71 backend tests on each run and nine frontend tests. The latest correction head `8d781f3fb45cdce2a07e50ef3250b99ce0501333` passed CI run `38420803176`, which verifies the required backend/frontend test commands. These changes remain unmerged from upstream `main`, so the baseline defect remains present until PR #54 is merged.
 
 The correction provides automated regression coverage, but it is not full browser end-to-end coverage. Remaining test work includes critical browser journeys such as registration/login, expense create/edit/delete, date filtering, category/budget workflows, dashboard totals, and CSV downloads. Those require browser-level test evidence; Node utility tests and a green build alone do not prove the complete UI works.
 
@@ -664,7 +664,7 @@ Closure evidence: Passing CI for the exact commit, API results for registration/
 
 CI run [38212818430](https://github.com/AyomideADEJARE1/Expense-Management-Platform/actions/runs/38212818430) passed all eight jobs for correction commit `0207384272129a22c719425fee062a87fc0f29ae`. The backend suite passed 39 tests. This run includes migrations 001–004, category-budget deletion protection, category create/update error handling, and email uniqueness conflict handling for registration/profile updates. Secret scanning, frontend lint/build, both Docker builds, database migration checks, and the aggregate CI check passed.
 
-At this historical checkpoint, the frontend package lacked a test script. PR #54 now adds `npm test`; run `38418979526` passed it on an earlier correction head, while the latest CI-enforcement change still needs its own run. Full browser end-to-end tests remain open. Populated AWS-volume migration, staging failure/recovery, deployed image identity, public health checks, category write authorization, production rate-limit storage/proxy handling, and public CSP/HSTS also remain open until evidence is recorded.
+At this historical checkpoint, the frontend package lacked a test script. PR #54 now adds `npm test`; run `38420803176` passed the required frontend test command on current correction head `8d781f3fb45cdce2a07e50ef3250b99ce0501333`. Full browser end-to-end tests remain open. Populated AWS-volume migration, staging failure/recovery, deployed image identity, public health checks, category write authorization, production rate-limit storage/proxy handling, and public CSP/HSTS also remain open until evidence is recorded.
 
 
 ## Latest code CI checkpoint — 2026-10-12
@@ -1227,8 +1227,8 @@ PR #54 now includes a CI check that asserts the public `/api/health` and `/api/h
 **Closure evidence:** Updated repository description visible on GitHub, plus the current README and CD workflow showing the same AWS target. This metadata item is separate from the two code/documentation PRs and does not require an application-code change.
 
 
-## Latest correction CI checkpoint — 2026-10-13 (commit ae54eec)
-CI run `38418979526` passed all eight jobs for correction commit `ae54eec01018a728f97bd7c77f7ccbcad3a96a05`. The database migration/role checks, secret scan, backend lint/tests (71 tests), frontend lint/test/build, both Docker builds, and aggregate CI passed; npm audit reported zero vulnerabilities. This supersedes earlier green checkpoints for PR #54 source/CI verification. It does not close AWS populated-volume migration, live deployment/version, public health, browser journeys/downloads, reboot recovery, backup restore, or shared production rate-limit storage. Findings with source corrections remain open for their stated browser/AWS verification until that evidence is retained.
+## Prior correction CI checkpoint — 2026-10-13 (commit ae54eec; superseded)
+CI run `38418979526` passed all eight jobs for correction commit `ae54eec01018a728f97bd7c77f7ccbcad3a96a05`. The database migration/role checks, secret scan, backend lint/tests (71 tests), frontend lint/test/build, both Docker builds, and aggregate CI passed; npm audit reported zero vulnerabilities. This checkpoint was superseded by current-head run `38420803176` for commit `8d781f3fb45cdce2a07e50ef3250b99ce0501333`. Neither run closes AWS populated-volume migration, live deployment/version, public health, browser journeys/downloads, reboot recovery, backup restore, or shared production rate-limit storage.
 
 
 ## Register hygiene — duplicate placeholder removal
@@ -1237,13 +1237,13 @@ Two duplicate placeholder sections for category-write authorization have been re
 
 ## QA-FIND-088 — CI can pass when required automated tests are absent
 
-**Classification:** Continuous-integration quality gate / regression protection. **Priority:** High for release confidence. **Status:** Confirmed on upstream main; correction is in PR #54. CI run for latest correction head `8d781f3fb45cdce2a07e50ef3250b99ce0501333` was queued at the last check.
+**Classification:** Continuous-integration quality gate / regression protection. **Priority:** High for release confidence. **Status:** Confirmed on upstream main; PR #54 correction is CI-verified on head `8d781f3fb45cdce2a07e50ef3250b99ce0501333` by run `38420803176`. The finding remains against upstream main until PR #54 is merged.
 
 **Evidence:** The upstream `.github/workflows/ci.yml` runs `pytest -v`, but treats pytest exit code 5 (“no tests collected”) as a warning and exits successfully. The frontend job also uses `npm test --if-present`, so a missing test script silently skips frontend tests. On the current QA-only PR #53 branch, CI run `38420555104` collected zero backend tests, emitted “No backend tests found yet,” and did not fail the backend job. That means a green CI result on a documentation-only branch is not evidence that backend tests ran.
 
 **Why it matters:** A future change could accidentally delete or rename the test suite, remove the frontend test script, or break test discovery and still receive a green CI result. The team may then believe regressions are being checked when the tests did not execute.
 
-**Correction in PR #54:** The correction branch removes the special allowance for pytest exit code 5 and runs the backend suite twice, so zero collected tests fail the job. Frontend lint and tests are now required commands (`npm run lint` and `npm test`) instead of optional `--if-present` steps. CI run `38418979526` passed before the newest required-check change; the latest head's run must pass before this correction is considered CI-verified.
+**Correction in PR #54:** The correction branch removes the special allowance for pytest exit code 5 and runs the backend suite twice, so zero collected tests fail the job. Frontend lint and tests are now required commands (`npm run lint` and `npm test`) instead of optional `--if-present` steps. CI run `38420803176` passed all eight jobs for the latest correction head `8d781f3fb45cdce2a07e50ef3250b99ce0501333`, verifying both backend test runs, the required frontend lint/test commands, migrations, secret scan, and both Docker builds.
 
 **How QA will verify:** Confirm the backend job runs pytest twice and fails on zero collected tests. Confirm frontend lint and test steps do not use `--if-present`, and that npm reports a nonzero test count. Review the job logs for the exact tested commit.
 
