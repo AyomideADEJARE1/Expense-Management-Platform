@@ -693,7 +693,7 @@ Run `38276034129` passed all eight jobs for code commit `97e6515f00c15e240532da6
 
 **Why it matters:** A backend compromise could gain far more database control than the application needs.
 
-**Correction in PR #54:** The backend now receives `POSTGRES_APP_USER` and `POSTGRES_APP_PASSWORD`; migration 006 configures a non-superuser role with required table/sequence access and no role/database creation privileges. CD applies migration 006 before restarting the app, and CI checks privilege boundaries. The latest CI result must pass before source verification is complete.
+**Correction in PR #54:** The backend now receives `POSTGRES_APP_USER` and `POSTGRES_APP_PASSWORD`; migration 006 configures a non-superuser role with required table/sequence access and no role/database creation privileges. CD applies migration 006 before restarting the app, and CI checks privilege boundaries. CI run `38381389211` passed all eight jobs for commit `85871877850b81b367be2acb1135dced73a95255`, including migration 006, runtime-role privilege checks, 69 backend tests, nine frontend tests, and both Docker builds. AWS existing-volume and live runtime checks remain open.
 
 **How to verify:** Confirm the backend test suite connects with the restricted role. Then test a fresh database and a disposable copy of an existing AWS database. Confirm normal app operations work while privileged operations fail, and confirm migrations run through the separate bootstrap account.
 
