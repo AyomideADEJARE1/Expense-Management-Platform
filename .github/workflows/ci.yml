@@ -371,10 +371,10 @@ jobs:
           NODE
 
       - name: Lint
-        run: npm run lint --if-present
+        run: npm run lint
 
       - name: Test
-        run: npm test --if-present
+        run: npm test
         env:
           CI: true
 
