@@ -1,113 +1,286 @@
-# Expense Management Platform
+# Expense Tracker
+## Enhanced Personal Expense Management Platform
 
-A full-stack personal expense management application built with React, Flask, PostgreSQL, Docker Compose, and Nginx. GitHub Actions provides repository validation and a prepared image-publishing/deployment workflow.
+Expense Tracker is a full-stack web application for recording personal expenses, organizing spending by category, setting budgets, reviewing monthly spending, and exporting transaction data for further analysis.
 
-## Current architecture
+The project combines application development with practical DevOps work: containerized services, a relational database, reverse-proxy routing, automated checks, and an AWS EC2 deployment workflow.
 
-![Expense Platform System Architecture](docs/Expense%20Platform%20System%20Architecture.png)
+## Project purpose
 
-Browser → Nginx → React frontend / Flask REST API → PostgreSQL
+People often record expenses in scattered notes or spreadsheets, making it difficult to understand where money goes or whether spending is within a budget. Expense Tracker provides one place to record transactions, categorize them, review summaries, and compare spending with budget limits.
 
-Nginx is the public entry point. The frontend calls the Flask API through the `/api` prefix; the browser must not connect directly to PostgreSQL.
+The goal is to make personal spending easier to record and review while demonstrating a maintainable, testable, and deployable web application architecture.
 
-## Implemented application areas
+## Submission information
+
+| Item | Status |
+|---|---|
+| Application URL | **Pending team-lead confirmation after AWS deployment and public health checks.** Add the verified URL here before submission. |
+| AWS architecture diagram | **Pending team-lead delivery of the final diagram from the verified AWS deployment.** Add the diagram to the repository and embed it here before submission. |
+| Project code | Available in this repository |
+| Local setup instructions | Included below |
+| Automated checks | GitHub Actions CI |
+| Deployment target | AWS EC2, as approved for this project |
+| Release verification | CI is available; final live-environment and end-to-end evidence must be recorded separately |
+
+The two pending submission items above must not be replaced with an unverified URL or a diagram that does not match the deployed environment.
+
+## Main features
 
 - User registration and login using JWT authentication and hashed passwords.
-- Expense creation, listing, editing, deletion, month/date-range/category API filtering, and an authenticated CSV export endpoint.
-- Category management, budgets, monthly summaries, and category summaries.
-- Dashboard totals, monthly/category charts, recent transactions, and reports.
-- Docker Compose services for frontend, backend, PostgreSQL, and Nginx, including container health checks.
-- GitHub Actions checks for secret scanning, database migration/schema checks, backend lint/test command, frontend lint/build, and Docker image builds.
+- Create, view, edit, and delete personal expenses.
+- Filter transactions by month, date range, and category.
+- Manage expense categories.
+- Create and review monthly and category-specific budgets through the supported API and application flows.
+- View monthly summaries, category summaries, dashboard totals, charts, and recent transactions.
+- Export transaction and report data to CSV, with spreadsheet-formula protection and UTF-8 handling.
+- Update supported profile settings, including currency and notification preferences.
+- Check application and database health through dedicated endpoints.
 
-Implementation presence is not proof that every flow has passed runtime QA. See the `QA/` directory for the test plan, test cases, traceability matrix, findings, and release checklist.
+Access control, budget rules, exports, and database behavior are covered by automated tests and the QA documents. A passing CI run demonstrates the checks executed by CI; it does not by itself prove that the latest version is deployed or that every browser flow has been tested.
 
-## Repository layout
+## Technology stack
 
-- `frontend/` — Vite/React application served by its container.
-- `backend/` — Flask API, routes, SQLAlchemy models, and dependencies.
-- `database/migrations/` — ordered PostgreSQL SQL files (initial schema and follow-up migrations 002–005).
-- `nginx/` — reverse proxy configuration.
-- `docker-compose.yml` — local multi-container stack.
-- `.github/workflows/` — CI and prepared CD workflows.
-- `QA/` — QA evidence and open findings.
+| Layer | Technology | Responsibility |
+|---|---|---|
+| Frontend | React, Vite, JavaScript, Tailwind CSS, Recharts | User interface, forms, dashboard, charts, and downloads |
+| API | Python, Flask, Flask-JWT-Extended, SQLAlchemy | Authentication, input validation, application rules, and JSON responses |
+| Database | PostgreSQL 16 | Persistent users, expenses, categories, budgets, and related settings |
+| Web entry point | Nginx | Serves the frontend and routes API/health requests to the backend |
+| Containers | Docker and Docker Compose | Runs the frontend, backend, database, and Nginx consistently |
+| CI | GitHub Actions | Runs secret scanning, migration checks, backend tests/lint, frontend tests/lint/build, and Docker builds |
+| Deployment target | AWS EC2 | Host target for the configurable container deployment workflow |
+| Container registry | GitHub Container Registry (GHCR) | Stores commit-tagged frontend and backend images |
 
-The root-level `src/` and root `package.json` are legacy/duplicate frontend assets. The Docker Compose frontend service builds from `frontend/`; use that directory as the frontend entry point unless the team deliberately consolidates the duplicate structure.
+## Architecture
 
-## Local prerequisites
+**Target request flow**
 
-Install Docker Engine/Desktop with the Docker Compose plugin. From a clean checkout:
+```text
+User's browser
+      |
+      v
+Public application endpoint / HTTPS
+      |
+      v
+Nginx reverse proxy
+      |--------------------------|
+      v                          v
+React frontend              Flask REST API
+                                  |
+                                  v
+                         Restricted PostgreSQL
+                         application account
+
+GitHub repository -> CI checks -> commit-tagged container images -> AWS EC2 deployment workflow
+```
+
+The browser communicates with Nginx. The React application calls the Flask API through the `/api` prefix. The browser must never connect directly to PostgreSQL. The backend uses a restricted database runtime account; the separate bootstrap account is reserved for database initialization and controlled migrations.
+
+**Final AWS architecture diagram:** pending team-lead delivery. Add the verified diagram to the repository and replace this note with an embedded image before submission.
+
+## Repository structure
+
+- `frontend/` — React/Vite application and frontend tests.
+- `backend/` — Flask application, API routes, SQLAlchemy models, and backend tests.
+- `database/migrations/` — ordered PostgreSQL migrations.
+- `nginx/` — reverse-proxy configuration.
+- `docker-compose.yml` — local multi-container configuration.
+- `.github/workflows/ci.yml` — automated validation.
+- `.github/workflows/cd.yml` — GHCR publishing and configurable AWS EC2 deployment.
+- `docs/` — architecture, security, Docker, Nginx, and CI/CD documentation.
+- `QA/` — test plan, test cases, findings, requirements traceability, runtime checks, and release checklist.
+
+The repository also contains legacy root-level frontend assets. The Docker Compose frontend service builds from `frontend/`; that is the maintained frontend entry point for the containerized application.
+
+## Prerequisites
+
+Install the following before running the application locally:
+
+- Git
+- Docker Engine or Docker Desktop
+- Docker Compose plugin
+- A terminal capable of running the commands below
+
+For development outside Docker, also install Python 3.12 and Node.js 20.
+
+## Local setup
+
+Run these commands from the repository root.
+
+### 1. Create the environment files
+
+**PowerShell:**
+
+```powershell
+Copy-Item .env.example .env
+Copy-Item backend/.env.example backend/.env
+```
+
+**Linux, macOS, or Git Bash:**
 
 ```bash
 cp .env.example .env
 cp backend/.env.example backend/.env
 ```
 
-Edit both environment files before starting the app. In `backend/.env`, set separate strong values for `SECRET_KEY` and `JWT_SECRET`. Production startup rejects missing, placeholder, shorter-than-32-character, or identical Flask/JWT signing keys. If neither `APP_ENV` nor `FLASK_ENV` is set, the app treats itself as production; set a non-production mode only for local development/testing, never on the AWS deployment. In the root `.env`, replace the PostgreSQL password placeholder with a unique strong password. Keep both `.env` files out of version control. Compose now requires these database variables instead of embedding a fixed password in the YAML.
+Edit both files before starting the application. Do not commit either real `.env` file.
 
-Start the application from the repository root:
+In the root `.env`, set:
+- `POSTGRES_USER` and `POSTGRES_PASSWORD`: the database bootstrap account used for initialization and migrations.
+- `POSTGRES_DB`: the database name.
+- `POSTGRES_APP_USER` and `POSTGRES_APP_PASSWORD`: a separate restricted account used by the Flask application. The app password must be a unique random value of at least 32 characters.
+
+In `backend/.env`, set separate strong values for `SECRET_KEY` and `JWT_SECRET`. Each must be at least 32 characters, must not be a placeholder, and must differ from the other. Do not reuse database passwords as application signing keys.
+
+The Compose configuration passes the restricted application credentials to the backend. It does not pass the bootstrap database password into the backend container. Migration 006 creates or updates the restricted role and grants the data/sequence permissions the application needs. On an existing AWS database, the team must add the new `POSTGRES_APP_USER` and `POSTGRES_APP_PASSWORD` values to the server's protected environment file before deploying the change.
+
+### 2. Start the services
 
 ```bash
 docker compose up --build -d
 docker compose ps
-docker compose logs --tail=100
 ```
 
-Open the application at `http://localhost/` when port 80 is available. If port 80 is occupied, change the host-side port mapping in Compose deliberately and update the URL accordingly.
+Open the local application at:
 
-Stop the services without deleting stored development data:
+```text
+http://localhost/
+```
+
+Nginx uses host port 80 by default. If that port is already in use, deliberately change the host-side mapping in `docker-compose.yml` and use the matching local URL.
+
+### 3. Review logs and health
+
+```bash
+docker compose logs --tail=100
+curl -i http://localhost/api/health
+curl -i http://localhost/api/health/db
+```
+
+The first health endpoint checks application availability. The second checks whether the backend can reach PostgreSQL. A healthy container does not prove that registration, expense ownership, budgets, reports, filters, or CSV downloads work end to end.
+
+### 4. Stop the services
 
 ```bash
 docker compose down
 ```
 
-The PostgreSQL data is held in a named Docker volume. **Do not run `docker compose down -v` unless you intend to delete the local database volume and its data.** PostgreSQL runs files in `/docker-entrypoint-initdb.d` only when initializing a new data volume. The CD workflow explicitly applies migrations 002–005 to an existing volume before restarting the application; if a migration fails, deployment must stop and the data/schema state must be reviewed before retrying.
+PostgreSQL data is stored in a named volume. **Do not use `docker compose down -v` unless you intentionally want to delete the local database volume and its data.**
 
-## Health checks and useful diagnostics
+## Database and migrations
 
-The public Nginx health route is:
+Migration files are ordered in `database/migrations/`. On a fresh PostgreSQL volume, the PostgreSQL container runs the mounted initialization files in order. Initialization scripts do not run again just because a container restarts or the repository is updated.
 
-```text
-GET /api/health
-```
+For an existing database, the CD workflow applies follow-up migrations explicitly before restarting the application services. The workflow stops if a migration fails. Before using this workflow against a populated database, the team must review migration output, preserve a backup, and confirm a recovery plan.
 
-Nginx also routes `GET /api/health/db` to the backend's `/health/db` endpoint. This route is configured in source; verify it through the deployed public endpoint before treating it as a successful runtime check.
+Migration 003 enforces budget uniqueness and intentionally stops if legacy duplicate budgets must be reviewed. Migration 004 prevents deleting a category while a budget still references it. Migration 005 adds the optional profile phone field. Migration 006 separates the restricted application database account from the bootstrap/migration account.
 
-Useful commands:
+## Running tests
+
+### Backend
+
+From the repository root:
 
 ```bash
-docker compose ps
-docker compose logs nginx
-docker compose logs frontend
-docker compose logs backend
-docker compose logs postgres
-curl -i http://localhost/api/health
+cd backend
+pip install -r requirements.txt
+pip install flake8 pytest
+pytest -v
+flake8 . --count --show-source --statistics --exclude .venv,venv,migrations
 ```
 
-A healthy container does not, by itself, prove that registration, expense ownership, budgets, reports, filters, or CSV downloads work correctly. Run the corresponding QA test cases and retain evidence.
+The test environment must point to a disposable database whose name clearly identifies it as a test database. The test configuration is designed to refuse normal production/staging database names. Do not point tests at a live database.
 
-## CI/CD and deployment status
+### Frontend
 
-The upstream `main` documentation currently identifies the live application URL as **https://expense-tracker.live** and describes the live host as AWS EC2 Ubuntu. Availability and current end-to-end functionality must be verified before using this URL as submission evidence.
+From the repository root:
 
-The project tutor has approved AWS as an alternative deployment target, as reported by the QA owner. AWS EC2 is the target for this capstone audit and the live environment documented by the project. Retain the tutor's approval with submission records. The public URL alone does not prove that the latest reviewed commit is deployed; capture workflow, instance/container, health-check, and browser evidence for the submitted version.
+```bash
+cd frontend
+npm ci
+npm test
+npm run lint
+npm run build
+```
 
-The CI workflow runs backend pytest checks, frontend lint/build checks, and an optional frontend test command. The frontend package currently has no test script, so CI can skip frontend tests while still passing. A green CI result must not be interpreted as complete functional or browser test coverage. This is recorded as an open QA finding.
+The frontend test command uses Node's built-in test runner. Tests cover budget-spending calculations, budget search, and CSV safety/formatting. These unit tests do not replace browser-based end-to-end testing.
 
-The CD workflow publishes container images and can deploy to AWS EC2 when DEPLOY_ENABLED=true and the required AWS secrets/variables are configured. The deployment workflow uses AWS_EC2_HOST, AWS_EC2_USER, and AWS_EC2_SSH_KEY. Do not describe the latest code as deployed or production-ready until the deployed commit/image, public routing, health checks, and end-to-end user journeys have been verified.
+## API and health endpoints
 
-## Security notes
+The application exposes its API through Nginx under `/api`.
 
-- Never commit `.env` files, access tokens, passwords, or private keys.
-- Use strong secrets from the deployment environment for production.
-- Restrict public network access to the required application entry point and administrative access.
-- Category mutation routes and test coverage are under QA review; consult `QA/QA_FINDINGS.md` before treating the system as release-ready.
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/health` | Public application health check |
+| `GET /api/health/db` | Public backend-to-database health check |
+| `POST /api/auth/register` | Register an account |
+| `POST /api/auth/login` | Authenticate and obtain a JWT |
+| `/api/expenses` | Authenticated expense operations and filters |
+| `/api/budgets` | Budget operations |
+| `/api/categories` | Category operations |
+| `/api/expenses/export` | Authenticated transaction CSV export |
 
-## QA documentation
+Use the source routes and QA test cases for the exact request fields, supported methods, and response formats. Nginx routing must be verified through the public endpoint; source configuration alone is not runtime evidence.
 
-- `QA/TEST_PLAN.md` — scope, environment, evidence rules, and release criteria.
-- `QA/TEST_CASES.md` — functional, API, security, infrastructure, CI/CD, and documentation tests.
-- `QA/REQUIREMENTS_TRACEABILITY.md` — requirement-to-test mapping.
-- `QA/QA_FINDINGS.md` — findings, observations, blockers, and retests.
-- `QA/RELEASE_CHECKLIST.md` — final release gate.
+## CI/CD and AWS deployment
 
-A test may be marked PASS only when it was actually executed and supporting evidence was recorded. Source inspection alone should be recorded as a code-review finding, not as a successful runtime test.
+The CI workflow runs on pull requests and configured branch pushes. It checks for committed environment files/secrets, applies and verifies database migrations, runs backend lint/tests, runs frontend tests/lint/build, builds the Docker images, and reports an aggregate `ci-success` result.
+
+The CD workflow can publish commit-tagged frontend and backend images to GHCR and deploy to AWS EC2. Deployment is intentionally disabled unless the repository variable `DEPLOY_ENABLED` is set to `true` and the required production configuration is present.
+
+The deployment uses these repository secrets:
+
+- `AWS_EC2_HOST` — AWS instance IP or hostname.
+- `AWS_EC2_USER` — SSH user on the instance.
+- `AWS_EC2_SSH_KEY` — private SSH key for deployment.
+
+It uses these repository variables:
+
+- `DEPLOY_ENABLED` — enables deployment when set to `true`.
+- `APP_URL` — verified public URL used by post-deployment health checks.
+- `DEPLOY_PATH` — application directory on the instance; otherwise the documented default is used.
+
+The workflow checks out the commit associated with the successful CI run, uses commit-tagged images, waits for PostgreSQL, applies migrations before restarting application services, and checks both public health endpoints. A commit-specific tag is traceable but is not inherently immutable; recording image digests or enforcing registry tag immutability provides stronger release integrity.
+
+**Deployment status:** Do not claim that the latest commit is live until the team has captured the deployed commit/image, successful health checks, and end-to-end browser results. The verified public URL is intentionally pending team-lead confirmation in the submission section above.
+
+## Security considerations
+
+- Keep real `.env` files, passwords, signing keys, and SSH private keys out of Git.
+- Use different strong Flask and JWT signing keys.
+- Keep the PostgreSQL bootstrap credential separate from the backend runtime credential.
+- Give the backend database role only the required table and sequence privileges.
+- Keep PostgreSQL off the public network; expose the application through Nginx.
+- Keep production deployment disabled until AWS secrets, variables, access controls, and the recovery plan are reviewed.
+- Review the QA findings and release checklist before describing the application as release-ready.
+
+## Troubleshooting
+
+| Problem | Checks |
+|---|---|
+| Compose refuses to start | Confirm both environment files exist and all required variables have been replaced with valid values. |
+| PostgreSQL does not become healthy | Review `docker compose logs postgres`; check the bootstrap username/password and database name. |
+| Backend cannot connect to PostgreSQL | Confirm the app-role variables match the role created by migration 006 and that the backend uses the Compose hostname `postgres`. |
+| Migration 003 fails | Review the diagnostic for duplicate legacy budgets; back up and reconcile data before retrying. |
+| Migration 006 fails | Check that app and bootstrap usernames differ and the app password is a non-placeholder random value of at least 32 characters. |
+| Nginx health check fails | Inspect Nginx, frontend, and backend logs and test both health endpoints locally. |
+| Backend tests refuse to run | Confirm the test database name clearly identifies it as a test database and is not a production/staging database. |
+| Frontend tests/build fail | Run `npm ci`, `npm test`, `npm run lint`, and `npm run build` inside `frontend/`. |
+| CD skips AWS deployment | Check that CI passed on the expected main-branch push, `DEPLOY_ENABLED=true`, and required AWS secrets/variables are configured. |
+| AWS health check fails | Check the deployed commit/image, instance access, Nginx routes, application logs, and the configured `APP_URL`. |
+
+## QA and release evidence
+
+The `QA/` directory records test cases, findings, requirements traceability, runtime verification steps, and release criteria. Findings distinguish source-level corrections and CI results from checks that require a running AWS environment or a browser.
+
+Before final submission, capture:
+1. The verified AWS architecture diagram.
+2. The live application URL and successful public health checks.
+3. The deployed commit or image digest.
+4. Browser evidence for registration/login, expense CRUD and ownership, filtering, budgets, dashboard/report totals, and both CSV exports.
+5. Migration results for a fresh database and a disposable populated database.
+6. Evidence that the application runtime database role is restricted and that the bootstrap credential is not passed to the backend.
+7. The required presentation covering the problem, objectives, architecture, stack, CI/CD, deployment, challenges, solutions, outcomes, future improvements, and demonstration screenshots.
+
+The final architecture diagram and verified public URL are the only intentional placeholders in the submission section; they must be filled from the actual AWS deployment, not guessed.
