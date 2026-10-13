@@ -1,480 +1,140 @@
-# Security Guidelines
+# Security
 
-Security controls and practices for the Expense Management Platform.
+This document describes the security controls implemented in Expense Tracker, the rules developers must follow, and what is still required before production. It was verified against the code on the PR #54 branch.
 
-This document describes the security measures currently implemented in the application and the security requirements that should be followed during development and deployment.
-
----
-
-## 1. Security Architecture
-
-The application separates security responsibilities across the frontend, reverse proxy, backend, and database layers.
+## 1. Architecture
 
 ```text
-Browser
-   │
-   ▼
-Nginx
-   │
-   ▼
-Flask API
-   │
-   ├── Authentication
-   ├── Authorization
-   ├── Input Validation
-   ├── Rate Limiting
-   └── Database Access
-            │
-            ▼
-       PostgreSQL 16
+Browser -> Nginx (port 80, the only published port)
+              |-- /api/* -> Flask API (gunicorn, non-root container)
+              |                |-- authentication, authorization, validation
+              |                |-- rate limiting
+              |                v
+              |           PostgreSQL 16 (internal network only)
+              |-- /*     -> React frontend (static files)
 ```
 
-The browser does not connect directly to PostgreSQL.
-
-The Flask backend is responsible for authentication, authorization, application validation, and database access.
-
----
+The browser never connects to PostgreSQL. The backend is the only component that holds database credentials.
 
 ## 2. Authentication
 
-The application uses **JWT-based authentication** for protected API endpoints.
+- Registration and sign-in return a JSON Web Token (JWT) signed with `JWT_SECRET`.
+- Protected endpoints require `Authorization: Bearer <token>`. Missing, invalid, and expired tokens return `401`.
+- The JWT identity is the user ID. It is read from the token, never from the request body.
+- There is no server-side logout. Logout removes the token in the browser. A stolen token remains valid until it expires, so token lifetime matters.
 
-The authentication flow is:
+## 3. Passwords
 
-```text
-User
- │
- ▼
-Login
- │
- ▼
-Flask Authentication API
- │
- ├── Validate credentials
- │
- ├── Verify password hash
- │
- └── Issue JWT
- │
- ▼
-Client
- │
- ▼
-Protected API requests
- │
- └── JWT supplied with request
-```
+- Passwords are hashed with Werkzeug's `generate_password_hash` before storage.
+- Sign-in compares the supplied password with the stored hash using `check_password_hash`.
+- Passwords are never returned, logged, or stored in plain text.
+- Sign-in returns the same message for an unknown email and a wrong password, so accounts cannot be enumerated that way.
 
-Protected endpoints require a valid authentication token.
+## 4. Authorization and data isolation
 
-The backend validates the token before allowing access to protected application resources.
+- Expenses, budgets, and profile data are filtered by the authenticated user ID. Changing an ID in the URL does not reveal another user's record. Missing and foreign records both return `404`.
+- **Known exception: categories are shared.** Any signed-in user can rename or delete any category, and deletion is refused while any user's expense or budget uses it. This conflicts with the privacy requirement and is an open product decision (MAIN-023). Do not describe category data as private until that decision is made.
 
-### Stateless Authentication
+## 5. Input validation
 
-JWT authentication is stateless.
+The backend validates every write endpoint before it reaches the database:
 
-The application does not currently provide a server-side logout endpoint.
+- Types: JSON bodies must be objects, and string fields must be strings. Integer IDs reject booleans.
+- Amounts: finite, greater than zero, below `10000000000`, and at most two decimal places.
+- Dates: ISO format (`YYYY-MM-DD`), with a round-trip check that rejects values such as `2026-2-3`. Budget months must be the first day of the month.
+- Length limits: names, emails, phone numbers, and descriptions.
+- Currency: restricted to an allow-list.
 
-Client-side logout is performed by removing the stored authentication token.
+Invalid input returns `400`. Database constraint violations return `409` where the constraint is known, and `500` otherwise, with a generic message.
 
-This means logging out from the frontend does not require a server-side session to be destroyed.
+## 6. CSV export safety
 
----
+Exported text cells that begin with `=`, `+`, `-`, or `@` are prefixed with an apostrophe, so spreadsheet applications do not run them as formulas (MAIN-004). Category and description are both escaped.
 
-## 3. Password Security
+## 7. Rate limiting
 
-User passwords must never be stored in plaintext.
+- `POST /api/auth/register` and `POST /api/auth/login` are limited to 5 requests per minute per client.
+- Limits are stored in memory. They reset when the backend restarts and are not shared between instances (MAIN-016). With one backend container, this is acceptable for the capstone, and the limitation is documented.
 
-The backend hashes passwords before storing them in PostgreSQL.
+## 8. Secrets and configuration
 
-Authentication compares the supplied password against the stored password hash rather than storing or retrieving the original password.
+- Real `.env` files, passwords, signing keys, and SSH keys must never be committed. CI blocks tracked `.env` files and runs Gitleaks on the repository history.
+- `backend/.env` holds the Flask and JWT secrets. The root `.env` holds the database settings. Both are created from templates that contain placeholders only.
+- **Startup checks:** when `APP_ENV` (or `FLASK_ENV`) is `production`, which is the default, the backend refuses to start unless `SECRET_KEY` and `JWT_SECRET` are each at least 32 characters, are not placeholders, and differ from each other (MAIN-008).
+- Compose refuses to start when a required database variable is missing (`${VAR:?...}`). No database password is written into the YAML.
+- The development database password that was previously committed in Compose and in this document has been removed. Any copy of it that still exists in a fork, clone, or old branch must be treated as exposed, and the password must not be reused anywhere (MAIN-003).
 
-The application must also:
+## 9. Database access
 
-- Never log user passwords
-- Never return passwords through API responses
-- Never store plaintext passwords
-- Never commit passwords to Git
-- Avoid exposing authentication secrets in application logs
+- Two accounts are used. The bootstrap account (`POSTGRES_USER`) runs initialization and migrations. The restricted runtime account (`POSTGRES_APP_USER`) is the only database account the backend receives.
+- Migration 006 creates the runtime account as a non-superuser, without role or database creation privileges, and grants only the table and sequence permissions the application needs.
+- CI checks that the runtime role has no administrative privileges and cannot create roles, databases, or tables.
+- PostgreSQL is not published to the host. It is reachable only on the Compose network.
+- SQLAlchemy parameterizes queries. The application does not build SQL strings from user input.
 
----
+## 10. Error handling and information disclosure
 
-## 4. Rate Limiting
+- Error responses carry a message and no stack trace.
+- The Werkzeug debugger is enabled only when `APP_ENV` is `development`, `dev`, `testing`, or `test` (MAIN-010). It is off in production.
+- Health endpoints return only status fields, with no configuration, versions, or credentials.
 
-The Flask application uses rate limiting to reduce abuse of API endpoints.
+## 11. Container security
 
-Rate limiting helps protect authentication and application endpoints from excessive or automated requests.
+- Each application container uses a minimal base image: `python:3.12-slim`, `node:22-alpine` for the build stage, and `nginx:alpine`.
+- The backend container runs as the unprivileged user `appuser` (MAIN-022).
+- `.dockerignore` files exclude local `.env` files from the build context, and CI checks this.
+- Only Nginx publishes a host port. The backend and PostgreSQL do not.
+- Container logs are rotated (10 MB x 3 per service), so logs cannot fill the disk.
 
-Rate-limit configuration should be reviewed when the application is deployed to production so that legitimate users are not unnecessarily blocked while abusive traffic is controlled.
+## 12. Transport security
 
----
+- The local Compose stack serves HTTP on port 80 only. It is for development.
+- In production, HTTPS is terminated by Cloudflare and Let's Encrypt/Certbot, which are configured outside this repository. Verify the certificate and HSTS status on the live host before release (see the runtime gates in the QA documents).
 
-## 5. Secrets Management
+## 13. Network and cloud access
 
-Sensitive information must never be committed to GitHub.
+The AWS identities, instance role, security groups, and SSH access are documented in [aws-iam.md](aws-iam.md). Monitoring and alerting are documented in [monitoring.md](monitoring.md).
 
-The following must not be committed:
+## 14. Git and repository hygiene
 
-- Database passwords
-- Secret keys
-- JWT secrets
-- API keys
-- Access tokens
-- Private keys
-- Cloud credentials
-- Production credentials
-- `.env` files containing real secrets
+- Stage files explicitly (`git add <file>`). Do not use `git add .` when unrelated or sensitive files may be present.
+- If a secret is committed, revoke or rotate it first. Deleting it from the latest commit does not remove it from history, so also rewrite history or treat the secret as permanently exposed.
 
-Local environment configuration is kept outside version control.
+## 15. Production requirements
 
-The backend uses a local:
+Before production is declared secure, the following must be confirmed on the live AWS environment, with evidence recorded:
 
-```text
-backend/.env
-```
+- Production secrets are set on the host and in the `production` GitHub environment, and differ from development values.
+- The `DEPLOY_ENABLED` variable and the SSH key are restricted to the `production` environment.
+- HTTPS is active, the certificate is valid, and renewal is configured.
+- Security group rules match [aws-iam.md](aws-iam.md).
+- The shared-category decision (MAIN-023) and rate-limit decision (MAIN-016) are recorded.
+- A database backup has been taken and restored successfully.
 
-for development-specific configuration such as the Flask secret key.
+## 16. Responsibilities
 
-The repository's `.gitignore` excludes local environment files from Git tracking.
+- **Backend:** authentication, authorization, validation, database access, and error handling.
+- **Frontend:** token handling, not storing secrets in client code, and handling authentication failures.
+- **Infrastructure:** Docker, Nginx, network exposure, host configuration, and production secrets.
+- **Everyone:** no secrets in Git, explicit staging, and updating this document when a security control changes.
 
----
-
-## 6. Environment Configuration
-
-Environment variables are used for configuration that should not be hard-coded into application source code.
-
-The backend database connection uses environment variables including:
-
-```text
-POSTGRES_HOST
-POSTGRES_PORT
-POSTGRES_USER
-POSTGRES_PASSWORD
-POSTGRES_DB
-```
-
-The Flask application also uses environment-based secret configuration.
-
-For local Docker Compose development, the example file provides placeholder values for the database name and user. The password must be replaced in the root `.env` file before startup. Compose requires these variables to be supplied and does not embed a fixed password in the YAML. Example values are for local development only; AWS production credentials must be strong, unique, protected from Git, and managed through the deployment environment.
-
----
-
-## 7. Database Security
-
-PostgreSQL is not directly exposed to the user's browser.
-
-The normal communication path is:
-
-```text
-Browser
-   │
-   ▼
-Nginx
-   │
-   ▼
-Flask API
-   │
-   ▼
-PostgreSQL
-```
-
-The PostgreSQL service communicates with the backend through the Docker Compose network.
-
-The current Docker Compose configuration does not publish PostgreSQL port `5432` directly to the host.
-
-### Database Access
-
-The backend uses:
-
-```text
-Flask
-  │
-  ▼
-SQLAlchemy
-  │
-  ▼
-Psycopg
-  │
-  ▼
-PostgreSQL 16
-```
-
-Using SQLAlchemy and the database abstraction layer helps avoid constructing raw SQL queries throughout the application.
-
-Database credentials should always be supplied through configuration rather than embedded in source code.
-
----
-
-## 8. Input Validation
-
-API input should be validated before it is processed or stored.
-
-Validation applies to areas including:
-
-- User registration
-- Authentication
-- Expense creation
-- Expense updates
-- Categories
-- Budgets
-- Dates
-- Numeric values
-- Query parameters
-
-Invalid input should result in an appropriate HTTP error response rather than being accepted as valid application data.
-
-The backend contains validation and response utilities to maintain consistent API behavior.
-
----
-
-## 9. Authorization
-
-Authentication and authorization are separate concerns.
-
-Authentication verifies the identity represented by a valid JWT.
-
-Authorization determines whether the authenticated user is allowed to access or modify a particular resource.
-
-Expense, budget, category, and related application operations should therefore be restricted to authenticated users and should enforce ownership rules where applicable.
-
-Users should not be able to access another user's private financial records simply by changing an identifier in an API request.
-
----
-
-## 10. API Error Handling
-
-The API should avoid exposing sensitive implementation details to clients.
-
-Error responses should:
-
-- Use appropriate HTTP status codes
-- Provide useful client-facing error messages
-- Avoid exposing database credentials
-- Avoid returning secret values
-- Avoid exposing internal infrastructure details unnecessarily
-- Avoid logging sensitive authentication information
-
-Detailed exception information should remain available only through appropriate server-side debugging and logging mechanisms during development.
-
----
-
-## 11. Health Endpoints
-
-The backend exposes application and database health endpoints:
-
-```text
-GET /health
-GET /health/db
-```
-
-Through Nginx, they are available as:
-
-```text
-GET /api/health
-GET /api/health/db
-```
-
-These endpoints are intended to verify service availability and database connectivity.
-
-Health endpoints should not expose credentials, tokens, passwords, or other sensitive configuration.
-
----
-
-## 12. Docker Security
-
-The application runs as separate Docker Compose services:
-
-```text
-Nginx
-   │
-   ├── React
-   │
-   └── Flask
-          │
-          ▼
-      PostgreSQL
-```
-
-PostgreSQL is isolated from direct browser access.
-
-The database container should remain on the internal Docker network and should not be unnecessarily published to the host or internet.
-
-Docker configuration should also avoid:
-
-- Hard-coded production secrets
-- Unnecessary exposed ports
-- Untrusted container images
-- Running unnecessary services
-- Committing environment files containing credentials
-
-The project currently uses official base images for its application services and PostgreSQL.
-
----
-
-## 13. Git and Repository Security
-
-Before committing or pushing code, developers should check that sensitive information has not been introduced.
-
-Pay particular attention to:
-
-- `.env` files
-- Passwords
-- Secret keys
-- JWT secrets
-- API keys
-- Access tokens
-- Private keys
-- Cloud credentials
-- Production configuration
-
-Never use:
-
-```bash
-git add .
-```
-
-when doing a commit if unrelated or sensitive files may be present in the working directory.
-
-Instead, stage the intended files explicitly.
-
-### Accidentally Committed Secrets
-
-If a secret is accidentally committed:
-
-1. Revoke or rotate the exposed secret immediately.
-2. Determine whether the secret exists elsewhere in Git history.
-3. Remove the secret from the repository where appropriate.
-4. Review access logs or provider activity if necessary.
-5. Replace the exposed credential with a new one.
-
-Simply deleting the file from the latest commit does not make a previously committed secret safe.
-
----
-
-## 14. Local Development Security
-
-Local development credentials must remain separate from production credentials.
-
-The development environment may use values such as:
-
-```text
-POSTGRES_USER=expense_user
-POSTGRES_PASSWORD=expense_password
-POSTGRES_DB=expense_db
-```
-
-These values are intended for the local Docker Compose environment.
-
-The backend's local environment file should remain untracked:
-
-```text
-backend/.env
-```
-
-Developers must never place production credentials into local development files that could accidentally be committed.
-
----
-
-## 15. Production Security Requirements
-
-The current Docker Compose environment is intended primarily for local development and integration testing.
-
-Before production deployment, the following areas should be addressed:
-
-- Use production-grade secrets management
-- Rotate development credentials
-- Configure HTTPS/TLS
-- Secure the AWS EC2 instance, security groups, SSH access, and network
-- Restrict inbound network access
-- Use least-privilege cloud identities
-- Protect production database credentials
-- Configure appropriate monitoring and logging
-- Review JWT configuration and token lifetime
-- Review rate limits for production traffic
-- Avoid exposing unnecessary service ports
-- Keep Docker images and operating system packages updated
-- Configure secure backups and recovery procedures
-
-AWS EC2 is the approved deployment target for this capstone. Repository configuration is not proof that the live AWS environment has been secured or verified; retain instance, security-group, TLS, secret-management, monitoring, and runtime evidence before declaring deployment complete.
-
----
-
-## 16. Security Responsibilities
-
-All contributors are responsible for following the project's security practices.
-
-The Project Lead / Architect is responsible for coordinating major security decisions.
-
-Backend contributors are responsible for:
-
-- Authentication
-- Authorization
-- Input validation
-- Secure database access
-- Error handling
-- Secret handling
-
-Frontend contributors are responsible for:
-
-- Secure token handling
-- Avoiding exposure of secrets in client-side code
-- Handling authentication failures correctly
-- Avoiding unnecessary sensitive data storage
-
-Infrastructure contributors are responsible for:
-
-- Docker configuration
-- Nginx configuration
-- Network exposure
-- Cloud infrastructure security
-- Production secrets management
-
----
-
-## 17. Security Review Checklist
-
-Before merging a change, verify:
-
-- [ ] No passwords or secrets are committed.
-- [ ] No `.env` files containing real secrets are committed.
-- [ ] Authentication requirements are preserved.
-- [ ] Authorization rules are preserved.
-- [ ] User input is validated.
-- [ ] Sensitive information is not returned in API responses.
-- [ ] Sensitive information is not logged.
-- [ ] Database credentials are not hard-coded.
-- [ ] PostgreSQL is not unnecessarily exposed.
-- [ ] New endpoints have appropriate authentication requirements.
-- [ ] Rate limiting is considered for sensitive or high-volume endpoints.
-- [ ] Docker configuration does not unnecessarily expose services.
-- [ ] Production-only security requirements are documented when applicable.
-
----
-
-## 18. Security Documentation
-
-Related project documentation includes:
-
-```text
-README.md
-docs/architecture.md
-database/README.md
-backend/README.md
-```
-
-This document should be updated whenever a significant security control or deployment security requirement changes.
-
-
----
-
-## 19. PostgreSQL Least-Privilege Accounts
-
-PostgreSQL must use separate credentials for administration/migrations and normal application traffic.
-
-- The bootstrap account is configured with `POSTGRES_USER` and `POSTGRES_PASSWORD` in the root environment file. Use it for database initialization and controlled migrations only.
-- The Flask backend receives `POSTGRES_APP_USER` and `POSTGRES_APP_PASSWORD` through the Compose environment mapping. It must not receive the bootstrap password.
-- Migration 006 configures the runtime role as a non-superuser without role-creation or database-creation privileges, and grants only the data/sequence privileges required by the application.
-- Use unique strong passwords and keep all real environment files out of version control.
-- For an existing AWS database, configure the new runtime variables before deploying the change. Apply migration 006 as the bootstrap account, then verify application CRUD and confirm prohibited administrative operations fail.
-
-CI verifies the role attributes and basic privilege boundaries. The disposable AWS staging database still needs migration, application-flow, and recovery verification before this security control can be considered closed.
+## 17. Review checklist
+
+- [ ] No passwords, keys, or `.env` files with real values are committed.
+- [ ] Protected endpoints require a valid token.
+- [ ] Queries are filtered by the authenticated user, or the exception is documented.
+- [ ] New input is validated before use.
+- [ ] Errors do not expose internals or credentials.
+- [ ] New ports are not published unless required.
+- [ ] Security documentation is updated.
+
+## 18. Related documents
+
+- [Architecture](architecture.md)
+- [Docker](docker.md)
+- [Nginx](nginx.md)
+- [CI/CD](ci-cd.md)
+- [AWS IAM and access model](aws-iam.md)
+- [Monitoring](monitoring.md)
+- [Database](../database/README.md)
+- [Backend](../backend/README.md)
