@@ -42,6 +42,10 @@ Required tests: Unauthenticated POST/PUT/DELETE rejected with 401; authenticated
 
 Pass evidence: Approved policy, implementation commit, passing automated negative/positive tests, and manual API/browser verification.
 
+**Two-account test procedure:** The team lead/product owner must first record whether categories are shared/admin-managed or individually owned. Create two accounts and record the starting category list. Try create/update/delete without a token and confirm 401. Try mutations using an ordinary user's token: under shared-admin policy, writes must return 403 while the designated admin can manage categories; under per-user policy, the owner can change only owned categories and cannot change another user's category by tampering with IDs. Create an expense and budget for account B, then repeat account A's denied attempts and confirm account B's category label, budget association, expense history, and summaries remain unchanged. Verify category list/detail reads follow the recorded policy.
+
+**Evidence to retain:** The approved decision, test names/results, sanitized requests/responses for both users, before/after category and budget references, and CI run for the exact tested commit. Do not close this gate based only on `@jwt_required()` decorators.
+
 ### RV-04 — Enforce budget uniqueness in PostgreSQL
 Related finding: QA-FIND-030 / QA-FIND-033. Priority: High; data-integrity blocker.
 
@@ -777,22 +781,3 @@ Related finding: QA-FIND-089. Owner: DevOps. Priority: High.
 **Pass evidence:** Green CI for the exact current PR #54 head, deployment logs showing checkout/build/migration/restart order, before/after Nginx image IDs, sanitized `nginx -T` output, public health/header responses, and failure-path evidence.
 
 **Fail conditions:** The deployment skips the Nginx build, uses a stale image/configuration, replaces services before migrations succeed, loses either public health route, or lacks the expected response headers after deployment.
-
-
-## RV-59 — Verify category authorization across two accounts
-
-**Risk:** Category mutations are authenticated in PR #54, but categories remain global records without an owner field or administrator-role check. Authentication alone does not prevent one user changing shared data.
-
-**Prerequisite:** Team lead/product owner records whether categories are globally shared and admin-managed or individually owned. QA must not assume this product rule.
-
-**Steps:**
-1. Create two accounts with separate tokens and record the starting category list.
-2. Without a token, attempt create, update, and delete; all mutation routes must reject the request.
-3. With an ordinary user's token, attempt to create, rename, and delete a category that is visible to both accounts.
-4. If shared-admin policy is chosen, confirm ordinary users receive 403 and the authorized admin can perform allowed actions. If per-user policy is chosen, confirm the owner can mutate only owned categories and cannot alter another user's category by changing the ID in the URL.
-5. Create an expense and a budget for account B using a category. Repeat account A's attempted changes and confirm account B's category label, budget association, expense history, and summaries remain unchanged.
-6. Verify category list/detail access follows the documented policy. Public read access may remain only if the team explicitly accepts it.
-
-**Pass criteria:** All mutation paths enforce the chosen policy, cross-user changes are denied, expected 401/403 responses are returned, and no data belonging to account B changes after denied requests.
-
-**Evidence to retain:** Decision/requirements reference, test names and results, sanitized request/response captures for both users, before/after category and budget references, and CI run for the exact tested commit. Do not close this gate based only on `@jwt_required()` decorators.
