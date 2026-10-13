@@ -10,7 +10,7 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Status rule:** “Found” means the code has a problem. “Correction proposed” means code has been changed but still needs review and tests. “CI passed” means automated checks passed for the named commit. “Runtime pending” means the app still needs to be run and checked. These statuses must not be treated as the same thing.
 
-**Current audit size:** 85 distinct findings/observations, 60 distinct team actions, and 48 runtime verification gates. CI run `38420803176` passed all eight jobs for correction commit `8d781f3fb45cdce2a07e50ef3250b99ce0501333`, including the new required-test gate. Both backend test runs passed 71 tests; frontend lint, all nine Node tests, and build passed; migrations 001–006 and restricted runtime-role checks passed; secret scan, both Docker builds, and aggregate CI passed. The earlier green run `38418979526` is historical. Flask-Limiter still warns about in-memory storage. AWS live/runtime evidence remains separate from CI evidence.
+**Current audit size:** 85 distinct findings/observations, 60 distinct team actions, and 58 runtime verification gates. CI run `38420803176` passed all eight jobs for correction commit `8d781f3fb45cdce2a07e50ef3250b99ce0501333`, including the new required-test gate. Both backend test runs passed 71 tests; frontend lint, all nine Node tests, and build passed; migrations 001–006 and restricted runtime-role checks passed; secret scan, both Docker builds, and aggregate CI passed. The earlier green run `38418979526` is historical. Flask-Limiter still warns about in-memory storage. AWS live/runtime evidence remains separate from CI evidence.
 
 ## Actions for the team
 
