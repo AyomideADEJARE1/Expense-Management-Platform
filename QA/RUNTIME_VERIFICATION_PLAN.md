@@ -706,7 +706,7 @@ CI run 38273922288 passed all eight jobs for correction commit 77620d6547cad3ee3
 ## RV-57 — Verify the documented AWS URL and architecture against production
 **Owner:** Team lead/DevOps. **Environment:** Deployed AWS environment and repository.
 
-**Steps:** The README now includes the production domain recorded in the previous main README and embeds the architecture image already present in `docs/`. Test the domain from outside the EC2 host, check `/api/health` and `/api/health/db`, record the running commit/image digest, and compare the diagram with the actual AWS topology. Update the URL or diagram only if runtime evidence shows a mismatch.
+**Steps:** The README proposed in PR #54 includes the production domain recorded in the previous main README and embeds the architecture image already present in `docs/`. Test the domain from outside the EC2 host, check `/api/health` and `/api/health/db`, record the running commit/image digest, and compare the diagram with the actual AWS topology. Update the URL or diagram only if runtime evidence shows a mismatch.
 
 **Pass criteria:** The URL resolves to the reviewed application; both health checks pass; the deployed commit/image is recorded; and the diagram matches the actual cloud entry point, host/network, Nginx, frontend, Flask API, PostgreSQL, and CI/CD flow.
 
