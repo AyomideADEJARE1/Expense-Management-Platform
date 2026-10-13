@@ -767,7 +767,7 @@ CI run `38420803176` passed all eight jobs for PR #54 correction head `8d781f3fb
 
 
 ## Latest PR #54 source checkpoint — 2026-10-13
-The professional root README follow-up at `425d435f08e1a11a0ca40060db8f285654ab54ad` passed CI run `38421606402`. The Nginx test-harness/code correction `cf02398d63fa2a2fd920d131d88fda42974b2700` passed all nine jobs in run `38423587724`. The latest PR #54 head `edcebac4482f33ca9280874f31a2a923b27865f6`, which updates deployment-sequence documentation, also passed all nine jobs in run `38424685532`. The Nginx syntax check uses temporary host mappings because the isolated test does not run frontend/backend services. This is CI evidence only; AWS runtime gates remain open until live health, deployed commit/image, populated-volume migration, recovery, backup/restore, and browser evidence are recorded.
+The professional root README follow-up at `425d435f08e1a11a0ca40060db8f285654ab54ad` passed CI run `38421606402`. The Nginx test-harness/code correction `cf02398d63fa2a2fd920d131d88fda42974b2700` passed all nine jobs in run `38423587724`. The deployment-sequence documentation head `edcebac4482f33ca9280874f31a2a923b27865f6` passed all nine jobs in run `38424685532`; latest PR #54 head `73d38778a73466f487c5077690ccbc3f527ec481` also passed all nine jobs in run `38425168914` after clarifying the root README title/purpose. The Nginx syntax check uses temporary host mappings because the isolated test does not run frontend/backend services. This is CI evidence only; AWS runtime gates remain open until live health, deployed commit/image, populated-volume migration, recovery, backup/restore, and browser evidence are recorded.
 
 
 ## RV-58 — Verify Nginx is rebuilt and deployed from the target commit
