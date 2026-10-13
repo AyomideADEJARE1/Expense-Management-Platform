@@ -741,7 +741,7 @@ The repository's GitHub About description still names the previous cloud target 
 CI run `38418979526` passed all eight jobs for `ae54eec01018a728f97bd7c77f7ccbcad3a96a05`: database migration/role checks, secret scan, component detection, backend lint and tests, frontend lint/tests/build, both Docker builds, and aggregate `ci-success`. The backend suite passed 71 tests and the frontend Node tests ran successfully; npm audit reported zero vulnerabilities. This confirms the CI environment only. AWS existing-volume migration, actual deployment/image version, public health checks, browser flows/downloads, reboot recovery, backup restore, and shared production rate-limit storage remain open.
 
 ## Audit register hygiene
-Two duplicate category-write authorization placeholders were removed from QA/QA_FINDINGS.md; QA-FIND-010 remains the canonical entry. The register now has 81 distinct findings/observations. IDs remain stable to preserve traceability; numbering gaps are intentional.
+Two duplicate category-write authorization placeholders were removed from QA/QA_FINDINGS.md; QA-FIND-010 remains the canonical entry. The register now has 80 findings/observations. IDs remain stable to preserve traceability; numbering gaps are intentional.
 
 
 ### RV-58 — Require non-empty backend and frontend test execution
@@ -755,7 +755,7 @@ Two duplicate category-write authorization placeholders were removed from QA/QA_
 
 
 ## Current audit counts
-The active register contains 81 distinct findings/observations, the team action summary contains 60 actions, and this plan contains 48 runtime verification gates. Four duplicate/consolidation placeholders were removed; finding IDs remain stable for traceability.
+The active register contains 80 findings/observations, the team action summary contains 60 actions, and this plan contains 48 runtime verification gates. Four duplicate/consolidation placeholders were removed; finding IDs remain stable for traceability.
 
 
 ## Current CI enforcement checkpoint — 2026-10-13
