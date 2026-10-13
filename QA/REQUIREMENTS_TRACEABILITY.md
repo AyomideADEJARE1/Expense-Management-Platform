@@ -275,3 +275,7 @@ CI run 38418489243 passed all eight jobs for PR #54 commit 905f5db2ff17d968e220f
 
 ## QA-FIND-087 — Repository About description alignment
 The GitHub repository description is separate from README and workflow files. It still names the previous cloud target, while the corrected README/CD workflow use AWS EC2. A repository administrator must update the About description field; QA cannot make a file commit change that metadata. Closure requires the refreshed repository header to name AWS EC2 consistently with PR #54.
+
+
+## Latest correction CI checkpoint — 2026-10-13
+CI run `38418979526` passed all eight jobs for correction commit `ae54eec01018a728f97bd7c77f7ccbcad3a96a05`: 71 backend tests, frontend lint/build/tests, npm audit with zero reported vulnerabilities, migrations 001–006 and restricted runtime-role checks, secret scan, both Docker builds, and aggregate CI. This is not live AWS/browser evidence. Public health, deployed commit/image, existing-volume migrations, browser journeys/downloads, reboot recovery, backup restore, and shared production rate-limit storage remain pending.
