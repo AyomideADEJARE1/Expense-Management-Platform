@@ -1005,7 +1005,7 @@ Classification: Account lifecycle / recoverability. Status: Open; product/securi
 
 ## QA-FIND-077 — Partial profile-name updates can erase the omitted name part
 
-**Classification:** API correctness and profile-data integrity. **Status:** Correction proposed in PR #54; CI retest pending. **Priority:** Medium.
+**Classification:** API correctness and profile-data integrity. **Status:** CI passed for correction commit 04fe7f2ea0942c467b1c0af29d7e60d63b3791e2; browser retest pending. **Priority:** Medium.
 
 **Evidence:** In the reviewed `backend/routes/auth.py`, the profile update endpoint accepts `first_name` and `last_name`. When either field is present, the old code used an empty string as the default for the field that was omitted. Therefore, a request that updates only `first_name` can replace the stored full name with only that first name; a request that updates only `last_name` is rejected because the first-name value becomes empty.
 
@@ -1028,7 +1028,7 @@ Run `38271222415` passed all eight CI jobs for commit `2316a358ca37495ecc41eff8a
 
 ## QA-FIND-078 — Concurrent category deletion can misreport a budget-reference conflict
 
-**Classification:** API error handling and concurrent data integrity. **Status:** CI passed for correction commit ea775178ea545b48bfea9cdaadd77b7b0965d4b8; AWS runtime retest pending. **Priority:** Medium.
+**Classification:** API error handling and concurrent data integrity. **Status:** CI passed for current correction commit 04fe7f2ea0942c467b1c0af29d7e60d63b3791e2; AWS runtime retest pending. **Priority:** Medium.
 
 **Evidence:** The category deletion route first checks whether expenses or budgets reference the category, then attempts the database delete. These separate checks are subject to a race: a budget can be inserted after the pre-check but before the delete commit. The database correctly rejects that delete through the `fk_budgets_category` foreign key, but the previous exception handler recognized only `fk_expenses_category`. The budget foreign-key conflict would therefore be returned as HTTP 500 instead of the expected HTTP 409.
 
@@ -1048,7 +1048,7 @@ CI run `38272033341` passed all eight jobs for correction commit `ea775178ea545b
 
 ## QA-FIND-079 — Whole-month budget spending is calculated as zero in the dashboard
 
-**Classification:** Functional correctness / financial reporting. **Priority:** High. **Status:** CI passed for correction commit 77620d6547cad3ee3774657df9dd0b9256ed9ff6; browser verification pending.
+**Classification:** Functional correctness / financial reporting. **Priority:** High. **Status:** Current correction CI passed for commit 04fe7f2ea0942c467b1c0af29d7e60d63b3791e2; browser verification pending.
 
 **Source evidence:** In `frontend/src/App.jsx`, budget spending was calculated by comparing `Number(expenseCategoryId)` with `Number(budget.category_id)`. For a whole-month budget, `budget.category_id` is `null`, so `Number(null)` is `0`. Expense category IDs are positive IDs, so none of the user's expenses match. The displayed `spent`, percentage used, remaining amount, and on-track/exceeded state can therefore all be wrong for a whole-month budget.
 
@@ -1063,7 +1063,7 @@ CI run `38272033341` passed all eight jobs for correction commit `ea775178ea545b
 
 ## QA-FIND-080 — Docker setup guide omits a required backend environment file
 
-**Classification:** Setup documentation defect. **Status:** Documentation correction is committed in PR #54; CI passed for commit `77620d6547cad3ee3774657df9dd0b9256ed9ff6`; clean local startup verification pending. **Priority:** Medium.
+**Classification:** Setup documentation defect. **Status:** Documentation correction is proposed in PR #54; current correction CI passed for commit `04fe7f2ea0942c467b1c0af29d7e60d63b3791e2`; clean local startup verification pending. **Priority:** Medium.
 
 **Evidence:** `docker-compose.yml` declares `./backend/.env` as a required `env_file` for the backend service. The README's clean-start instructions tell the reader to create both the root `.env` and `backend/.env`, but the Docker guide previously instructed the reader to create only the root `.env` before running Compose. A reader following the Docker guide alone could reach startup with the required backend environment file missing.
 
@@ -1083,7 +1083,7 @@ Run `38272803374` passed all eight jobs for correction commit `f58bd3fbc4e75ae22
 
 ## QA-FIND-081 — Global search returns every budget for unrelated queries
 
-**Classification:** Frontend functional defect / search relevance. **Priority:** Medium. **Status:** CI passed for correction commit 77620d6547cad3ee3774657df9dd0b9256ed9ff6; browser retest pending.
+**Classification:** Frontend functional defect / search relevance. **Priority:** Medium. **Status:** Current correction CI passed for commit 04fe7f2ea0942c467b1c0af29d7e60d63b3791e2; browser retest pending.
 
 **Evidence:** In the earlier frontend/src/App.jsx search logic, expenses and categories were conditionally added when their text matched the search query, but the budgets loop added every budget unconditionally whenever the global search query was non-empty. A search for an unrelated word could therefore display all budgets as matches.
 
@@ -1098,7 +1098,7 @@ Run `38272803374` passed all eight jobs for correction commit `f58bd3fbc4e75ae22
 
 ## QA-FIND-082 — Reports CSV export does not neutralize spreadsheet formulas
 
-**Classification:** Data export security. **Priority:** Medium. **Status:** Correction proposed in PR #54; current-head CI retest pending.
+**Classification:** Data export security. **Priority:** Medium. **Status:** Source correction and current CI passed for commit 04fe7f2ea0942c467b1c0af29d7e60d63b3791e2; browser export retest pending.
 
 **Evidence:** `frontend/src/pages/Transactions.jsx` neutralizes untrusted cell values beginning with spreadsheet formula characters before CSV quoting. The separate report export in `frontend/src/pages/Reports.jsx` previously only escaped double quotes and did not neutralize formula-leading descriptions or category names. A value such as `=HYPERLINK(...)`, `+...`, `-...`, or `@...` could therefore be interpreted as a formula when a user opens the exported report in spreadsheet software.
 
@@ -1124,7 +1124,7 @@ CI run `38275606391` passed all eight jobs for code commit `11d1756f083f51e6e18d
 
 ## QA-FIND-083 — Reports export revokes its download URL immediately
 
-**Classification:** Frontend download reliability. **Priority:** Low. **Status:** Correction committed in PR #54; CI passed for commit `97e6515f00c15e240532da653235421a2c6fb055`; browser retest pending.
+**Classification:** Frontend download reliability. **Priority:** Low. **Status:** Source correction and current CI passed for commit 04fe7f2ea0942c467b1c0af29d7e60d63b3791e2; browser retest pending.
 
 **Evidence:** The report CSV export created a Blob URL, triggered a click on a temporary download link, removed the link, and immediately called `URL.revokeObjectURL(url)`. The Transactions export already delayed revocation by one second.
 
@@ -1150,7 +1150,7 @@ CI run `38276034129` passed all eight jobs for code commit `97e6515f00c15e240532
 
 ## QA-FIND-084 — Direct app execution always enables the Werkzeug debugger
 
-**Classification:** Security configuration. **Priority:** Medium. **Status:** Correction proposed in PR #54; current-head CI retest pending.
+**Classification:** Security configuration. **Priority:** Medium. **Status:** Current correction CI passed for commit 04fe7f2ea0942c467b1c0af29d7e60d63b3791e2; direct-run production-mode retest remains a runtime check.
 
 **Evidence:** At the bottom of `backend/app.py`, direct execution previously called `app.run(debug=True)` unconditionally. The container's Dockerfile uses Gunicorn, so the risk applies when the module is launched directly (for example, by an operator or local script) rather than through the normal container entry point. The application defaults to production mode when no environment is specified, making unconditional debug mode inconsistent with that default.
 
@@ -1172,7 +1172,7 @@ QA-FIND-084 is verified at the source/CI level. The production container still u
 
 ## QA-FIND-085 — Reports CSV export omits the UTF-8 byte-order mark
 
-**Classification:** Export compatibility. **Priority:** Low. **Status:** Correction proposed in PR #54; browser retest pending.
+**Classification:** Export compatibility. **Priority:** Low. **Status:** Source correction and current CI passed for commit 04fe7f2ea0942c467b1c0af29d7e60d63b3791e2; spreadsheet/browser retest pending.
 
 **Evidence:** The Transactions CSV export prepends a UTF-8 byte-order mark (BOM) to the generated file. The Reports CSV export previously created a UTF-8 Blob without the BOM, even though report descriptions and category names can contain non-ASCII text.
 
@@ -1200,7 +1200,7 @@ QA-FIND-082 through QA-FIND-085 now have source-level corrections covered by CI.
 
 **Why it matters:** If an API vulnerability or application compromise allows SQL execution, the attacker inherits excessive database privileges. A superuser role can alter database-wide objects and roles, create/drop databases, and bypass controls that should protect data. The application needs normal read/write access to its own schema, not database-administration powers.
 
-**Correction in PR #54:** Compose now passes `POSTGRES_APP_USER` and `POSTGRES_APP_PASSWORD` to the backend while PostgreSQL retains the separate bootstrap account. New migration 006 creates or updates the runtime role as a non-superuser, rejects placeholder/short app passwords and identical bootstrap/app usernames, grants CRUD and sequence permissions, and configures default privileges. CD applies migration 006 after migrations 002–005 and before restarting application services. CI checks runtime-role attributes, required table/sequence privileges, and that the app role cannot create roles, databases, or schema objects. CI run `38381389211` passed all eight jobs for code commit `85871877850b81b367be2acb1135dced73a95255`. It applied migrations 001–006, verified the runtime role has required table/sequence access and cannot create roles, databases, or schema objects, and passed 69 backend tests plus nine frontend tests. For an existing AWS database, add the two app-role variables to the protected host environment before deploying; do not rotate the bootstrap credentials blindly.
+**Correction in PR #54:** Compose now passes `POSTGRES_APP_USER` and `POSTGRES_APP_PASSWORD` to the backend while PostgreSQL retains the separate bootstrap account. New migration 006 creates or updates the runtime role as a non-superuser, rejects placeholder/short app passwords and identical bootstrap/app usernames, grants CRUD and sequence permissions, and configures default privileges. CD applies migration 006 after migrations 002–005 and before restarting application services. CI checks runtime-role attributes, required table/sequence privileges, and that the app role cannot create roles, databases, or schema objects. Latest CI run `38416894925` passed all eight jobs for correction commit `04fe7f2ea0942c467b1c0af29d7e60d63b3791e2`. It applied migrations 001–006, verified the runtime role has required table/sequence access and cannot create roles, databases, or schema objects, and passed 71 backend tests twice plus nine frontend tests. For an existing AWS database, add the two app-role variables to the protected host environment before deploying; do not rotate the bootstrap credentials blindly.
 
 **Required retest:** On a fresh database and a copy of an existing database, confirm the application can register/login, read/write expenses, budgets, categories, and profile settings using the restricted role. Then verify the application role cannot create/drop databases or roles, cannot alter unrelated schemas, and cannot perform superuser-only actions. Confirm migrations still run with the separate administrative role and that rollback/recovery remains possible.
 
@@ -1209,7 +1209,7 @@ QA-FIND-082 through QA-FIND-085 now have source-level corrections covered by CI.
 
 ### Status update — QA-FIND-086 (2026-10-13)
 
-PR #54 now includes `database/migrations/006_app_runtime_role.sql`, Compose credential separation, a CD step that applies migration 006 before application restart, and CI privilege-boundary checks. The backend test job is configured to connect using the restricted application role, while the migration connection uses the bootstrap account. CI run `38381389211` passed all eight jobs for commit `85871877850b81b367be2acb1135dced73a95255`. AWS populated-database migration and live runtime verification remain pending. Do not close this finding until disposable AWS staging checks confirm CRUD works while privileged operations fail.
+PR #54 now includes `database/migrations/006_app_runtime_role.sql`, Compose credential separation, a CD step that applies migration 006 before application restart, and CI privilege-boundary checks. The backend test job is configured to connect using the restricted application role, while the migration connection uses the bootstrap account. CI run `38416894925` passed all eight jobs for commit `04fe7f2ea0942c467b1c0af29d7e60d63b3791e2`. AWS populated-database migration and live runtime verification remain pending. Do not close this finding until disposable AWS staging checks confirm CRUD works while privileged operations fail.
 
 
 ## Documentation refresh status — 2026-10-13
