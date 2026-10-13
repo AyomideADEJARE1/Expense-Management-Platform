@@ -70,7 +70,7 @@ cp .env.example .env
 cp backend/.env.example backend/.env
 ```
 
-Edit the root `.env` and replace the PostgreSQL password placeholder with a unique strong password. In `backend/.env`, replace both Flask/JWT placeholders with separate strong random values. Do not commit either file. The root `.env` provides Compose interpolation for PostgreSQL; `backend/.env` provides the application signing secrets. The Compose configuration fails at startup if the required database variables are missing.
+Edit the root `.env` and set unique strong passwords for both the bootstrap database account and the restricted runtime account. The runtime password must be at least 32 characters and not a placeholder. In `backend/.env`, replace both Flask/JWT placeholders with separate strong random values. Do not commit either file. The root `.env` provides Compose interpolation for database credentials; `backend/.env` provides application signing secrets. The Compose configuration fails at startup if required database variables are missing.
 
 Then start the complete stack with:
 
@@ -766,7 +766,7 @@ See [CI/CD documentation](ci-cd.md) for the complete pipeline.
 
 The current Compose configuration is the project's **local/integration environment**.
 
-The repository also contains a configurable CD workflow for publishing images and deploying to the approved AWS EC2 target.
+The repository also contains a configurable CD workflow for publishing images and deploying to the approved AWS EC2 target. Migration 006 provisions the restricted runtime database role. The PostgreSQL bootstrap credentials stay in the database container and are not passed to the Flask backend.
 
 The AWS deployment should not be considered an active production deployment until the following have been configured and verified:
 
