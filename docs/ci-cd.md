@@ -401,7 +401,7 @@ and the CD workflow is running against:
 main
 ```
 
-The deployment job uses SSH to connect to the configured AWS EC2 VM. The remote script derives the short commit tag with POSIX-compatible shell commands so it does not depend on Bash-only substring expansion.
+The deployment job uses SSH to connect to the configured AWS EC2 VM. It forwards the GHCR read-only credentials to the remote script through the action's environment forwarding, logs in with `--password-stdin`, pulls the commit-tagged images, and logs out on exit. The runner's own GHCR login does not authenticate the EC2 host. The remote script derives the short commit tag with POSIX-compatible shell commands so it does not depend on Bash-only substring expansion.
 
 The corrected deployment process checks out the commit associated with the successful CI run, selects the corresponding `sha-<short commit>` backend/frontend image tags, pulls those images, and restarts the Compose services. It then applies the idempotent user-settings migration (002), applies the budget uniqueness migration (003), applies category-budget deletion restriction migration (004), applies the optional profile-phone migration (005), provisions the restricted application database role (006), and checks both public health endpoints. Migration 003 intentionally fails if legacy duplicate budgets exist, stopping deployment until the data is reviewed and remediated. Migration 004 ensures deleting a category cannot silently convert linked budgets into whole-month budgets. Migration 005 adds the nullable `users.phone` column used by the profile API; it must complete before application services restart. The Compose services also use `restart: unless-stopped`; this helps recover containers after Docker or EC2 restarts, but a staging reboot test must still prove the host starts Docker and both public health endpoints recover. Migration 006 reads `POSTGRES_APP_USER` and `POSTGRES_APP_PASSWORD` from the protected environment, rejects placeholder/weak runtime passwords, and grants the application role no database/role creation privileges. Add these variables to an existing AWS host before deploying this migration.
 
@@ -436,6 +436,8 @@ When AWS deployment is ready to be enabled, the repository requires the followin
 | `AWS_EC2_HOST` | AWS VM public IP address or hostname |
 | `AWS_EC2_USER` | SSH user |
 | `AWS_EC2_SSH_KEY` | Private SSH key used for deployment |
+| `GHCR_READ_USERNAME` | Account name used by the AWS host to authenticate to GHCR |
+| `GHCR_READ_TOKEN` | Protected read-only token that permits the AWS host to pull the required images |
 
 ### Repository variables
 
@@ -585,7 +587,7 @@ The repository currently uses `nginx` as an important integrated application bra
 | CD does not publish images | Confirm CI succeeded for the relevant `main` push or run CD manually. |
 | AWS deployment is skipped | Confirm `DEPLOY_ENABLED=true` and that the workflow is running against `main`. |
 | AWS SSH deployment fails | Check `AWS_EC2_HOST`, `AWS_EC2_USER`, `AWS_EC2_SSH_KEY`, VM SSH access, and `DEPLOY_PATH`. |
-| Docker image pull fails on AWS | Confirm the GHCR image exists and that the VM's Docker configuration can access the required package. |
+| Docker image pull fails on AWS | Confirm `GHCR_READ_USERNAME` and `GHCR_READ_TOKEN` are configured, the token can read both packages, and the remote login/pull succeeds without printing the token. |
 | Deployment health check fails | Verify `APP_URL`, the application's exposed health endpoint, Nginx routing, and the running containers on the VM. |
 
 ---
