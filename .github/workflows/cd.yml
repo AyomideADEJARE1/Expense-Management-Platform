@@ -130,7 +130,7 @@ jobs:
             SHORT_SHA="$(printf '%s' "$COMMIT_SHA" | cut -c1-7)"
             git fetch origin "$COMMIT_SHA"
             git checkout --detach "$COMMIT_SHA"
-            repo_lower=$(printf '%s' 'AyomideADEJARE1/Expense-Management-Platform' | tr '[:upper:]' '[:lower:]')
+            repo_lower=$(printf '%s' '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')
             export BACKEND_IMAGE="ghcr.io/${repo_lower}-backend:sha-${SHORT_SHA}"
             export FRONTEND_IMAGE="ghcr.io/${repo_lower}-frontend:sha-${SHORT_SHA}"
             docker compose pull backend frontend
