@@ -1201,3 +1201,21 @@ Removed the older “Additional source audit — targeted retest notes” append
 **How QA will verify:** On a controlled AWS staging VM, deploy a commit that changes a harmless Nginx response header or route marker. Capture the running Nginx image ID and `nginx -T` output before/after deployment. Confirm the new configuration appears in the running container and that `/api/health`, `/api/health/db`, and expected security headers respond through the public endpoint. Confirm a failed Nginx build prevents service replacement.
 
 **Closure evidence:** Green CI for the exact correction head, log evidence showing `docker compose build nginx` before migration/restart, running container/image identity, sanitized `nginx -T` output, and public AWS staging responses showing the changed route/header. CI source checks alone do not close the live deployment finding.
+
+
+## QA-FIND-090 — Any signed-in user can change globally shared categories
+
+**Classification:** Authorization boundary / shared-data integrity. **Priority:** High until the category ownership policy is explicitly agreed. **Status:** Residual issue in the PR #54 correction branch; upstream main is more exposed because its category mutation routes do not require authentication.
+
+**Evidence:** The category model has one global `expense_categories` table; it has no `user_id` owner field. The create, update, and delete routes in the correction branch use `@jwt_required()`, but they do not check an administrator role or category ownership. A normal authenticated account can therefore create a category, rename a category used by other users, or delete a category when no expense/budget references it. Authentication proves who the caller is; it does not grant permission to change shared application data.
+
+**Why it matters:** One user's action can change the category list and labels used by every other account. A user can also create large numbers of categories or remove categories another user expects to use. The current correction closes anonymous write access but does not establish a full authorization policy.
+
+**Required decision and correction:** The team lead/product owner must choose one model and record it in the project requirements:
+1. **Shared categories:** only a defined administrator role can create, rename, or delete shared categories; normal users may list/read them.
+2. **Per-user categories:** add category ownership, migrate existing categories safely, and scope every category query/mutation to the signed-in owner. Shared/system categories need a clearly defined protected type.
+Do not treat “any authenticated user” as equivalent to “authorized administrator.” Do not implement per-user ownership without a migration and a decision on existing category-linked expenses and budgets.
+
+**How QA will verify:** Create two separate accounts. As the ordinary account, attempt category create/update/delete against a shared category and confirm the chosen policy is enforced. Confirm the second account's category list, expense labels, budget references, and summaries remain correct. Test an administrator path if shared-admin categories are selected, or cross-user ID tampering if per-user ownership is selected. Repeat requests without a token and with a valid token belonging to a different account.
+
+**Closure evidence:** Written team decision, implemented role/ownership checks, migration if needed, automated tests for anonymous, ordinary-user, admin/owner and cross-user cases, green CI for the exact commit, and API/browser evidence showing another user's categories cannot be changed without permission.
