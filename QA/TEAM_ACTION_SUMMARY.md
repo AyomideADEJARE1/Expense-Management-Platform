@@ -652,7 +652,7 @@ Run `38276034129` passed all eight jobs for code commit `97e6515f00c15e240532da6
 
 
 ### 58. Team lead/DevOps: verify the documented AWS URL and architecture against production
-**What happens:** PR #53 now includes the production domain recorded in the previous main README and embeds the architecture image already present in `docs/`. The documents are aligned to AWS EC2, but the audit has not yet verified the live domain or compared the diagram with the running AWS topology.
+**What happens:** PR #54 now includes the production domain recorded in the previous main README and embeds the architecture image already present in `docs/`. The documents are aligned to AWS EC2, but the audit has not yet verified the live domain or compared the diagram with the running AWS topology.
 
 **Why it matters:** A URL can remain in a README while the service is unavailable or points to a different release. A diagram can also become stale after infrastructure changes.
 
@@ -662,6 +662,6 @@ Run `38276034129` passed all eight jobs for code commit `97e6515f00c15e240532da6
 
 
 ### Documentation update — README and architecture
-PR #53 updates the existing root README rather than creating a duplicate. It documents the project as Expense Tracker / Enhanced Personal Expense Management Platform, describes the implemented React/Vite, Flask, PostgreSQL 16, Nginx, Docker Compose, GitHub Actions, GHCR, and AWS EC2 path, and gives local setup/test commands and release evidence requirements. The existing architecture image is embedded rather than replaced with a second diagram. The public domain remains subject to live health verification.
+PR #54 updates the existing root README rather than creating a duplicate. It documents the project as Expense Tracker / Enhanced Personal Expense Management Platform, describes the implemented React/Vite, Flask, PostgreSQL 16, Nginx, Docker Compose, GitHub Actions, GHCR, and AWS EC2 path, and gives local setup/test commands and release evidence requirements. The existing architecture image is embedded rather than replaced with a second diagram. The public domain remains subject to live health verification.
 
 The architecture document is also aligned with host port 80, private PostgreSQL, restricted runtime database credentials, migrations 002–006 for existing AWS volumes, and the gated AWS deployment workflow. 
