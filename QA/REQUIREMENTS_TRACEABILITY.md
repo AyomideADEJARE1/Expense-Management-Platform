@@ -59,6 +59,7 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 | REQ-40 | Account email uniqueness conflicts are handled safely | TC-AUTH-012–013, RV-28 | PR #54 adds named-constraint handling and rollback tests; CI run 38213904072 passed all 39 backend tests. AWS runtime verification remains pending |
 
 | REQ-41 | Production Flask/JWT signing secrets fail closed | TC-SEC-011, RV-06, RV-10 | PR #54 adds startup validation and tests for missing, weak, placeholder, or shared keys; CI run 38213904072 passed all 47 backend tests. AWS configuration verification remains pending |
+| REQ-42 | Nginx configuration is rebuilt and applied for the deployed commit | TC-CD-009, RV-58 | Upstream main does not explicitly rebuild the locally built Nginx image after checkout. PR #54 adds `docker compose build nginx`, includes Nginx in the CI Docker matrix, runs `nginx -t`, and checks build-before-migration/restart ordering. Current PR #54 head `83352b2ff90551a896113385f036b66d77f1009c` has CI run `38423159920` pending; AWS runtime verification remains required |
 
 
 ## QA-FIND-059 trace — expense date format
