@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Architecture documentation
+    url: https://github.com/AyomideADEJARE1/Expense-Management-Platform/blob/main/docs/architecture.md
+    about: Read the system architecture before opening an issue.
