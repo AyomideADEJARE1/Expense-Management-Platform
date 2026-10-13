@@ -10,15 +10,15 @@ It is a containerized system with automated checks and an AWS EC2 deployment wor
 - Run the system as React, Nginx, Flask, and PostgreSQL 16 in Docker Compose.
 - Check every change with automated tests, linting, migration checks, and image builds in GitHub Actions.
 - Publish commit-tagged images and deploy them to AWS EC2 with explicit migration and health-check steps.
-- Keep secrets out of Git, and document how to run, deploy, and troubleshoot the system.
+- Keep secrets out of Git, and document how to run, deploy, monitor, and troubleshoot the system.
 
 ## Features
 
 - Registration and sign-in with JWT authentication and hashed passwords
 - Create, view, edit, and delete personal expenses
 - Filter transactions by month, date range, and category
-- Manage expense categories (shared across users; see [limitations](#current-limitations))
-- Set monthly budgets by category, and track budget utilization on the dashboard
+- Manage expense categories. Categories are shared across users (see [limitations](#current-limitations))
+- Set monthly budgets by category, and track budget use on the dashboard
 - Monthly and category summaries, dashboard totals, charts, and recent transactions
 - CSV export with spreadsheet-formula protection and UTF-8 output
 - Profile settings: name, email, phone, and display currency
@@ -41,9 +41,9 @@ Nginx (reverse proxy, port 80)
 
 - The browser talks only to Nginx. PostgreSQL is reachable only inside the Docker network.
 - The Flask API connects with a restricted runtime database account. A separate bootstrap account runs initialization and migrations.
-- In production, the application runs on AWS EC2 (Ubuntu) behind Cloudflare DNS and proxy, with HTTPS certificates from Let's Encrypt and Certbot.
+- In production, the application is intended to run on AWS EC2 (Ubuntu) behind Cloudflare DNS and proxy, with HTTPS certificates from Let's Encrypt and Certbot. See [deployment status](#deployment-status).
 
-Component details are in [docs/architecture.md](docs/architecture.md). Container, routing, and database details are in [docs/docker.md](docs/docker.md), [docs/nginx.md](docs/nginx.md), and [database/README.md](database/README.md).
+Component details are in [docs/architecture.md](docs/architecture.md). Containers, routing, and the database are described in [docs/docker.md](docs/docker.md), [docs/nginx.md](docs/nginx.md), and [database/README.md](database/README.md).
 
 ## Technology stack
 
@@ -55,7 +55,7 @@ Component details are in [docs/architecture.md](docs/architecture.md). Container
 | Web entry point | Nginx |
 | Containers | Docker and Docker Compose |
 | CI/CD | GitHub Actions, GitHub Container Registry (GHCR) |
-| Production host | AWS EC2 (Ubuntu) |
+| Target host | AWS EC2 (Ubuntu) |
 
 ## Repository layout
 
@@ -63,11 +63,12 @@ Component details are in [docs/architecture.md](docs/architecture.md). Container
 |---|---|
 | `frontend/` | React application, tests, Dockerfile, and Nginx configuration |
 | `backend/` | Flask application, routes, models, tests, and Dockerfile |
-| `database/migrations/` | Ordered PostgreSQL migrations (the single source of truth for the schema) |
+| `database/migrations/` | Ordered PostgreSQL migrations. This is the only schema source |
 | `database/README.md` | Database accounts, migration rules, and verification |
 | `nginx/` | Reverse-proxy configuration |
-| `docs/` | Architecture, Docker, Nginx, security, and CI/CD documentation |
-| `QA/` | Test plan, test cases, findings, and release checklist |
+| `scripts/` | Operational scripts, including the host health probe |
+| `docs/` | Architecture, Docker, Nginx, security, CI/CD, AWS access, and monitoring |
+| `QA/` | QA record: reading guide, findings register, test plan, and release checklist |
 | `.github/workflows/` | CI and CD workflows |
 | `docker-compose.yml` | Local and integration stack |
 
@@ -95,7 +96,7 @@ cp .env.example .env
 cp backend/.env.example backend/.env
 ```
 
-Edit both files before starting the stack. Never commit real `.env` files. The variables are listed in [Environment variables](#environment-variables).
+Edit both files before starting the stack. Never commit real `.env` files. The variables are listed in [environment variables](#environment-variables).
 
 ### 2. Start the stack
 
@@ -133,9 +134,9 @@ Database data lives in the `postgres_data` volume. **`docker compose down -v` de
 | `.env` | `POSTGRES_APP_USER` | Yes | Restricted runtime account used by the backend |
 | `.env` | `POSTGRES_APP_PASSWORD` | Yes | Runtime password. At least 32 characters, not a placeholder |
 | `backend/.env` | `SECRET_KEY` | Yes | Flask secret. At least 32 characters, not a placeholder |
-| `backend/.env` | `JWT_SECRET` | Yes | JWT signing key. At least 32 characters, must differ from `SECRET_KEY` |
+| `backend/.env` | `JWT_SECRET` | Yes | JWT signing key. At least 32 characters, different from `SECRET_KEY` |
 | `backend/.env` | `APP_ENV` | No | `development`, `testing`, or `production`. Defaults to `production`, which enforces strong keys and disables the debugger |
-| `backend/.env` | `POSTGRES_PORT` | No | Database port for direct (non-Compose) runs. Default `5432` |
+| `backend/.env` | `POSTGRES_PORT` | No | Database port for direct runs outside Compose. Default `5432` |
 
 Compose overrides the `POSTGRES_*` values in `backend/.env` with the root runtime account, so the backend always uses the restricted account in Docker.
 
@@ -152,7 +153,7 @@ Migrations live in `database/migrations/` and are applied in filename order.
 | `005_user_phone.sql` | Optional phone number on the profile |
 | `006_app_runtime_role.sql` | Creates or updates the restricted application role |
 
-A new Compose volume runs migrations automatically. Existing databases receive later migrations through the deployment workflow. Back up a populated database before applying migrations. See [database/README.md](database/README.md).
+A new Compose volume runs the migrations automatically. Existing databases receive later migrations through the deployment workflow. Back up a populated database before applying migrations. See [database/README.md](database/README.md).
 
 ## Running tests
 
@@ -197,11 +198,11 @@ All endpoints are served under `/api` through Nginx. Protected endpoints require
 | `/api/budgets` | Budget CRUD |
 | `/api/summaries/...` | Monthly and category summaries |
 
-The source code and [QA test cases](QA/TEST_CASES.md) define exact request fields and response formats.
+The source code and the [test cases](QA/TEST_CASES.md) define the exact request fields and response formats.
 
 ## Deployment
 
-Production runs on **AWS EC2 (Ubuntu)** with Docker Compose, Cloudflare DNS and proxy, and HTTPS certificates managed by Let's Encrypt and Certbot.
+The deployment target is **AWS EC2 (Ubuntu)** with Docker Compose, Cloudflare DNS and proxy, and HTTPS certificates managed by Let's Encrypt and Certbot.
 
 The GitHub Actions CD workflow runs only after CI passes on `main`. When `DEPLOY_ENABLED` is `true`, it:
 
@@ -213,19 +214,20 @@ The GitHub Actions CD workflow runs only after CI passes on `main`. When `DEPLOY
 6. Restarts the backend, frontend, and Nginx services.
 7. Checks `/api/health` and `/api/health/db` on the public URL.
 
-The full pipeline and required GitHub configuration are in [docs/ci-cd.md](docs/ci-cd.md).
+The full pipeline and the required GitHub configuration are in [docs/ci-cd.md](docs/ci-cd.md). The AWS identities, instance role, and network rules are in [docs/aws-iam.md](docs/aws-iam.md).
 
 ### Deployment status
 
-The deployment workflow and its configuration are implemented. Before reporting a release, record the following: the deployed commit or image, successful public health checks, and browser checks of the main user flows. A green CI run does not by itself prove that the latest commit is live.
+The deployment workflow and its configuration are in this repository. The live environment's current state must be verified before a release is reported. Record the following for each release: the deployed commit or image digest, the result of both public health endpoints, and browser checks of the main user flows. A green CI run does not show that the latest commit is running.
 
 ## Monitoring
 
-- **Health endpoints:** `/api/health` and `/api/health/db` through Nginx. Checked by the deploy workflow and by hand.
-- **Container health:** every Compose service has a Docker health check, and `docker compose ps` shows the state.
-- **Logs:** `docker compose logs -f <service>` on the host.
+- **Health endpoints:** `/api/health` and `/api/health/db` through Nginx.
+- **Container health:** every Compose service has a Docker health check. `docker compose ps` shows the state.
+- **Host probe:** `scripts/healthcheck.sh` checks both public endpoints and the container states. Schedule it on the host. See [docs/monitoring.md](docs/monitoring.md).
+- **Logs:** `docker compose logs -f <service>`. Each service keeps logs rotated at 10 MB, three files.
 
-Not yet in place: centralized log collection, host or container alerting, and uptime monitoring outside the deploy workflow. See [limitations](#current-limitations).
+Scheduled alerting, external uptime monitoring, centralized logs, and host metrics are not yet configured. See [docs/monitoring.md](docs/monitoring.md) for each gap and how to close it.
 
 ## Security
 
@@ -243,10 +245,12 @@ Not yet in place: centralized log collection, host or container alerting, and up
 - The budget alert-threshold preference is stored but does not trigger alerts.
 - The API supports whole-month budgets, but the browser form requires a category, so whole-month budgets cannot yet be created in the UI.
 - The currency preference changes display formatting only. It does not convert historical amounts.
-- Categories are shared across all users. Any signed-in user can rename or delete any category, and deletion is refused while any user's expense or budget uses it. Ownership is a product decision still open in the QA findings.
+- Categories are shared across all users. Any signed-in user can rename or delete any category, and deletion is refused while any user's expense or budget uses it. Ownership is an open product decision.
 - Rate-limit storage is in memory and is not shared across application instances.
-- AWS IAM roles and policies are not defined in this repository. They must be documented separately before release.
-- The architecture diagram image must be checked against the live AWS topology before it is used as final evidence.
+- Nginx does not yet send a Content Security Policy.
+- Automated database backup and restore are not defined in this repository.
+
+Each limitation is recorded in the [QA findings register](QA/QA_FINDINGS.md).
 
 ## Troubleshooting
 
@@ -255,7 +259,7 @@ Not yet in place: centralized log collection, host or container alerting, and up
 | Compose fails to start | Both `.env` files exist, and every required variable has a valid value |
 | Backend exits at startup | `SECRET_KEY` or `JWT_SECRET` is missing, too short, a placeholder, or equal to the other |
 | PostgreSQL is unhealthy | `docker compose logs postgres`; bootstrap user, password, and database name |
-| Backend cannot reach the database | Runtime variables match the role from migration `006`; the backend host is `postgres` |
+| Backend cannot reach the database | Runtime variables match migration `006`; the backend host is `postgres` |
 | `/api/health` fails | `docker compose logs nginx backend`; routes in `nginx/default.conf` |
 | `/api/health/db` fails | Backend logs; database health; runtime credentials |
 | Migration 003 fails | Duplicate legacy budgets. Back up, reconcile the data, then retry |
@@ -269,6 +273,8 @@ Not yet in place: centralized log collection, host or container alerting, and up
 - [Docker](docs/docker.md)
 - [Nginx](docs/nginx.md)
 - [Security](docs/security.md)
+- [AWS IAM and access model](docs/aws-iam.md)
+- [Monitoring](docs/monitoring.md)
 - [Database](database/README.md)
 - [Backend](backend/README.md)
 - [QA documentation](QA/README.md)
