@@ -10,7 +10,7 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Status rule:** “Found” means the code has a problem. “Correction proposed” means code has been changed but still needs review and tests. “CI passed” means automated checks passed for the named commit. “Runtime pending” means the app still needs to be run and checked. These statuses must not be treated as the same thing.
 
-**Current audit size:** 85 distinct findings/observations, 60 distinct team actions, and 48 runtime verification gates. CI run `38418979526` passed all eight jobs for correction commit `ae54eec01018a728f97bd7c77f7ccbcad3a96a05`, which also includes the professional README and AWS architecture updates: 71 backend tests passed twice, nine frontend tests passed, npm audit reported zero vulnerabilities, migrations 001–006 and runtime-role checks passed, secret scanning and both Docker builds passed. Flask-Limiter still warns about in-memory storage. The earlier green run does not cover the newest CI-enforcement edit on PR #54 head `8d781f3fb45cdce2a07e50ef3250b99ce0501333`; run `38420803176` was queued at the last check. AWS live/runtime evidence remains separate from CI evidence.
+**Current audit size:** 85 distinct findings/observations, 60 distinct team actions, and 48 runtime verification gates. CI run `38420803176` passed all eight jobs for correction commit `8d781f3fb45cdce2a07e50ef3250b99ce0501333`, including the new required-test gate. Both backend test runs passed 71 tests; frontend lint, all nine Node tests, and build passed; migrations 001–006 and restricted runtime-role checks passed; secret scan, both Docker builds, and aggregate CI passed. The earlier green run `38418979526` is historical. Flask-Limiter still warns about in-memory storage. AWS live/runtime evidence remains separate from CI evidence.
 
 ## Actions for the team
 
@@ -691,6 +691,6 @@ PR #54 owns the root README and architecture documentation because they must sta
 
 **Required correction:** PR #54 removes the backend empty-suite allowance, runs backend tests twice, and now makes frontend lint and test commands mandatory by removing `--if-present`.
 
-**How to verify:** The current PR #54 CI run must pass after this change. Confirm the backend job reports a real test count twice and the frontend job reports a real test count. Confirm there is no no-tests-allowed branch in CI.
+**How to verify:** CI run `38420803176` passed all eight jobs for current correction head `8d781f3fb45cdce2a07e50ef3250b99ce0501333`. Both backend test runs reported 71 passing tests, and the frontend job ran lint, nine Node tests, and build. Confirm there is no no-tests-allowed branch in CI.
 
-**Evidence required:** Green current-head CI, backend test collection/pass counts, frontend test count, and the workflow diff showing mandatory commands. The previous green run predates the latest workflow edit.
+**Evidence required:** Green current-head CI run `38420803176`, backend test collection/pass counts, frontend test count, and the workflow diff showing mandatory commands. This closes the CI-workflow correction gate in PR #54, but the finding remains against upstream main until PR #54 is merged.
