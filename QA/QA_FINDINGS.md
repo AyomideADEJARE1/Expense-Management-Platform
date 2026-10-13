@@ -48,7 +48,7 @@ The backend exposes an authenticated CSV endpoint at `/api/expenses/export`, and
 ## QA-FIND-007 — Category authorization observation (consolidated)
 Classification: Duplicate/overlapping observation. Status: Consolidated into QA-FIND-010.
 
-The category write-authorization issue is tracked as the high-priority finding QA-FIND-010. Do not count this entry as a separate defect. The team still needs to confirm the intended global-category administration model before choosing the authorization implementation.
+The category write-authorization issue is tracked as the high-priority finding QA-FIND-010. Do not count this entry as a separate defect. PR #54 now requires JWT authentication for category writes, but the team still needs to choose and enforce the global-category administration model (administrator-managed versus user-owned categories).
 
 ## QA-FIND-008 — Deployment target decision and evidence
 
@@ -74,14 +74,14 @@ Resolved findings remain in this record. Record the fixing commit/PR, affected t
 Git history can reconstruct implementation history, but must not be presented as a functional test unless execution evidence exists.
 
 
-## QA-FIND-010 — Category write endpoints are not authenticated
-Classification: Confirmed security defect. Status: Open. Priority: High.
+## QA-FIND-010 — Category write endpoints lack complete authorization
+Classification: Confirmed security defect. Status: Partially corrected in PR #54; policy/role authorization remains open. Priority: High.
 
-In `backend/routes/categories.py` on `integration/deployable-main`, the category POST, PUT, and DELETE handlers have no `@jwt_required()` guard. An unauthenticated caller can attempt to create, rename, or delete shared category records. The routes currently model categories as global rather than user-owned, so write access is publicly available.
+In upstream `main`, the category POST, PUT, and DELETE handlers remain unauthenticated. PR #54 now adds `@jwt_required()` to these three mutation handlers and tests that anonymous create/update/delete requests return HTTP 401. However, categories remain global, and the API still has no administrator role or per-user ownership policy; any authenticated user can still attempt to rename or delete a shared category.
 
 Impact: unauthenticated callers can mutate global categories that other accounts use. The risk includes unauthorized renames and delete attempts against referenced records. The category UI cannot be treated as a security boundary.
 
-Required action: agree on the intended category administration model with the team. Then enforce authentication and authorization appropriate to that model, add negative tests for unauthenticated and unauthorized writes, and verify that category deletion cannot damage expenses or leave inconsistent records. Closure requires a documented shared-category policy, role/ownership checks in the API, and passing API/browser tests.
+Required action: first verify the current PR #54 authentication guard and its negative tests. Then agree on whether categories are administrator-managed shared records or user-owned records. Implement the matching role/ownership enforcement, add tests for an authenticated non-admin/other user, and verify category deletion cannot damage expenses or leave inconsistent records. Closure requires a documented policy, role/ownership checks in the API, passing API/browser tests, and a successful current-head CI run.
 
 ## QA-FIND-011 — Automated test coverage was missing/incomplete
 Classification: Confirmed verification gap; initial backend smoke tests proposed in PR #54. Status: Retest pending. Priority: High.
@@ -294,7 +294,7 @@ This addendum records a direct comparison of the upstream `main` branch, upstrea
 
 ### Confirmed against upstream `main`
 
-- `backend/routes/categories.py` is unchanged between upstream `main` and `integration/deployable-main` at the time of review (same file blob SHA `0ddfd5fc289b245c5bd3626d83fda7dc19f35070`). Category POST, PUT, and DELETE have no authentication decorator. This remains the existing QA-FIND-010 authorization issue; PR #54 adds field-type validation but does not add authorization. Do not mark it fixed.
+- `backend/routes/categories.py` was unchanged between upstream `main` and `integration/deployable-main` at the time of the original review. Upstream `main` still lacks category-write authentication. PR #54 now adds `@jwt_required()` to POST, PUT, and DELETE and adds anonymous-write tests, but the shared-category admin/ownership policy is still not enforced. Do not mark QA-FIND-010 fully fixed.
 - Upstream `main` `docker-compose.yml` still hard-codes the PostgreSQL username/password/database for both backend and database service, and requires `backend/.env`. This remains QA-FIND-022 and the clean-checkout setup concern recorded under QA-FIND-014. Do not duplicate these as new findings.
 - Upstream `main` `frontend/src/pages/Transactions.jsx` exposes search and transaction-type selection but no date-range/category controls or direct CSV export action. These remain the requirement gaps in QA-FIND-005/006 and are proposed for correction by PR #54.
 The tutor-approved deployment target for this audit is AWS EC2. QA-FIND-008 records that decision; AWS deployment evidence is still required.
@@ -305,7 +305,7 @@ The tutor-approved deployment target for this audit is AWS EC2. QA-FIND-008 reco
 
 The PR #54 head branch contains transaction date-range/category UI and API query support, CSV formula neutralization, stricter JSON and field validation, a strict pytest collection gate, image-name configuration for Compose, a database health route, and baseline Nginx headers. Its recorded CI run reports 26 backend tests passing and zero npm audit vulnerabilities. These results apply to the tested correction commit, not upstream `main` or a live deployment.
 
-Outstanding items explicitly remain: category write authorization, production-safe database credentials, fail-closed production signing-secret validation, shared production rate-limit storage, database-enforced budget uniqueness, VM GHCR pull authentication/visibility, AWS deployment evidence, and browser/live-deployment verification. No source-level correction should be promoted to PASS until its required retest evidence exists.
+Outstanding items explicitly remain: category administrator/ownership authorization policy, production-safe database credentials, fail-closed production signing-secret validation, shared production rate-limit storage, database-enforced budget uniqueness, VM GHCR pull authentication/visibility, AWS deployment evidence, and browser/live-deployment verification. No source-level correction should be promoted to PASS until its required retest evidence exists.
 
 ### Additional test-coverage action
 
@@ -321,7 +321,7 @@ Evidence: upstream `main` `backend/routes/categories.py` assigns `description = 
 ### QA-FIND-032 — Category mutation routes have no access-control policy
 Classification: Security finding. Status: Open; design decision required.
 
-Evidence: upstream `main` `backend/routes/categories.py` exposes POST, PUT, and DELETE without `@jwt_required()` or an explicit role/owner policy. These operations modify the shared category table. PR #54 improves request validation but does not add authorization. Do not close this finding based on the validation patch. The team must choose between administrator-managed shared categories and user-owned categories, then test unauthenticated, authenticated non-admin, and authorized administrator behavior.
+Evidence: upstream `main` `backend/routes/categories.py` exposes POST, PUT, and DELETE without `@jwt_required()` or an explicit role/owner policy. PR #54 adds JWT authentication for those mutations and tests anonymous requests, but the shared category table still has no role/owner policy. Do not close this finding based on the authentication guard alone. The team must choose between administrator-managed shared categories and user-owned categories, then test unauthenticated, authenticated non-admin, and authorized administrator behavior.
 
 ### QA-FIND-033 — Budget duplicate prevention is vulnerable to concurrent requests
 Classification: Data-integrity risk. Status: Open.
