@@ -162,9 +162,9 @@ Related finding: QA-FIND-043. Priority: Medium; test reliability gate.
 
 Why it matters: the API test fixture toggles test mode and resets rate limiting, but does not itself isolate the database or clean up records created by registration/category tests. Repeated or reordered runs can collide with leftovers, and a misconfigured local environment could target an unintended database.
 
-Correction status update — 2026-10-12: PR #54 now uses an explicit test-database name guard that rejects production/staging/live markers, truncates the test tables and resets identities after each API test, and adds tests for guard behavior. CI now runs the backend suite twice consecutively. The first CI attempt, run `38217113207`, failed backend lint because of two overlong test lines; these were corrected in commit `52438ec387ed2c9bfaff56081930e6df317604dd`. CI run `38217288387` passed all eight jobs for commit `52438ec387ed2c9bfaff56081930e6df317604dd`; both consecutive pytest runs collected and passed all 57 tests, and both Docker builds passed. The repeatability/cleanup correction is CI-verified.
+Historical checkpoint — 2026-10-12: CI run `38217288387` passed all eight jobs and both pytest runs passed 57 tests for an earlier commit. Current correction status — 2026-10-13: the database-name guard remains, and the autouse fixture clears rows from budgets, expenses, categories, and users before each test. The current backend suite has 71 tests and CI is configured to run it twice. Run `38416894925` for commit `04fe7f2ea0942c467b1c0af29d7e60d63b3791e2` passed the first 71-test backend run; the repeatability pass and Docker builds were still running at the last check. Do not close this gate until the full current-head run passes.
 
-Action: confirm CI uses a dedicated disposable database, add or execute a negative check with a non-test database name, and establish cleanup or disposable-database behavior for repeatable runs.
+Action: confirm CI uses a dedicated disposable database, preserve the negative test-database guard, and verify the row-cleanup fixture and two consecutive backend runs.
 
 Pass evidence: the current CI passes the guard on expense_management_test; the suite passes twice consecutively and in altered order; test-created records are cleaned up; and a non-test database configuration is rejected before any mutation.
 
@@ -719,3 +719,7 @@ CI run `38381389211` passed all eight jobs for code commit `85871877850b81b367be
 
 ### Documentation source check — 2026-10-13
 The README and architecture document are updated in PR #53 to use AWS EC2, the current Compose host port 80, the existing architecture image, the restricted runtime database account, and the current CI/CD migration path. This is documentation/source evidence only; the public domain and live AWS release still need runtime verification.
+
+
+## Test-isolation checkpoint — 2026-10-13
+Current PR #54 commit 04fe7f2ea0942c467b1c0af29d7e60d63b3791e2 has passed the first 71-test backend run. The workflow's second repeatability run and both Docker builds must finish before the current correction head is marked green. The fixture clears rows before each test; it does not reset database identity sequences, so test IDs must not be assumed to start at one.
