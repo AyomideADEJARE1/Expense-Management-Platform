@@ -233,6 +233,11 @@ jobs:
             exit 1
           fi
           echo "Deployment order keeps the current app running until database migrations complete."
+          grep -qF 'docker login ghcr.io' .github/workflows/cd.yml
+          grep -qF 'GHCR_READ_USERNAME' .github/workflows/cd.yml
+          grep -qF 'GHCR_READ_TOKEN' .github/workflows/cd.yml
+          grep -qF 'envs: GHCR_READ_USERNAME,GHCR_READ_TOKEN' .github/workflows/cd.yml
+          echo "AWS deployment is configured to authenticate the VM before pulling GHCR images."
 
   backend:
     name: Backend (lint & test)
