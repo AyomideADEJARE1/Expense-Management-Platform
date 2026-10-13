@@ -1,46 +1,3 @@
-import uuid
-from types import SimpleNamespace
-
-import pytest
-from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
-
-from app import app, debug_mode_enabled, validate_secret_configuration
-from extensions import db, limiter
-from routes.expenses import safe_csv_cell
-from routes.budgets import _is_budget_uniqueness_violation
-from conftest import is_test_database
-
-
-@pytest.fixture()
-def client():
-    app.config.update(TESTING=True, RATELIMIT_ENABLED=False)
-    limiter.reset()
-    with app.test_client() as test_client:
-        yield test_client
-
-    # Clear committed API data between tests.
-    with app.app_context():
-        db.session.rollback()
-        # Delete parent rows so database cascades clean up child rows. The
-        # runtime role intentionally lacks the powerful TRUNCATE privilege.
-        db.session.execute(db.text("DELETE FROM users"))
-        db.session.execute(db.text("DELETE FROM expense_categories"))
-        db.session.commit()
-
-
-@pytest.mark.parametrize(
-    ("database_name", "expected"),
-    [
-        ("expense_management_test", True),
-        ("test_expense_db", True),
-        ("testing", True),
-        ("expense_management", False),
-        ("contest", False),
-        ("production_test", False),
-        ("live_expense_test", False),
-    ],
-)
 def test_test_database_guard_requires_explicit_nonproduction_test_name(
     database_name, expected
 ):
@@ -101,6 +58,61 @@ def test_user_can_register_login_and_read_own_expenses(client):
     assert expenses_response.get_json()["data"] == []
 
 
+@pytest.fixture()
+def auth_headers(client):
+    """Return a JWT header for category write requests in API tests."""
+    email = f"category-auth-{uuid.uuid4().hex}@example.test"
+    password = "CategoryAuthTestPassword123!"
+
+    registered = client.post(
+        "/api/auth/register",
+        json={
+            "full_name": "Category Authorization Test",
+            "email": email,
+            "password": password,
+        },
+    )
+    assert registered.status_code == 201
+
+    login = client.post(
+        "/api/auth/login",
+        json={"email": email, "password": password},
+    )
+    assert login.status_code == 200
+    token = login.get_json()["data"]["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+
+
+def test_category_mutations_require_authentication(client, auth_headers):
+    name = f"QA category auth {uuid.uuid4().hex}"
+    denied_create = client.post(
+        "/api/categories",
+        json={"name": name},
+    )
+    assert denied_create.status_code == 401
+
+    created = client.post(
+        "/api/categories",
+        json={"name": name},
+        headers=auth_headers,
+    )
+    assert created.status_code == 201
+    category_id = created.get_json()["data"]["id"]
+
+    denied_update = client.put(
+        f"/api/categories/{category_id}",
+        json={"name": f"{name} changed"},
+    )
+    assert denied_update.status_code == 401
+
+    denied_delete = client.delete(f"/api/categories/{category_id}")
+    assert denied_delete.status_code == 401
+
+    unchanged = client.get(f"/api/categories/{category_id}")
+    assert unchanged.status_code == 200
+    assert unchanged.get_json()["data"]["name"] == name
+
+
 @pytest.mark.parametrize(
     "value",
     [
@@ -129,25 +141,27 @@ def test_csv_text_cells_preserve_ordinary_values(value):
     assert safe_csv_cell(value) == ("" if value is None else value)
 
 
-def test_category_rejects_non_string_name(client):
+def test_category_rejects_non_string_name(client, auth_headers):
     response = client.post(
         "/api/categories",
+        headers=auth_headers,
         json={"name": 123},
     )
 
     assert response.status_code == 400
 
 
-def test_category_rejects_non_string_description(client):
+def test_category_rejects_non_string_description(client, auth_headers):
     response = client.post(
         "/api/categories",
+        headers=auth_headers,
         json={"name": "QA category type test", "description": ["invalid"]},
     )
 
     assert response.status_code == 400
 
 
-def test_non_finite_expense_amount_is_rejected(client):
+def test_non_finite_expense_amount_is_rejected(client, auth_headers):
     email = f"qa-amount-{uuid.uuid4().hex}@example.test"
     password = "TestPassword123!"
 
@@ -171,6 +185,7 @@ def test_non_finite_expense_amount_is_rejected(client):
     category_name = f"QA amount category {uuid.uuid4().hex}"
     category_response = client.post(
         "/api/categories",
+        headers=auth_headers,
         json={"name": category_name},
     )
     assert category_response.status_code == 201
@@ -470,7 +485,7 @@ def test_registration_rejects_invalid_email_and_oversized_name(client):
         assert response.status_code == 400
 
 
-def test_expense_date_range_filters_and_validation(client):
+def test_expense_date_range_filters_and_validation(client, auth_headers):
     email = f"qa-date-range-{uuid.uuid4().hex}@example.test"
     password = "TestPassword123!"
 
@@ -494,6 +509,7 @@ def test_expense_date_range_filters_and_validation(client):
 
     category_response = client.post(
         "/api/categories",
+        headers=auth_headers,
         json={"name": f"QA date range {uuid.uuid4().hex}"},
     )
     assert category_response.status_code == 201
@@ -601,7 +617,7 @@ def test_expense_date_range_filters_and_validation(client):
 
 
 def test_monthly_and_category_summaries_validate_month_and_aggregate(
-    client,
+    client, auth_headers
 ):
     email = f"qa-summary-{uuid.uuid4().hex}@example.test"
     password = "TestPassword123!"
@@ -626,6 +642,7 @@ def test_monthly_and_category_summaries_validate_month_and_aggregate(
 
     category_response = client.post(
         "/api/categories",
+        headers=auth_headers,
         json={"name": f"QA summary {uuid.uuid4().hex}"},
     )
     assert category_response.status_code == 201
@@ -785,7 +802,7 @@ def test_non_object_json_bodies_are_rejected(client):
         assert response.status_code == 400
 
 
-def test_expenses_and_csv_export_are_isolated_between_users(client):
+def test_expenses_and_csv_export_are_isolated_between_users(client, auth_headers):
     """A user's list and CSV export must not expose another user's expense."""
     password = "TestPassword123!"
 
@@ -815,6 +832,7 @@ def test_expenses_and_csv_export_are_isolated_between_users(client):
     category_name = f"QA isolation category {uuid.uuid4().hex}"
     category_response = client.post(
         "/api/categories",
+        headers=auth_headers,
         json={"name": category_name},
     )
     assert category_response.status_code == 201
@@ -969,7 +987,7 @@ def test_only_budget_unique_index_violations_map_to_conflict():
     )
 
 
-def test_delete_category_in_use_returns_conflict(client):
+def test_delete_category_in_use_returns_conflict(client, auth_headers):
     email = f"qa-category-delete-{uuid.uuid4().hex}@example.test"
     password = "TestPassword123!"
 
@@ -993,6 +1011,7 @@ def test_delete_category_in_use_returns_conflict(client):
 
     category_response = client.post(
         "/api/categories",
+        headers=auth_headers,
         json={"name": f"QA delete category {uuid.uuid4().hex}"},
     )
     assert category_response.status_code == 201
@@ -1010,7 +1029,7 @@ def test_delete_category_in_use_returns_conflict(client):
     )
     assert expense_response.status_code == 201
 
-    deletion = client.delete(f"/api/categories/{category_id}")
+    deletion = client.delete(f"/api/categories/{category_id}", headers=auth_headers)
     assert deletion.status_code == 409
 
     still_exists = client.get(f"/api/categories/{category_id}")
@@ -1022,11 +1041,12 @@ def test_delete_category_in_use_returns_conflict(client):
     ["fk_expenses_category", "fk_budgets_category"],
 )
 def test_category_delete_reference_foreign_key_race_returns_409(
-    client, monkeypatch, constraint_name
+    client, monkeypatch, constraint_name, auth_headers
 ):
     category_name = f"QA budget FK race {uuid.uuid4().hex}"
     created = client.post(
         "/api/categories",
+        headers=auth_headers,
         json={"name": category_name},
     )
     assert created.status_code == 201
@@ -1045,7 +1065,7 @@ def test_category_delete_reference_foreign_key_race_returns_409(
 
     with monkeypatch.context() as patcher:
         patcher.setattr(Session, "commit", fail_with_budget_reference)
-        deleted = client.delete(f"/api/categories/{category_id}")
+        deleted = client.delete(f"/api/categories/{category_id}", headers=auth_headers)
 
     assert deleted.status_code == 409
     assert "expense or budget" in deleted.get_json()["message"]
@@ -1056,10 +1076,11 @@ def test_category_delete_reference_foreign_key_race_returns_409(
 
 
 def test_unexpected_category_delete_failure_returns_500_and_recovers(
-    client, monkeypatch
+    client, monkeypatch, auth_headers
 ):
     category_response = client.post(
         "/api/categories",
+        headers=auth_headers,
         json={"name": f"QA delete failure {uuid.uuid4().hex}"},
     )
     assert category_response.status_code == 201
@@ -1070,7 +1091,7 @@ def test_unexpected_category_delete_failure_returns_500_and_recovers(
 
     with monkeypatch.context() as patcher:
         patcher.setattr(Session, "commit", fail_commit)
-        failed = client.delete(f"/api/categories/{category_id}")
+        failed = client.delete(f"/api/categories/{category_id}", headers=auth_headers)
 
     assert failed.status_code == 500
     assert "simulated database failure" not in failed.get_data(as_text=True)
@@ -1078,11 +1099,11 @@ def test_unexpected_category_delete_failure_returns_500_and_recovers(
     still_exists = client.get(f"/api/categories/{category_id}")
     assert still_exists.status_code == 200
 
-    recovered = client.delete(f"/api/categories/{category_id}")
+    recovered = client.delete(f"/api/categories/{category_id}", headers=auth_headers)
     assert recovered.status_code == 200
 
 
-def test_category_with_budget_cannot_be_deleted_or_reclassified(client):
+def test_category_with_budget_cannot_be_deleted_or_reclassified(client, auth_headers):
     email = f"qa-category-budget-{uuid.uuid4().hex}@example.test"
     password = "TestPassword123!"
 
@@ -1106,6 +1127,7 @@ def test_category_with_budget_cannot_be_deleted_or_reclassified(client):
 
     category_response = client.post(
         "/api/categories",
+        headers=auth_headers,
         json={"name": f"QA budget category {uuid.uuid4().hex}"},
     )
     assert category_response.status_code == 201
@@ -1122,7 +1144,7 @@ def test_category_with_budget_cannot_be_deleted_or_reclassified(client):
     )
     assert budget_response.status_code == 201
 
-    deletion = client.delete(f"/api/categories/{category_id}")
+    deletion = client.delete(f"/api/categories/{category_id}", headers=auth_headers)
     assert deletion.status_code == 409
     assert "assigned to a budget" in deletion.get_json()["message"]
 
@@ -1155,9 +1177,10 @@ def test_budget_category_foreign_key_restricts_deletion():
     assert constraint == "RESTRICT"
 
 
-def test_category_name_length_is_validated_for_create_and_update(client):
+def test_category_name_length_is_validated_for_create_and_update(client, auth_headers):
     too_long_create = client.post(
         "/api/categories",
+        headers=auth_headers,
         json={"name": "C" * 101},
     )
     assert too_long_create.status_code == 400
@@ -1165,6 +1188,7 @@ def test_category_name_length_is_validated_for_create_and_update(client):
 
     valid_boundary = client.post(
         "/api/categories",
+        headers=auth_headers,
         json={"name": ("V" * 90) + uuid.uuid4().hex[:10]},
     )
     assert valid_boundary.status_code == 201
@@ -1173,6 +1197,7 @@ def test_category_name_length_is_validated_for_create_and_update(client):
     original_name = f"QA category length {uuid.uuid4().hex}"
     created = client.post(
         "/api/categories",
+        headers=auth_headers,
         json={"name": original_name},
     )
     assert created.status_code == 201
@@ -1180,6 +1205,7 @@ def test_category_name_length_is_validated_for_create_and_update(client):
 
     too_long_update = client.put(
         f"/api/categories/{category_id}",
+        headers=auth_headers,
         json={"name": "U" * 101},
     )
     assert too_long_update.status_code == 400
@@ -1191,7 +1217,7 @@ def test_category_name_length_is_validated_for_create_and_update(client):
 
 
 def test_category_name_constraint_conflict_returns_409_for_create_and_update(
-    client, monkeypatch
+    client, monkeypatch, auth_headers
 ):
     def fail_unique_commit(self):
         raise IntegrityError(
@@ -1208,6 +1234,7 @@ def test_category_name_constraint_conflict_returns_409_for_create_and_update(
         patcher.setattr(Session, "commit", fail_unique_commit)
         create_response = client.post(
             "/api/categories",
+            headers=auth_headers,
             json={"name": f"QA category race {uuid.uuid4().hex}"},
         )
 
@@ -1217,6 +1244,7 @@ def test_category_name_constraint_conflict_returns_409_for_create_and_update(
     original_name = f"QA category update {uuid.uuid4().hex}"
     category_response = client.post(
         "/api/categories",
+        headers=auth_headers,
         json={"name": original_name},
     )
     assert category_response.status_code == 201
@@ -1226,6 +1254,7 @@ def test_category_name_constraint_conflict_returns_409_for_create_and_update(
         patcher.setattr(Session, "commit", fail_unique_commit)
         update_response = client.put(
             f"/api/categories/{category_id}",
+            headers=auth_headers,
             json={"name": f"QA category renamed {uuid.uuid4().hex}"},
         )
 
@@ -1236,7 +1265,7 @@ def test_category_name_constraint_conflict_returns_409_for_create_and_update(
 
 
 def test_category_create_unexpected_commit_failure_rolls_back_and_recovers(
-    client, monkeypatch
+    client, monkeypatch, auth_headers
 ):
     def fail_commit(self):
         raise RuntimeError("simulated category database failure")
@@ -1245,6 +1274,7 @@ def test_category_create_unexpected_commit_failure_rolls_back_and_recovers(
         patcher.setattr(Session, "commit", fail_commit)
         failed = client.post(
             "/api/categories",
+            headers=auth_headers,
             json={"name": f"QA category failure {uuid.uuid4().hex}"},
         )
 
@@ -1255,6 +1285,7 @@ def test_category_create_unexpected_commit_failure_rolls_back_and_recovers(
 
     recovered = client.post(
         "/api/categories",
+        headers=auth_headers,
         json={"name": f"QA category recovery {uuid.uuid4().hex}"},
     )
     assert recovered.status_code == 201
