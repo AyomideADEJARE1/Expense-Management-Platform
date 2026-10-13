@@ -36,7 +36,7 @@ The backend is responsible for:
 - Budget management
 - Monthly expense summaries
 - Category-based expense summaries
-- PostgreSQL database communication
+- PostgreSQL database communication using a restricted runtime account
 - Input validation
 - Error handling
 - API rate limiting
@@ -53,7 +53,7 @@ The backend is part of the following application architecture:
 Browser
    |
    v
-Nginx Reverse Proxy :8080
+Nginx Reverse Proxy :80
    |
    +----------------------+
    |                      |
@@ -642,7 +642,7 @@ The backend source can also be checked for Python compilation errors using:
 python -m compileall routes models utils app.py extensions.py
 ```
 
-The complete Docker Compose environment has also been verified through the Nginx entry point.
+The Docker Compose environment is designed to route requests through Nginx. The current source/CI checks do not replace live verification through the deployed Nginx entry point.
 
 ---
 
@@ -693,3 +693,13 @@ backend/docs/troubleshooting.md
 ```
 
 The troubleshooting documentation contains development problems, investigation steps, solutions, verification results, and lessons learned.
+
+
+## Database credential separation
+
+The root `.env` contains two different PostgreSQL accounts:
+
+- `POSTGRES_USER` / `POSTGRES_PASSWORD`: bootstrap/migration account.
+- `POSTGRES_APP_USER` / `POSTGRES_APP_PASSWORD`: restricted account used by the Flask runtime.
+
+The Compose configuration maps only the restricted account to the backend container. Migration 006 provisions its role and grants required table/sequence permissions. The bootstrap password must not be passed into the backend. On an existing AWS database, add the new runtime credentials to the protected environment file before deployment and verify both normal application operations and prohibited administrative actions.
