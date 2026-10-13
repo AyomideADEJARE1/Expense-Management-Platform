@@ -236,6 +236,7 @@ jobs:
 
       - name: Verify deployment migrations run before app restart
         run: |
+          nginx_build=$(grep -nF 'docker compose build nginx' .github/workflows/cd.yml | cut -d: -f1)
           db_start=$(grep -nF 'docker compose up -d --wait postgres' .github/workflows/cd.yml | cut -d: -f1)
           migration_002=$(grep -nF '002_user_settings.sql' .github/workflows/cd.yml | cut -d: -f1)
           migration_003=$(grep -nF '003_budget_uniqueness.sql' .github/workflows/cd.yml | cut -d: -f1)
@@ -243,12 +244,12 @@ jobs:
           migration_005=$(grep -nF '005_user_phone.sql' .github/workflows/cd.yml | cut -d: -f1)
           migration_006=$(grep -nF '006_app_runtime_role.sql' .github/workflows/cd.yml | cut -d: -f1)
           app_start=$(grep -nF 'docker compose up -d --remove-orphans backend frontend nginx' .github/workflows/cd.yml | cut -d: -f1)
-          test -n "$db_start" && test -n "$migration_002" && test -n "$migration_003" && test -n "$migration_004" && test -n "$migration_005" && test -n "$migration_006" && test -n "$app_start"
-          if [ "$db_start" -ge "$migration_002" ] || [ "$migration_002" -ge "$migration_003" ] || [ "$migration_003" -ge "$migration_004" ] || [ "$migration_004" -ge "$migration_005" ] || [ "$migration_005" -ge "$migration_006" ] || [ "$migration_006" -ge "$app_start" ]; then
+          test -n "$nginx_build" && test -n "$db_start" && test -n "$migration_002" && test -n "$migration_003" && test -n "$migration_004" && test -n "$migration_005" && test -n "$migration_006" && test -n "$app_start"
+          if [ "$nginx_build" -ge "$db_start" ] || [ "$db_start" -ge "$migration_002" ] || [ "$migration_002" -ge "$migration_003" ] || [ "$migration_003" -ge "$migration_004" ] || [ "$migration_004" -ge "$migration_005" ] || [ "$migration_005" -ge "$migration_006" ] || [ "$migration_006" -ge "$app_start" ]; then
             echo "::error::Database migrations must complete before application services are restarted."
             exit 1
           fi
-          echo "Deployment order keeps the current app running until database migrations complete."
+          echo "Deployment builds Nginx from the checked-out commit before migrations and keeps current services running until migrations complete."
           grep -qF 'docker login ghcr.io' .github/workflows/cd.yml
           grep -qF 'GHCR_READ_USERNAME' .github/workflows/cd.yml
           grep -qF 'GHCR_READ_TOKEN' .github/workflows/cd.yml
@@ -393,7 +394,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [backend, frontend]
+        service: [backend, frontend, nginx]
     steps:
       - uses: actions/checkout@v7
 
@@ -424,7 +425,7 @@ jobs:
           echo "Docker build contexts exclude local env files; frontend also excludes host dependencies."
 
       - name: Add harmless sentinel environment file for build-context test
-        if: steps.dockerfile.outputs.present == 'true'
+        if: steps.dockerfile.outputs.present == 'true' && matrix.service != 'nginx'
         run: |
           if [ "${{ matrix.service }}" = "backend" ]; then
             printf '%s\n' 'SECRET_SENTINEL=do-not-package' > backend/.env
@@ -444,7 +445,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
 
       - name: Verify sentinel was excluded from the built image
-        if: steps.dockerfile.outputs.present == 'true'
+        if: steps.dockerfile.outputs.present == 'true' && matrix.service != 'nginx'
         run: |
           if [ "${{ matrix.service }}" = "backend" ]; then
             docker run --rm --entrypoint sh expense-backend:ci -c 'test ! -e /app/.env'
@@ -452,6 +453,11 @@ jobs:
             docker run --rm --entrypoint sh expense-frontend:ci -c "test -d /usr/share/nginx/html && ! grep -R -q 'VITE_SECRET_SENTINEL' /usr/share/nginx/html"
           fi
           echo "Local environment sentinel was not included in the built image/assets."
+
+      - name: Verify Nginx image configuration
+        if: steps.dockerfile.outputs.present == 'true' && matrix.service == 'nginx'
+        run: |
+          docker run --rm --entrypoint sh expense-nginx:ci -c 'test -f /etc/nginx/conf.d/default.conf && nginx -t'
 
   ci-success:
     name: ci-success
