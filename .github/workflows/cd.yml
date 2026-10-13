@@ -134,6 +134,9 @@ jobs:
             export BACKEND_IMAGE="ghcr.io/${repo_lower}-backend:sha-${SHORT_SHA}"
             export FRONTEND_IMAGE="ghcr.io/${repo_lower}-frontend:sha-${SHORT_SHA}"
             docker compose pull backend frontend
+            # Nginx is built locally from the checked-out commit, not pulled from GHCR.
+            # Build it before migrations without replacing the running proxy yet.
+            docker compose build nginx
             # Start only the database first; keep the currently running app version up
             # until the schema changes have completed successfully.
             docker compose up -d --wait postgres
