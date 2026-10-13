@@ -265,11 +265,15 @@ Several write routes checked only whether `request.get_json()` returned a truthy
 
 
 ## QA-FIND-031 — VM authentication to GitHub Container Registry is not established
-Classification: Deployment configuration risk. Status: Open. Priority: Medium.
+Classification: Deployment configuration risk. Status: Source correction proposed in PR #54; CI/runtime retest pending. Priority: Medium.
 
-The CD workflow publishes images to GHCR and the deployment script pulls those images on the VM. The workflow logs in to GHCR on the GitHub Actions runner, but that login does not automatically authenticate the remote VM. If the packages are private, `docker compose pull` will fail unless the VM has a configured read-only package credential. If the packages are public, anonymous pull should be verified explicitly.
+The CD workflow publishes images to GHCR and the deployment script pulls those images on the AWS VM. A login performed by the GitHub Actions runner does not automatically authenticate the remote VM. If either package is private, the pull fails unless the VM authenticates separately.
 
-Required action: confirm package visibility and test the VM pull from a clean authentication state. If credentials are required, provision a least-privilege read-only token through a secure host-side secret mechanism; do not place it in the repository or print it in logs.
+Correction in PR #54: the remote SSH deployment step now receives `GHCR_READ_USERNAME` and `GHCR_READ_TOKEN` through environment forwarding, logs in with `docker login --password-stdin`, pulls the commit-tagged images, and logs out on exit. The CI workflow checks that the remote authentication configuration remains present. The README and CI/CD guide document the two required repository secrets.
+
+Required retest: current-head CI must pass. Then verify the AWS host can authenticate and pull both images from a clean Docker-authentication state. Confirm the token has read-only package access and is not printed or committed. If packages are public, still test the configured flow or document and verify anonymous pulls explicitly.
+
+Closure evidence: green current-head CI, the secret names (never their values), successful AWS image-pull logs, image tags/digests, and proof the running containers use the intended commit.
 
 
 ## QA-FIND-034 — Database health probe did not reset a failed SQLAlchemy session
@@ -1190,14 +1194,19 @@ QA-FIND-082 through QA-FIND-085 now have source-level corrections covered by CI.
 
 ## QA-FIND-086 — Backend connects to PostgreSQL with the bootstrap database user
 
-**Classification:** Database privilege / least-privilege security. **Priority:** High. **Status:** Open; requires a database-role design and migration before production closure.
+**Classification:** Database privilege / least-privilege security. **Priority:** High. **Status:** Correction proposed in PR #54; current-head CI and AWS staging verification pending.
 
 **Evidence:** In `docker-compose.yml`, the PostgreSQL service initializes with `POSTGRES_USER` and `POSTGRES_PASSWORD`. The backend service receives the same `POSTGRES_USER` and `POSTGRES_PASSWORD` values. The official PostgreSQL container uses `POSTGRES_USER` as its initial database superuser unless configured otherwise, so the application connects using the bootstrap superuser rather than a restricted runtime role.
 
 **Why it matters:** If an API vulnerability or application compromise allows SQL execution, the attacker inherits excessive database privileges. A superuser role can alter database-wide objects and roles, create/drop databases, and bypass controls that should protect data. The application needs normal read/write access to its own schema, not database-administration powers.
 
-**Required correction:** DevOps/backend/database owners should separate the bootstrap/migration role from the application runtime role. The runtime role should have only the schema/table/sequence privileges required by the application. Keep the admin credential out of the backend container and use it only for initialization and controlled migrations. Design a safe migration for existing AWS databases, including ownership/grant changes; do not rotate the shared credentials without a deployment plan.
+**Correction in PR #54:** Compose now passes `POSTGRES_APP_USER` and `POSTGRES_APP_PASSWORD` to the backend while PostgreSQL retains the separate bootstrap account. New migration 006 creates or updates the runtime role as a non-superuser, rejects placeholder/short app passwords and identical bootstrap/app usernames, grants CRUD and sequence permissions, and configures default privileges. CD applies migration 006 after migrations 002–005 and before restarting application services. CI checks runtime-role attributes, required table/sequence privileges, and that the app role cannot create roles, databases, or schema objects. The current CI result must be confirmed before marking the source checks green. For an existing AWS database, add the two app-role variables to the protected host environment before deploying; do not rotate the bootstrap credentials blindly.
 
 **Required retest:** On a fresh database and a copy of an existing database, confirm the application can register/login, read/write expenses, budgets, categories, and profile settings using the restricted role. Then verify the application role cannot create/drop databases or roles, cannot alter unrelated schemas, and cannot perform superuser-only actions. Confirm migrations still run with the separate administrative role and that rollback/recovery remains possible.
 
 **Closure evidence:** Reviewed role/privilege design, migration SQL or provisioning script, least-privilege permission test output, successful application CRUD tests using the runtime role, AWS staging migration logs, and proof that the backend container receives no bootstrap-admin password. This finding is not closed by a green application CI run alone.
+
+
+## QA-FIND-086 correction update — 2026-10-13
+
+PR #54 now includes `database/migrations/006_app_runtime_role.sql`, Compose credential separation, a CD step that applies migration 006 before application restart, and CI privilege-boundary checks. The backend test job is configured to connect using the restricted application role, while the migration connection uses the bootstrap account. Current-head CI run and AWS populated-database verification remain pending. Do not close this finding until the current CI passes and the disposable AWS staging checks confirm CRUD works while privileged operations fail.
