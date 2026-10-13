@@ -300,38 +300,6 @@ Outstanding items explicitly remain: category administrator/ownership authorizat
 
 PR #54 is being extended with a regression test for cross-user expense isolation across the authenticated expense list and CSV export. The test must pass in CI before this coverage gap can be marked covered. This test does not replace the broader requirement for complete CRUD, browser journey, and deployment testing.
 
-## Additional source audit — targeted retest notes (2026-10-11)
-
-### QA-FIND-031 — Category descriptions accept invalid types on the original main branch
-Classification: Confirmed input-validation defect. Status: Correction proposed in PR #54; authorization remains open separately.
-
-Evidence: upstream `main` `backend/routes/categories.py` assigns `description = data.get("description")` and passes it to the model without checking that a supplied description is a string. A JSON array/object or other unexpected type can reach persistence and trigger a database/driver exception rather than a controlled 400 response. The PR #54 fork branch validates description types for create and update and returns 400 for non-string values. Retest against the upstream integration target before closing.
-
-### QA-FIND-032 — Category mutation routes have no access-control policy
-Classification: Security finding. Status: Open; design decision required.
-
-Evidence: upstream `main` `backend/routes/categories.py` exposes POST, PUT, and DELETE without `@jwt_required()` or an explicit role/owner policy. PR #54 adds JWT authentication for those mutations and tests anonymous requests, but the shared category table still has no role/owner policy. Do not close this finding based on the authentication guard alone. The team must choose between administrator-managed shared categories and user-owned categories, then test unauthenticated, authenticated non-admin, and authorized administrator behavior.
-
-### QA-FIND-033 — Budget duplicate prevention is vulnerable to concurrent requests
-Classification: Data-integrity risk. Status: Open.
-
-Evidence: upstream `main` `backend/routes/budgets.py` checks for an existing (user, month, category) budget before inserting, while `backend/models/budget.py` has no corresponding database uniqueness constraint. Two simultaneous requests can both pass the pre-check and insert duplicates. The category-null case also requires explicit treatment because PostgreSQL ordinary UNIQUE constraints permit multiple NULL values. Recommended correction: migration-backed database enforcement appropriate to the supported PostgreSQL version (for example, separate partial unique indexes for non-null category IDs and null-category budgets), duplicate-safe error handling, and a concurrency regression test. Confirm existing duplicate rows before applying a constraint to any existing database.
-
-### QA-FIND-034 — Nginx database-health route differs between main and correction branch
-Classification: Deployment/health-check gap. Status: Open on upstream main; correction proposed in PR #54.
-
-Evidence: upstream `main` `nginx/default.conf` has an exact mapping for `/api/health` but no exact mapping for `/api/health/db`. The general `location /api/` forwards the latter path as `/api/health/db` to Flask, whereas the backend health endpoint is `/health/db`; therefore the documented public path is not explicitly mapped to the backend path on main. PR #54 adds the route mapping and checks both endpoints in CD. A CI assertion now checks the route mapping strings, but that is not an HTTP runtime test. Verify both endpoints through Nginx in a running Compose environment and through the deployed AWS URL before closure.
-
-### QA-FIND-035 — Compose credentials are hard-coded in the original main branch
-Classification: Security/configuration finding. Status: Open on upstream main; correction design still required.
-
-Evidence: upstream `main` `docker-compose.yml` embeds fixed PostgreSQL user/password/database values in both backend and database service configuration. The README warns not to reuse development credentials in production, but the Compose file itself still contains those values. The fork's current correction branch still has the same fixed values. Do not mark this as fixed merely because image names or deployment pull logic changed. Replace secrets with required environment interpolation or a supported secrets mechanism, provide a safe non-production example file, and fail startup when required production secrets are absent. Test fresh setup and existing deployments without exposing real credentials.
-
-### Retest rules
-- Keep findings 031–035 separate only where they represent different underlying failure modes; do not duplicate existing CSV/date filtering or general input-validation findings.
-- Mark a finding "fixed" only after reviewing the correction on the PR's target branch and recording relevant passing automated/manual evidence.
-- CI passing on PR #54 does not prove these remaining findings are fixed; the latest PR #54 run validates the current correction head, not the unchanged upstream `main` or live deployment.
-
 ## QA-FIND-036 — JWT-specific secret configuration is ignored
 Classification: Security configuration defect. Status: Correction proposed in PR #54; CI passed in run 38213583630; AWS configuration retest pending. Priority: High.
 
@@ -1214,3 +1182,7 @@ Five non-active duplicate/consolidation placeholders have been removed from the 
 
 ## Current PR status — 2026-10-13
 The application-code and CI-enforcement changes in PR #54 passed run `38420803176` on commit `8d781f3fb45cdce2a07e50ef3250b99ce0501333`. The current PR #54 head `425d435f08e1a11a0ca40060db8f285654ab54ad` is a README-only follow-up; its run `38421606402` was pending at the last check. The latest PR #53 documentation head is tracked in its pull-request description and must have its own CI conclusion before the documentation PR is called green. Both PRs remain open and unmerged. Findings remain against upstream `main` until the corrections are merged; runtime-only gates remain open until AWS/browser evidence is captured.
+
+
+## Duplicate-section cleanup — 2026-10-13
+Removed the older “Additional source audit — targeted retest notes” appendix because it reused QA-FIND-031 through QA-FIND-035 for different defects than the canonical numbered findings, creating conflicting duplicate IDs. The unique issues remain tracked in their canonical entries: category input validation, category authorization, budget uniqueness, Nginx health routing, and database credentials. Stable canonical IDs were retained; the duplicate appendix is not part of the active register.
