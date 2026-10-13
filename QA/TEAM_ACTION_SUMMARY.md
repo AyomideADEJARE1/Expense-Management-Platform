@@ -112,10 +112,12 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 ## Additional findings requiring team action
 
-### 11. DevOps: confirm the AWS VM can pull the published images
-**What happens:** The CD workflow publishes images to GitHub Container Registry (GHCR), but source configuration does not prove the AWS VM can pull them.
+### 11. DevOps: authenticate the AWS VM to GHCR
+**What happens:** CI publishes images to GitHub Container Registry (GHCR), but the runner's login does not authenticate the AWS host.
 
-**Why it matters:** A successful image build can be followed by a failed deployment if the package is private or the VM lacks registry access.
+**Why it matters:** A successful build can still be followed by a failed deployment if the packages are private and the VM has no registry credentials.
+
+**Required correction:** PR #54 now forwards `GHCR_READ_USERNAME` and `GHCR_READ_TOKEN` to the remote deployment step, logs in with `--password-stdin`, pulls commit-tagged images, and logs out on exit. CI checks that this login remains in the workflow. Add the two secrets to the repository settings using a least-privilege read-only package token.
 
 **Required correction:** Decide whether packages are public or private. If private, configure least-privilege read access on the EC2 VM and authenticate without exposing tokens.
 
@@ -687,12 +689,24 @@ Run `38276034129` passed all eight jobs for code commit `97e6515f00c15e240532da6
 
 
 ### 61. DevOps/backend/database: use a restricted PostgreSQL runtime account
-**What happens:** The Compose file passes the same PostgreSQL user/password to both the database service and the backend. The PostgreSQL image uses its configured initial user as the bootstrap superuser, so the app runs with database-administration privileges.
+**What happens:** The Compose file previously passed the bootstrap PostgreSQL account to the backend.
 
 **Why it matters:** A backend compromise could gain far more database control than the application needs.
 
-**Required correction:** Separate the bootstrap/migration account from the application account. Give the runtime account only the permissions required for the application's tables and sequences. Keep the admin credential out of the backend container.
+**Correction in PR #54:** The backend now receives `POSTGRES_APP_USER` and `POSTGRES_APP_PASSWORD`; migration 006 configures a non-superuser role with required table/sequence access and no role/database creation privileges. CD applies migration 006 before restarting the app, and CI checks privilege boundaries. The latest CI result must pass before source verification is complete.
 
-**How to verify:** Test a fresh database and a disposable copy of an existing AWS database. Confirm normal app operations work as the restricted user and privileged operations (such as creating roles/databases or changing unrelated schemas) fail. Confirm migrations run through the separate administrative account.
+**How to verify:** Confirm the backend test suite connects with the restricted role. Then test a fresh database and a disposable copy of an existing AWS database. Confirm normal app operations work while privileged operations fail, and confirm migrations run through the separate bootstrap account.
 
-**Evidence to close:** Role/grant design, migration/provisioning script, privilege-test output, passing application CRUD tests, and AWS staging evidence. Plan the change before rotating existing credentials.
+**Evidence to close:** Green current-head CI, role/grant output, migration logs, passing CRUD tests, and AWS staging evidence.
+
+
+### 62. Team lead/DevOps: complete the two AWS submission assets
+**What happens:** The professional README intentionally leaves the public application URL and final AWS architecture diagram for the team lead to supply from the actual deployment.
+
+**Why it matters:** A guessed URL or a diagram that does not match the running system is not reliable submission evidence.
+
+**Required action:** After AWS deployment, verify the public URL and both health endpoints. Export an architecture diagram that matches the deployed AWS instance, networking, Nginx, frontend, backend, PostgreSQL, and CI/CD flow. Add the verified URL and diagram to README.md and confirm the diagram file is committed.
+
+**How to verify:** Open the URL from outside the EC2 host, confirm `/api/health` and `/api/health/db`, record the deployed commit/image, and compare the diagram with the actual AWS topology.
+
+**Evidence to close:** Verified URL, health responses, deployed SHA/image digest, and committed architecture diagram. Do not mark the placeholders complete before those checks.
