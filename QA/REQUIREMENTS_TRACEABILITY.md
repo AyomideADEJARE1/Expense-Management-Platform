@@ -138,7 +138,7 @@ The reviewed repository does not define a scheduled off-host backup or tested re
 
 
 ## QA-FIND-073 trace — Proxy-aware rate limiting
-Flask-Limiter currently keys requests by `get_remote_address`, while Flask is behind Nginx and has no trusted-proxy middleware; no shared rate-limit storage URI is configured. PR #54 needs a reviewed trusted-proxy boundary and approved shared store for production. Verify independent client quotas, spoofed-header resistance, restart behavior, and shared counters through the public AWS endpoint. CI/source inspection is not a substitute for the staging network test.
+PR #54 adds `ProxyFix(x_for=1, x_proto=1)`, but its unit test covers only a synthetic one-proxy chain. The documented architecture includes Cloudflare before Nginx; if Cloudflare proxying is active, the current `X-Forwarded-For` append behavior may cause Flask to see a Cloudflare edge IP rather than the visitor. Confirm the real AWS path and configure trusted Cloudflare IP handling or overwrite untrusted forwarding headers. Shared rate-limit storage is still absent. Verify independent client quotas, spoofed-header resistance, restart behavior, and shared counters through the public AWS endpoint; source/CI checks do not replace the staging network test.
 
 
 ## QA-FIND-074 trace — Account email change verification
