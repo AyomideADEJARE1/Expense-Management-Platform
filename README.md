@@ -249,6 +249,16 @@ The workflow checks out the commit associated with the successful CI run, authen
 
 **Deployment status:** The production domain is recorded in the submission section, but its current DNS/HTTPS, deployed version, and health responses still require team-lead verification. Do not claim the latest commit is live until the team has captured the deployed commit/image, successful health checks, and end-to-end browser results.
 
+## Current limitations and scope notes
+
+- The Settings page saves notification preference flags, but the repository does not currently provide a notification delivery service or a verified in-app/email delivery workflow. Do not describe notifications as operational.
+- The budget alert-threshold preference is stored, but it is not currently connected to a threshold-triggered warning or delivery workflow.
+- The API and database can represent a whole-month budget, but the current browser budget form requires a category. Whole-month budgets cannot yet be created through the UI.
+- Changing the preferred currency changes how amounts are displayed; it does not convert historical transaction values using exchange rates. Treat the preference as a display setting, not a currency-conversion feature.
+- CI verifies the code and automated checks on the tested commit. Live AWS deployment, populated-database migration, backup restoration, host reboot recovery, public health endpoints, and complete browser journeys must be evidenced separately before they are described as verified.
+
+These notes distinguish implemented behavior from UI preferences or deployment checks that still need implementation or evidence. Update them when the corresponding feature is completed and tested.
+
 ## Security considerations
 
 - Keep real `.env` files, passwords, signing keys, and SSH private keys out of Git.
