@@ -10,7 +10,7 @@ This document tells the team what is wrong, why it matters, and who needs to act
 
 **Status rule:** “Found” means the code has a problem. “Correction proposed” means code has been changed but still needs review and tests. “CI passed” means automated checks passed for the named commit. “Runtime pending” means the app still needs to be run and checked. These statuses must not be treated as the same thing.
 
-**Current audit size:** 85 distinct findings/observations, 60 distinct team actions, and 58 runtime verification gates. CI run `38420803176` passed all eight jobs for correction commit `8d781f3fb45cdce2a07e50ef3250b99ce0501333`, including the new required-test gate. Both backend test runs passed 71 tests; frontend lint, all nine Node tests, and build passed; migrations 001–006 and restricted runtime-role checks passed; secret scan, both Docker builds, and aggregate CI passed. The earlier green run `38418979526` is historical. Flask-Limiter still warns about in-memory storage. AWS live/runtime evidence remains separate from CI evidence.
+**Current audit size:** 85 distinct findings/observations, 60 distinct team actions, and 48 runtime verification gates. CI run `38420803176` passed all eight jobs for correction commit `8d781f3fb45cdce2a07e50ef3250b99ce0501333`, including the new required-test gate. Both backend test runs passed 71 tests; frontend lint, all nine Node tests, and build passed; migrations 001–006 and restricted runtime-role checks passed; secret scan, both Docker builds, and aggregate CI passed. The CI-enforcement change passed run `38420803176` at code head `8d781f3fb45cdce2a07e50ef3250b99ce0501333`. The current PR #54 head is `425d435f08e1a11a0ca40060db8f285654ab54ad`, which contains a README-only follow-up; its CI run `38421606402` was pending at the last check. Flask-Limiter still warns about in-memory storage. AWS live/runtime evidence remains separate from CI evidence.
 
 ## Actions for the team
 
@@ -186,7 +186,7 @@ The missing shared production store remains open and is tracked in action 47 alo
 
 ### 18. Frontend: add automated UI tests
 
-**Current status:** Upstream `main` did not define a frontend test script. PR #54 now adds `npm test` using Node's test runner, and correction CI run `38418979526` passed the frontend test job. The remaining action is to add or execute browser-level tests for complete user journeys; utility/unit tests do not prove the whole UI works.
+**Current status:** Upstream `main` did not define a frontend test script. PR #54 now adds `npm test` using Node's test runner, and correction CI run `38420803176` passed the frontend test job with nine Node tests on correction head `8d781f3fb45cdce2a07e50ef3250b99ce0501333`. The remaining action is to add or execute browser-level tests for complete user journeys; utility/unit tests do not prove the whole UI works.
 
 **Why it matters:** A green build does not prove that login state, navigation, budget editing, or key screens work when users interact with them.
 
@@ -691,6 +691,6 @@ PR #54 owns the root README and architecture documentation because they must sta
 
 **Required correction:** PR #54 removes the backend empty-suite allowance, runs backend tests twice, and now makes frontend lint and test commands mandatory by removing `--if-present`.
 
-**How to verify:** CI run `38420803176` passed all eight jobs for current correction head `8d781f3fb45cdce2a07e50ef3250b99ce0501333`. Both backend test runs reported 71 passing tests, and the frontend job ran lint, nine Node tests, and build. Confirm there is no no-tests-allowed branch in CI.
+**How to verify:** CI run `38420803176` passed all eight jobs for correction head `8d781f3fb45cdce2a07e50ef3250b99ce0501333`. Both backend test runs reported 71 passing tests, and the frontend job ran lint, nine Node tests, and build. The latest PR #54 head `425d435f08e1a11a0ca40060db8f285654ab54ad` only updates README content and has CI run `38421606402` pending at the last check. Confirm there is no no-tests-allowed branch in CI.
 
 **Evidence required:** Green current-head CI run `38420803176`, backend test collection/pass counts, frontend test count, and the workflow diff showing mandatory commands. This closes the CI-workflow correction gate in PR #54, but the finding remains against upstream main until PR #54 is merged.
