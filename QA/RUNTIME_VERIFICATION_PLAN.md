@@ -34,7 +34,7 @@ Pass evidence: Source scan shows no operational password literals; a fresh local
 ### RV-03 — Decide and enforce category write authorization
 Related finding: QA-FIND-010 / QA-FIND-032. Priority: High; security blocker.
 
-Why it matters: Category POST, PUT, and DELETE currently modify shared global records without an authentication/authorization guard. A remote caller may alter the categories all users see or attempt deletion of a category used by expenses. This is not solved by validating the JSON fields.
+Why it matters: Upstream `main` still permits anonymous category writes. PR #54 adds JWT guards and tests anonymous 401 responses, but categories remain global and any authenticated user can still modify them until an administrator/ownership policy is implemented.
 
 Action: The team must decide whether categories are global and administrator-managed or individually owned. For global categories, require authentication plus an explicit administrator/maintainer role for writes. For user-owned categories, scope writes and reads to the authenticated owner and adjust expense/budget references accordingly. Do not add a guard that blocks all legitimate category administration without defining how authorized management will work.
 
