@@ -291,20 +291,7 @@ QA-FIND-088 is covered by TC-CI-004 and TC-CI-006. Upstream CI previously allowe
 
 
 ## Latest PR #54 status — 2026-10-13
-The root README follow-up commit `425d435f08e1a11a0ca40060db8f285654ab54ad` passed CI run `38421606402`. Latest PR #54 head `0002b8a21e88e54917e7b6519ea07683d183001c` updates architecture documentation only; CI run `38422688117` passed all eight jobs for this exact head. The correction PR remains open and unmerged. Live AWS/browser checks remain separate release gates.
-
-
-## QA-FIND-090 — Shared category authorization (policy decision required)
-
-**Requirement:** A signed-in user must not be able to modify shared data unless the user has the defined permission.
-
-**Upstream main:** Category mutations are not protected by authentication in the reviewed baseline.
-
-**PR #54 correction:** Create/update/delete require authentication, which blocks anonymous writes but does not enforce administrator privileges or category ownership. Categories remain global records.
-
-**Disposition:** Partially corrected; residual authorization decision and tests remain open. The team must choose shared admin-managed categories or per-user ownership before this item can close.
-
-**Verification:** Two-account API/browser tests, expected 401/403 behavior, and proof that denied actions leave other users' category labels, expenses, budgets, and summaries unchanged. Record the tested commit and CI run.
+The root README and architecture documentation are part of PR #54, which remains open and unmerged. Latest correction head `cf02398d63fa2a2fd920d131d88fda42974b2700` passed all nine CI jobs in run `38423587724`, including the Nginx syntax-check fix. Live AWS/browser checks remain separate release gates.
 
 
 ## REQ-DEPLOY-05 — Nginx image matches the checked-out deployment commit
