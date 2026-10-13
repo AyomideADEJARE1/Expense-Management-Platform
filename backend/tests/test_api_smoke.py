@@ -1,3 +1,38 @@
+import uuid
+from types import SimpleNamespace
+
+import pytest
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
+
+from app import app, debug_mode_enabled, validate_secret_configuration
+from conftest import is_test_database
+from extensions import db, limiter
+from routes.budgets import _is_budget_uniqueness_violation
+from routes.expenses import safe_csv_cell
+
+
+@pytest.fixture()
+def client():
+    app.config.update(TESTING=True, RATELIMIT_ENABLED=False)
+    limiter.reset()
+    with app.test_client() as test_client:
+        yield test_client
+
+
+@pytest.mark.parametrize(
+    ("database_name", "expected"),
+    [
+        ("expense_management_test", True),
+        ("test", True),
+        ("testing", True),
+        ("test_db", True),
+        ("expense_management", False),
+        ("expense_management_prod", False),
+        ("staging_test", False),
+        (None, False),
+    ],
+)
 def test_test_database_guard_requires_explicit_nonproduction_test_name(
     database_name, expected
 ):
@@ -802,7 +837,9 @@ def test_non_object_json_bodies_are_rejected(client):
         assert response.status_code == 400
 
 
-def test_expenses_and_csv_export_are_isolated_between_users(client, auth_headers):
+def test_expenses_and_csv_export_are_isolated_between_users(
+    client, auth_headers
+):
     """A user's list and CSV export must not expose another user's expense."""
     password = "TestPassword123!"
 
@@ -1029,7 +1066,9 @@ def test_delete_category_in_use_returns_conflict(client, auth_headers):
     )
     assert expense_response.status_code == 201
 
-    deletion = client.delete(f"/api/categories/{category_id}", headers=auth_headers)
+    deletion = client.delete(
+        f"/api/categories/{category_id}", headers=auth_headers
+    )
     assert deletion.status_code == 409
 
     still_exists = client.get(f"/api/categories/{category_id}")
@@ -1065,7 +1104,9 @@ def test_category_delete_reference_foreign_key_race_returns_409(
 
     with monkeypatch.context() as patcher:
         patcher.setattr(Session, "commit", fail_with_budget_reference)
-        deleted = client.delete(f"/api/categories/{category_id}", headers=auth_headers)
+        deleted = client.delete(
+            f"/api/categories/{category_id}", headers=auth_headers
+        )
 
     assert deleted.status_code == 409
     assert "expense or budget" in deleted.get_json()["message"]
@@ -1091,7 +1132,9 @@ def test_unexpected_category_delete_failure_returns_500_and_recovers(
 
     with monkeypatch.context() as patcher:
         patcher.setattr(Session, "commit", fail_commit)
-        failed = client.delete(f"/api/categories/{category_id}", headers=auth_headers)
+        failed = client.delete(
+            f"/api/categories/{category_id}", headers=auth_headers
+        )
 
     assert failed.status_code == 500
     assert "simulated database failure" not in failed.get_data(as_text=True)
@@ -1099,11 +1142,15 @@ def test_unexpected_category_delete_failure_returns_500_and_recovers(
     still_exists = client.get(f"/api/categories/{category_id}")
     assert still_exists.status_code == 200
 
-    recovered = client.delete(f"/api/categories/{category_id}", headers=auth_headers)
+    recovered = client.delete(
+        f"/api/categories/{category_id}", headers=auth_headers
+    )
     assert recovered.status_code == 200
 
 
-def test_category_with_budget_cannot_be_deleted_or_reclassified(client, auth_headers):
+def test_category_with_budget_cannot_be_deleted_or_reclassified(
+    client, auth_headers
+):
     email = f"qa-category-budget-{uuid.uuid4().hex}@example.test"
     password = "TestPassword123!"
 
@@ -1144,7 +1191,9 @@ def test_category_with_budget_cannot_be_deleted_or_reclassified(client, auth_hea
     )
     assert budget_response.status_code == 201
 
-    deletion = client.delete(f"/api/categories/{category_id}", headers=auth_headers)
+    deletion = client.delete(
+        f"/api/categories/{category_id}", headers=auth_headers
+    )
     assert deletion.status_code == 409
     assert "assigned to a budget" in deletion.get_json()["message"]
 
@@ -1177,7 +1226,9 @@ def test_budget_category_foreign_key_restricts_deletion():
     assert constraint == "RESTRICT"
 
 
-def test_category_name_length_is_validated_for_create_and_update(client, auth_headers):
+def test_category_name_length_is_validated_for_create_and_update(
+    client, auth_headers
+):
     too_long_create = client.post(
         "/api/categories",
         headers=auth_headers,
