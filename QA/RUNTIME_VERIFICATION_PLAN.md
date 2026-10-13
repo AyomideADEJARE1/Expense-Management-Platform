@@ -745,7 +745,7 @@ The repository's GitHub About description still names the previous cloud target 
 CI run `38418979526` passed all eight jobs for `ae54eec01018a728f97bd7c77f7ccbcad3a96a05`: database migration/role checks, secret scan, component detection, backend lint and tests, frontend lint/tests/build, both Docker builds, and aggregate `ci-success`. The backend suite passed 71 tests and the frontend Node tests ran successfully; npm audit reported zero vulnerabilities. This confirms the CI environment only. AWS existing-volume migration, actual deployment/image version, public health checks, browser flows/downloads, reboot recovery, backup restore, and shared production rate-limit storage remain open.
 
 ## Audit register hygiene
-Five non-active duplicate/consolidation placeholders (QA-FIND-007, 016, 037, 039 and 051) were removed. Canonical coverage remains in QA-FIND-010, QA-FIND-022 and QA-FIND-073. The register now has 80 findings/observations; IDs remain stable for traceability.
+Five non-active duplicate/consolidation placeholders (QA-FIND-007, 016, 037, 039 and 051) were removed. Canonical coverage remains in QA-FIND-010, QA-FIND-022 and QA-FIND-073. The register now has 81 findings/observations; IDs remain stable for traceability.
 
 
 ### RV-58 — Require non-empty backend and frontend test execution
