@@ -700,13 +700,17 @@ Run `38276034129` passed all eight jobs for code commit `97e6515f00c15e240532da6
 **Evidence to close:** Green current-head CI, role/grant output, migration logs, passing CRUD tests, and AWS staging evidence.
 
 
-### 62. Team lead/DevOps: complete the two AWS submission assets
-**What happens:** The professional README intentionally leaves the public application URL and final AWS architecture diagram for the team lead to supply from the actual deployment.
+### 62. Team lead/DevOps: verify the documented AWS URL and architecture against production
+**What happens:** PR #53 now includes the production domain recorded in the previous main README and embeds the architecture image already present in `docs/`. The documents are aligned to AWS EC2, but the audit has not yet verified the live domain or compared the diagram with the running AWS topology.
 
-**Why it matters:** A guessed URL or a diagram that does not match the running system is not reliable submission evidence.
+**Why it matters:** A URL can remain in a README while the service is unavailable or points to a different release. A diagram can also become stale after infrastructure changes.
 
-**Required action:** After AWS deployment, verify the public URL and both health endpoints. Export an architecture diagram that matches the deployed AWS instance, networking, Nginx, frontend, backend, PostgreSQL, and CI/CD flow. Add the verified URL and diagram to README.md and confirm the diagram file is committed.
+**Required action:** Test the public domain from outside the EC2 host, verify `/api/health` and `/api/health/db`, record the deployed commit/image digest, and compare the existing diagram with the actual AWS topology. Update the README/image only if the evidence shows a mismatch.
 
-**How to verify:** Open the URL from outside the EC2 host, confirm `/api/health` and `/api/health/db`, record the deployed commit/image, and compare the diagram with the actual AWS topology.
+**Evidence to close:** Timestamped URL and health results, deployed SHA/image digest, and confirmation that the committed diagram matches the actual AWS services. The README content alone does not close the runtime gate.
 
-**Evidence to close:** Verified URL, health responses, deployed SHA/image digest, and committed architecture diagram. Do not mark the placeholders complete before those checks.
+
+### Documentation update — README and architecture
+PR #53 updates the existing root README rather than creating a duplicate. It documents the project as Expense Tracker / Enhanced Personal Expense Management Platform, describes the implemented React/Vite, Flask, PostgreSQL 16, Nginx, Docker Compose, GitHub Actions, GHCR, and AWS EC2 path, and gives local setup/test commands and release evidence requirements. The existing architecture image is embedded rather than replaced with a second diagram. The public domain remains subject to live health verification.
+
+The architecture document is also aligned with host port 80, private PostgreSQL, restricted runtime database credentials, migrations 002–006 for existing AWS volumes, and the gated AWS deployment workflow. No Azure references remain in the reviewed documents.
