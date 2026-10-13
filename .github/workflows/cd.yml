@@ -108,12 +108,23 @@ jobs:
     steps:
       - name: Pull images and restart services
         uses: appleboy/ssh-action@v1.2.5
+        env:
+          GHCR_READ_USERNAME: ${{ secrets.GHCR_READ_USERNAME }}
+          GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
         with:
           host: ${{ secrets.AWS_EC2_HOST }}
           username: ${{ secrets.AWS_EC2_USER }}
           key: ${{ secrets.AWS_EC2_SSH_KEY }}
+          envs: GHCR_READ_USERNAME,GHCR_READ_TOKEN
           script: |
             set -e
+            cleanup_registry_auth() { docker logout ghcr.io >/dev/null 2>&1 || true; }
+            trap cleanup_registry_auth EXIT
+            if [ -z "$GHCR_READ_USERNAME" ] || [ -z "$GHCR_READ_TOKEN" ]; then
+              echo "GHCR_READ_USERNAME and GHCR_READ_TOKEN are required for the AWS image pull." >&2
+              exit 1
+            fi
+            printf '%s' "$GHCR_READ_TOKEN" | docker login ghcr.io --username "$GHCR_READ_USERNAME" --password-stdin
             cd ${{ vars.DEPLOY_PATH || '~/expense-management-platform' }}
             COMMIT_SHA="${{ github.event.workflow_run.head_sha || github.sha }}"
             SHORT_SHA="$(printf '%s' "$COMMIT_SHA" | cut -c1-7)"
