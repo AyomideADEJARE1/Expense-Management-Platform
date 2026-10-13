@@ -755,7 +755,7 @@ Two duplicate category-write authorization placeholders were removed from QA/QA_
 
 
 ## Current audit counts
-The active register contains 80 findings/observations, the team action summary contains 60 actions, and this plan contains 48 runtime verification gates. Four duplicate/consolidation placeholders were removed; finding IDs remain stable for traceability.
+The active register contains 80 distinct findings/observations, the team action summary contains 60 actions, and this plan contains 58 runtime verification gates. Four duplicate/consolidation placeholders were removed; finding IDs remain stable for traceability.
 
 
 ## Current CI enforcement checkpoint — 2026-10-13
