@@ -2,7 +2,7 @@
 
 Findings are evidence-based. QA is not judged by defect count.
 
-Latest fully green correction checkpoint: CI run 38277483412 passed all eight jobs for code commit 2cc775b4ddc514e8dea5c6c1d80d633d47991ff1. Backend lint passed and the backend suite passed 69 tests, including debug-mode selection, trusted-proxy, partial-profile-name, and category-delete race tests. The frontend suite passed lint/build and all nine Node tests, including CSV formula-neutralization and quote-escaping tests. CI verified migrations 001–005, the budget-category RESTRICT rule, the users.phone column, and migration order; secret scanning, both Docker builds, and aggregate CI passed. Flask-Limiter still warns that rate-limit counters use in-memory storage. This is CI evidence only; AWS live deployment, populated-volume migration, browser workflows, reboot recovery, backup restore, and shared production rate-limit storage remain unverified.
+Latest historical green correction checkpoint: CI run 38381389211 passed all eight jobs for code commit 85871877850b81b367be2acb1135dced73a95255, including migrations 001–006, 69 backend tests, nine frontend tests, secret scanning, both Docker builds, and aggregate CI. This is not the current PR #54 head. The current correction branch has since changed its test harness; CI run 38416621129 is queued for commit 02e0a4a6e30e3fdee45df4238d6649670cd2668b after fixing the test imports/client fixture and a lint-only docstring issue. Do not treat the queued run as passing. AWS live deployment, populated-volume migration, browser workflows, reboot recovery, backup restore, and shared production rate-limit storage remain unverified.
 
 ## QA-FIND-001 — Duplicate frontend source structures
 Classification: Observation. Status: Open.
@@ -10,11 +10,11 @@ Classification: Observation. Status: Open.
 The repository contains both a root-level React source structure and frontend/src. Docker builds ./frontend, making that tree the apparent containerized frontend. The role of the other tree should be clarified.
 
 ## QA-FIND-002 — README accuracy differs by branch
-Classification: Documentation defect. Status: Correction proposed in PR #54; review pending.
+Classification: Documentation defect. Status: README correction proposed in PR #53; branch-specific follow-up remains.
 
 The current upstream `main` README already describes the integrated React/Flask/PostgreSQL stack and identifies AWS EC2 as the documented live environment. The `integration/deployable-main` README still contained legacy frontend/localStorage descriptions that did not match its integrated backend and Docker/Nginx implementation.
 
-PR #54 replaces the integration-branch README and preserves the architecture diagram and documented live URL, while noting that the approved deployment target is AWS. Review the rendered README and verify its links before closing this finding.
+PR #53 updates the main-branch README with the current React/Flask/PostgreSQL/Docker/Nginx stack, AWS EC2 deployment path, local setup, health routes, environment configuration, CI/CD limits, and release evidence. It embeds the architecture image already present in `docs/`. The existing production domain is retained from the previous main README but still requires live verification. The separate `integration/deployable-main` branch should only be updated separately if it remains an active delivery branch.
 
 ## QA-FIND-003 — Dashboard budget data is not passed to all budget-dependent components
 Classification: Historical finding; source correction present. Status: Retest pending.
@@ -100,11 +100,11 @@ The workflow health check requests `${APP_URL}/health`, while the integrated Ngi
 Required action: align Compose image names, publishing tags, and deployment pull behavior; align the health-check URL with the public Nginx route; verify using a deployment or controlled integration environment before marking CD as passing.
 
 ## QA-FIND-013 — Root README describes the legacy localStorage-only app
-Classification: Confirmed documentation defect; corrected README proposed in PR #54. Status: Review pending.
+Classification: Branch-specific documentation defect. Status: Consolidated into QA-FIND-002 for main README; do not count as a separate main-branch defect.
 
 The root `README.md` on `integration/deployable-main` describes a React/localStorage application and lists a legacy component structure. The current integrated implementation instead uses the frontend under `frontend/`, Flask API routes, PostgreSQL, Docker Compose, and Nginx. This discrepancy can cause a developer or reviewer to follow incorrect setup and persistence instructions.
 
-Required action: rewrite the root README to reflect the actual integrated application, required environment configuration, Docker Compose commands, health endpoints, API routing, current CI/CD limitations, and deployment status.
+Main-branch correction is now proposed in PR #53. If `integration/deployable-main` remains an active branch, align its README separately; otherwise retain this as historical branch-specific context and track the main README under QA-FIND-002.
 
 ## QA-FIND-014 — Docker Compose uses development credentials and requires a local backend env file
 Classification: Configuration/security observation. Status: Open.
@@ -519,9 +519,9 @@ Closure evidence: Test script and test files, CI log showing the test command an
 
 ## QA-FIND-049 — Docker Compose port documentation disagrees with the actual port mapping
 
-Classification: Documentation/reproducibility finding. Status: Correction proposed in PR #54; verify remaining documentation references. Priority: Low–Medium.
+Classification: Documentation/reproducibility finding. Status: README and architecture-document corrections proposed in PR #53; clean-start runtime verification remains open. Priority: Low–Medium.
 
-Evidence: The Compose file publishes Nginx as `80:80`, while parts of `docs/docker.md` describe `8080:80` and instruct the reader to open `localhost:8080`. The README describes `http://localhost/`. These instructions cannot all be correct for the same Compose configuration.
+Evidence: The Compose file publishes Nginx as `80:80`. The README and architecture document now describe `http://localhost/` and host port `80`; older documentation/snapshots mentioned `8080:80`. Review all active guides and screenshots for remaining stale `8080` instructions.
 
 Impact: A new developer may open the wrong URL or assume the stack failed to start. This wastes setup time and can lead to inaccurate QA evidence.
 
@@ -1210,3 +1210,9 @@ QA-FIND-082 through QA-FIND-085 now have source-level corrections covered by CI.
 ### Status update — QA-FIND-086 (2026-10-13)
 
 PR #54 now includes `database/migrations/006_app_runtime_role.sql`, Compose credential separation, a CD step that applies migration 006 before application restart, and CI privilege-boundary checks. The backend test job is configured to connect using the restricted application role, while the migration connection uses the bootstrap account. CI run `38381389211` passed all eight jobs for commit `85871877850b81b367be2acb1135dced73a95255`. AWS populated-database migration and live runtime verification remain pending. Do not close this finding until disposable AWS staging checks confirm CRUD works while privileged operations fail.
+
+
+## Documentation refresh status — 2026-10-13
+PR #53 now updates the root README and `docs/architecture.md` on the documentation branch. The README uses the project name “Expense Tracker” with “Enhanced Personal Expense Management Platform”, documents AWS EC2, the current four-service Compose architecture, both environment files, migration behavior, tests, health endpoints, protected deployment settings, and release evidence. It embeds the architecture image that already exists in `docs/Expense Platform System Architecture.png` and retains the public domain recorded in the previous main README, explicitly requiring live verification.
+
+The architecture document now reflects the current host mapping `80:80`, private PostgreSQL port, restricted runtime database role, migration sequence 002–006 for existing deployments, and the AWS EC2/GHCR release path. No Azure references remain in the reviewed README, architecture document, QA findings, team action summary, or runtime plan. Source/document review is complete; current-head CI and live AWS verification are separate gates.
