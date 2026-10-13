@@ -209,12 +209,12 @@ From a clean checkout, copy the root example environment file to .env, set a uni
 
 Pass evidence: Sanitized config, startup/health results, CI run for the exact correction commit, and confirmation that real secrets are not tracked.
 
-## RV-17 — Confirm frontend automated tests execute
-Related finding: QA-FIND-048. Priority: Medium.
+## RV-17 — Verify frontend regression tests and browser journeys
+Related finding: QA-FIND-011. Priority: Medium–High.
 
-Inspect frontend/package.json and the CI logs. The current package has no test script, so npm test with if-present behavior can skip tests. Closure requires a test script and CI logs showing a non-zero number of tests executed. Include profile refresh, expense-search navigation, and budget create/edit cases.
+The PR #54 correction branch now defines `npm test` using Node's test runner, and CI run `38418979526` passed the frontend test job. Confirm the current correction head still runs the test command and reports a non-zero test count. Then verify core browser journeys: registration/login, profile refresh, expense create/edit/delete, date filters, budget create/edit, dashboard totals, and CSV downloads. If the team uses browser automation, make those journeys required CI checks; otherwise retain dated browser-test evidence and the tested commit SHA.
 
-Pass evidence: Test files, package script, CI test output, and tested commit SHA.
+Pass evidence: CI output showing frontend tests actually ran, plus browser automation results or a signed/dated test record with screenshots, expected/actual results, and tested commit SHA.
 
 ## RV-18 — Verify documented port and clean-start steps
 Related finding: QA-FIND-049. Priority: Low–Medium.
@@ -408,7 +408,7 @@ Latest correction CI result: run `38213904072` passed all eight jobs for commit 
 
 **Check:** Set the profile currency to each supported option (NGN, USD, EUR, GBP), then inspect Dashboard, Transactions, Budgets, Reports, dashboard chart tooltips, budget overview, and budget search results. All monetary labels should use the selected currency symbol consistently. Change back to NGN and confirm the display updates without changing the underlying numeric amounts.
 
-**Current source correction:** PR #54 adds a shared currency-symbol helper, passes the saved user currency to financial pages, and replaces hardcoded naira formatting with the shared formatter. Frontend lint/build is pending for the latest commit; automated frontend tests are not configured.
+**Current source correction:** PR #54 adds a shared currency-symbol helper, passes the saved user currency to financial pages, and replaces hardcoded naira formatting with the shared formatter. CI run `38418979526` passed frontend lint, tests, and build for correction commit `ae54eec01018a728f97bd7c77f7ccbcad3a96a05`. Browser verification across all financial screens remains pending.
 
 **Pass evidence:** Passing frontend lint/build for the exact commit and browser screenshots for all supported currencies across the named screens. Keep this gate open until browser evidence is recorded.
 
