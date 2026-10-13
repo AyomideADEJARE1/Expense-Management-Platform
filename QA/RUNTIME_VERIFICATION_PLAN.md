@@ -87,13 +87,15 @@ Action: Configure a shared supported backend such as Redis for production, with 
 Pass evidence: Production config uses shared storage; test requests across workers share the same limit; Redis outage behavior is documented and monitored; no credentials are logged.
 
 ### RV-08 — Verify GHCR image access and deploy the exact tested commit
-Related finding: QA-FIND-012 and deployment workflow verification. Priority: High; deployment gate.
+Related finding: QA-FIND-012 and QA-FIND-031. Priority: High; deployment gate.
 
-Why it matters: CI may build and publish an image successfully while the VM cannot pull it because the package is private or the VM has not authenticated. A deployment can also pull a moving latest tag that is not the exact commit tested by CI.
+Why it matters: CI may publish images successfully while the AWS host cannot pull them because runner authentication does not transfer to the remote VM. A deployment must also use images corresponding to the tested commit.
 
-Action: Decide whether GHCR packages are public or private. For private packages, provision least-privilege read access on the VM and test login non-interactively. Use commit-specific SHA-tagged images and either enforce registry tag immutability or pin the image digest; record the commit SHA and image digest. Confirm the VM's checkout and image correspond to the same reviewed release.
+Correction in PR #54: the remote deployment step uses the repository secrets `GHCR_READ_USERNAME` and `GHCR_READ_TOKEN`, logs in with `--password-stdin`, pulls commit-tagged images, and logs out on exit. CI checks the presence of this configuration. AWS authentication/pull is still an external runtime check.
 
-Pass evidence: VM successfully pulls both images; deployment logs identify the commit-specific tag/digest; running containers report the expected release; rollback instructions are documented and tested.
+Action: Configure a least-privilege token that can read both packages. Use commit-specific SHA-tagged images and either enforce registry tag immutability or pin the image digest; record the commit SHA and image digest. Confirm the VM checkout and running images correspond to the same reviewed release.
+
+Pass evidence: Green current-head CI, VM successfully pulls both images from a clean auth state, deployment logs identify the commit-specific tag/digest, running containers match the expected release, and rollback instructions are tested.
 
 ### RV-09 — Validate migrations on both fresh and existing databases
 Related finding: Existing migration/volume concern noted in PR #53/#54. Priority: High; data-loss prevention.
@@ -694,8 +696,18 @@ CI run 38273922288 passed all eight jobs for correction commit 77620d6547cad3ee3
 ## RV-56 — Verify least-privilege PostgreSQL runtime permissions
 **Owner:** Database/DevOps/backend. **Environment:** CI plus disposable AWS staging database.
 
-**Steps:** Inspect the database role used by the backend and compare it with the bootstrap/migration role. Run the application CRUD suite using the restricted runtime role. Attempt prohibited operations such as creating a role/database, dropping unrelated objects, and changing schema ownership. Separately verify the migration job uses the administrative role and can complete migrations 002–005 on both a fresh database and a disposable populated copy.
+**Steps:** Inspect the database role used by the backend and compare it with the bootstrap/migration role. Run the application CRUD suite using the restricted runtime role. Attempt prohibited operations such as creating a role/database, dropping unrelated objects, and changing schema ownership. Separately verify the migration job uses the administrative role and can complete migrations 002–006 on both a fresh database and a disposable populated copy.
 
 **Pass criteria:** Backend runtime credentials are distinct from administrative credentials; normal application CRUD works; privileged database operations fail for the runtime role; migrations succeed using the administrative role; failure/rollback procedures are documented.
 
 **Evidence:** Sanitized role/grant listing, test results, migration logs, and AWS staging commit/schema evidence. Never include passwords or secret values in evidence. Do not close based on source inspection alone.
+
+
+## RV-57 — Verify AWS submission URL and architecture diagram
+**Owner:** Team lead/DevOps. **Environment:** Deployed AWS environment and repository.
+
+**Steps:** After a deployment has been verified, add the public application URL and the final architecture diagram to README.md. Test the URL from outside the EC2 host, check `/api/health` and `/api/health/db`, record the running commit/image digest, and compare the diagram with the actual AWS topology.
+
+**Pass criteria:** The URL resolves to the reviewed application; both health checks pass; the diagram includes the actual cloud entry point, host/network, Nginx, frontend, Flask API, PostgreSQL, and CI/CD flow; the diagram file is committed and embedded in README.md.
+
+**Evidence:** URL, sanitized health responses, deployed commit/image digest, diagram path and commit. Do not close using an unverified URL or a placeholder diagram.
