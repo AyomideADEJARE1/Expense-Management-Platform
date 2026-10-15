@@ -247,7 +247,7 @@ Scheduled alerting, external uptime monitoring, centralized logs, and host metri
 - The currency preference changes display formatting only. It does not convert historical amounts.
 - Categories are shared across all users. Any signed-in user can rename or delete any category, and deletion is refused while any user's expense or budget uses it. Ownership is an open product decision.
 - Rate-limit storage is in memory and is not shared across application instances.
-- Nginx does not yet send a Content Security Policy.
+- Nginx now sends a Content Security Policy in the correction branch. Browser validation for CSP violations and public response-header verification remain pending; HSTS must be verified/configured at the HTTPS termination layer.
 - Automated database backup and restore are not defined in this repository.
 
 Each limitation is recorded in the [QA findings register](QA/QA_FINDINGS.md).
