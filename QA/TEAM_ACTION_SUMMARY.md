@@ -212,15 +212,15 @@ The missing shared production store remains open and is tracked in action 47 alo
 
 ### 20. DevOps/security: review browser security headers
 
-**What happens:** Nginx sets several security headers, but the reviewed configuration does not include Content-Security-Policy or HSTS.
+**What happens:** Upstream `main` has baseline security headers but no CSP. PR #54 now adds a Content-Security-Policy header in the correction branch. HSTS is still not configured/verified at the public HTTPS termination layer.
 
 **Why it matters:** CSP can limit the impact of unexpected script/resource execution. HSTS helps enforce HTTPS, but it should only be set after HTTPS is confirmed at the public endpoint.
 
-**Required correction:** Define and test a CSP compatible with the React app. Configure HSTS at the HTTPS termination layer only after confirming HTTPS behavior and scope.
+**Required correction:** Review and test the CSP added in PR #54 against the same-origin React app. Configure HSTS at the HTTPS termination layer only after confirming HTTPS behavior and scope.
 
-**How QA will verify:** Inspect response headers on the public HTTPS endpoint and run login, navigation, and API browser tests with CSP enabled.
+**How QA will verify:** After CI passes for the current PR #54 head, inspect public HTTPS response headers and run browser tests for login, navigation, charts, and API requests. Check for unexplained CSP violations and verify HSTS separately at the TLS termination layer.
 
-**Evidence to close:** Header capture, reviewed CSP configuration, and browser results. Do not claim HSTS is enabled unless it is observed on HTTPS responses.
+**Evidence to close:** Passing CI for the current head, header capture, reviewed CSP configuration, and browser results. Do not claim HSTS is enabled unless it is observed on public HTTPS responses.
 
 ### 21. Backend/DevOps: make authentication rate limits proxy-aware (consolidated)
 
@@ -713,3 +713,6 @@ PR #54 owns the root README and architecture documentation because they must sta
 
 
 **Latest deployment correction status (2026-10-13):** The audit identified that upstream `main` did not explicitly rebuild the local Nginx image after checkout. PR #54 now runs `docker compose build nginx` before migrations/restart and includes Nginx in the CI Docker matrix with an `nginx -t` check and an order guard. CI run `38423159920` failed at the isolated Nginx `nginx -t` check because the test container could not resolve the `frontend` and `backend` upstream hostnames. Follow-up commit `cf02398d63fa2a2fd920d131d88fda42974b2700` adds temporary host mappings; CI run `38423587724` passed all nine jobs, and latest PR #54 head `edcebac4482f33ca9280874f31a2a923b27865f6` passed all nine jobs in run `38424685532`. AWS staging verification remains open.
+
+
+**Latest CSP note (2026-10-15):** The correction branch adds the CSP, and the root README now describes it accurately. CI for the latest README/CSP head must pass before the code correction is treated as CI-verified. Public browser/header evidence and HSTS verification remain pending.
