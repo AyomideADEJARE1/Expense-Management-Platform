@@ -447,15 +447,15 @@ Closure evidence: Reviewed documentation diff and a clean-start result using the
 
 ## QA-FIND-050 — Nginx security headers do not yet include a Content Security Policy
 
-Classification: Security-hardening observation. Status: Open; CSP policy and HTTPS/HSTS behavior need review. Priority: Medium.
+Classification: Security-hardening observation. Status: Confirmed on upstream `main`; CSP has been added in the current PR #54 correction branch, but the current CI run and public browser verification are pending. HSTS remains unverified at the HTTPS termination layer. Priority: Medium.
 
-Evidence: The reviewed `nginx/default.conf` sets `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, and `Permissions-Policy`, but does not set a Content-Security-Policy header. HSTS is also not present in the reviewed config.
+Evidence: Upstream `main` sets `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, and `Permissions-Policy`, but does not set a Content-Security-Policy header. The current PR #54 correction branch adds a same-origin CSP to `nginx/default.conf`. HSTS is still not present in that HTTP-only container configuration and must be checked at the public HTTPS termination layer.
 
 Impact: Without a suitable CSP, the browser has fewer restrictions against unexpected script/resource execution if an injection flaw is introduced. HSTS is relevant only when the public site is served over HTTPS; it must not be enabled blindly on a plain-HTTP endpoint.
 
-Required correction: Review frontend asset requirements and add a tested, restrictive CSP that does not break the React app. Configure HSTS at the HTTPS termination layer only after confirming HTTPS is enforced and subdomain/preload scope is appropriate. Preserve the existing security headers.
+Required correction: PR #54 now proposes a restrictive CSP compatible with the same-origin React build while preserving existing security headers. Review the policy and run browser checks for CSP violations before treating the correction as verified. Configure HSTS at the HTTPS termination layer only after confirming HTTPS is enforced and subdomain/preload scope is appropriate.
 
-Retest: Inspect response headers from the public HTTPS URL and run browser smoke tests for login, navigation, and API requests under the CSP. Confirm there are no unexplained CSP violations.
+Retest: First require CI to pass for the commit containing the CSP. Then inspect response headers from the public HTTPS URL and run browser smoke tests for login, navigation, charts, and API requests under the CSP. Confirm there are no unexplained CSP violations. Check HSTS separately at the public HTTPS endpoint.
 
 Closure evidence: Header capture from the deployed HTTPS endpoint, reviewed CSP policy, and browser test evidence. Do not report HSTS as enabled unless observed on HTTPS responses.
 
@@ -1201,3 +1201,8 @@ Removed the older “Additional source audit — targeted retest notes” append
 **How QA will verify:** On a controlled AWS staging VM, deploy a commit that changes a harmless Nginx response header or route marker. Capture the running Nginx image ID and `nginx -T` output before/after deployment. Confirm the new configuration appears in the running container and that `/api/health`, `/api/health/db`, and expected security headers respond through the public endpoint. Confirm a failed Nginx build prevents service replacement.
 
 **Closure evidence:** Green CI for the exact correction head, log evidence showing `docker compose build nginx` before migration/restart, running container/image identity, sanitized `nginx -T` output, and public AWS staging responses showing the changed route/header. CI source checks alone do not close the live deployment finding.
+
+
+### QA-FIND-050 status update — 2026-10-15
+
+The current PR #54 correction branch adds a Content-Security-Policy header to Nginx. The current CI run `38720433781` was in progress when this note was written; do not mark the source correction as CI-verified until that run (or a later run for the final commit) passes. The README limitation was updated to reflect that CSP is configured in the correction branch. Public response-header capture and browser CSP validation remain open, and HSTS remains an edge/TLS-layer verification item. Upstream `main` still lacks the change until PR #54 is merged.
