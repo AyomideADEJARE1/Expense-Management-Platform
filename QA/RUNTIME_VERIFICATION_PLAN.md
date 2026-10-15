@@ -781,3 +781,22 @@ Related finding: QA-FIND-089. Owner: DevOps. Priority: High.
 **Pass evidence:** Green CI for the exact current PR #54 head, deployment logs showing checkout/build/migration/restart order, before/after Nginx image IDs, sanitized `nginx -T` output, public health/header responses, and failure-path evidence.
 
 **Fail conditions:** The deployment skips the Nginx build, uses a stale image/configuration, replaces services before migrations succeed, loses either public health route, or lacks the expected response headers after deployment.
+
+
+## RV-59 — Verify the new Content Security Policy in a real browser
+
+**Purpose:** Confirm the CSP introduced in PR #54 protects the deployed React application without breaking required application behavior.
+
+**Source correction:** PR #54 adds a same-origin CSP in `nginx/default.conf`. The current PR #54 head is `c346a32723e389ae097e2abed6243d6114501670`; CI run `38720599667` was pending at the latest check.
+
+**Procedure:**
+1. Require passing CI for the exact PR #54 head.
+2. Deploy to an approved AWS staging environment.
+3. Capture response headers for the frontend, `/api/health`, and `/api/health/db`.
+4. In a real browser, test registration, login, navigation, dashboard charts, expense create/edit/delete, filters, budgets, profile settings, and CSV download.
+5. Inspect the browser console for CSP violations. Do not weaken directives merely to silence an error; identify the required resource and justify any policy change.
+6. Check HSTS separately on the public HTTPS endpoint. Because the container Nginx listener is HTTP-only, verify the actual TLS termination layer rather than assuming the container header controls public HTTPS.
+
+**Pass criteria:** Required user flows work, no unexplained CSP violations remain, the intended CSP appears on public responses, and HSTS status is explicitly recorded from the public HTTPS endpoint.
+
+**Evidence required:** Tested commit SHA, CI run URL, sanitized response headers, browser screenshots/console evidence, and separate HSTS evidence. Until then, source configuration is present but runtime verification is pending.
