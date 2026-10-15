@@ -19,6 +19,7 @@ It is a containerized system with automated checks and an AWS EC2 deployment wor
 - Filter transactions by month, date range, and category
 - Manage expense categories. Categories are shared across users (see [limitations](#current-limitations))
 - Set monthly budgets by category, and track budget use on the dashboard
+- Budget alerts: the dashboard highlights a budget when spending reaches the alert threshold saved in Settings (50 to 100 percent, default 80) and shows it as over budget when spending exceeds the limit
 - Monthly and category summaries, dashboard totals, charts, and recent transactions
 - CSV export with spreadsheet-formula protection and UTF-8 output
 - Profile settings: name, email, phone, and display currency
@@ -236,15 +237,14 @@ Scheduled alerting, external uptime monitoring, centralized logs, and host metri
 - Keep the bootstrap database credential separate from the runtime credential. The backend receives only the runtime credential.
 - PostgreSQL is not published to the host. Nginx is the only public entry point.
 - The backend container runs as a non-root user.
-- Passwords are hashed. Register and sign-in endpoints are rate limited.
+- Passwords are hashed. New passwords need 8 to 128 characters. Register and sign-in endpoints are rate limited.
 - See [docs/security.md](docs/security.md).
 
 ## Current limitations
 
-- Settings saves notification preferences, but no notification delivery is implemented.
-- The budget alert-threshold preference is stored but does not trigger alerts.
+- Notification preferences are saved, but no notification is sent. Email and message delivery are not implemented.
+- The currency preference changes display formatting only. Amounts recorded in another currency are not converted.
 - The API supports whole-month budgets, but the browser form requires a category, so whole-month budgets cannot yet be created in the UI.
-- The currency preference changes display formatting only. It does not convert historical amounts.
 - Categories are shared across all users. Any signed-in user can rename or delete any category, and deletion is refused while any user's expense or budget uses it. Ownership is an open product decision.
 - Rate-limit storage is in memory and is not shared across application instances.
 - Nginx now sends a Content Security Policy in the correction branch. Browser validation for CSP violations and public response-header verification remain pending; HSTS must be verified/configured at the HTTPS termination layer.
