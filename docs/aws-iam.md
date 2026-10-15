@@ -1,6 +1,6 @@
 # AWS IAM and Access Model
 
-This document records who and what can access the AWS environment for Expense Tracker, the permissions each identity needs, and what must be checked on the live account. It closes the capstone requirement for appropriate cloud IAM permissions (MAIN-027).
+This document records the intended AWS access model for Expense Tracker, the permissions each identity needs, and what must be checked on the live account. It documents how the project addresses the capstone's appropriate cloud IAM permissions requirement (MAIN-027); the requirement must not be marked complete until the live account, role, and network settings have been verified.
 
 Read this with [docs/monitoring.md](monitoring.md), [docs/ci-cd.md](ci-cd.md), and [docs/security.md](security.md).
 
