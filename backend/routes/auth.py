@@ -18,6 +18,11 @@ auth_bp = Blueprint(
     url_prefix="/api/auth"
 )
 
+# Password policy for new registrations (QA-FIND-075). Existing accounts are
+# not affected, and sign-in does not re-apply this rule.
+PASSWORD_MIN_LENGTH = 8
+PASSWORD_MAX_LENGTH = 128
+
 
 def _is_user_email_conflict(error):
     """Return True only for the database's unique users.email constraint."""
@@ -53,6 +58,13 @@ def register():
     if not full_name or not email or not password:
         return error_response(
             "Full name, email, and password are required",
+            400
+        )
+
+    if not (PASSWORD_MIN_LENGTH <= len(password) <= PASSWORD_MAX_LENGTH):
+        return error_response(
+            f"Password must be between {PASSWORD_MIN_LENGTH} and "
+            f"{PASSWORD_MAX_LENGTH} characters",
             400
         )
 
