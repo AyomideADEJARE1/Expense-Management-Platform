@@ -314,7 +314,7 @@ This checkpoint updates the CI evidence above. It does not close any row whose s
 
 ## Latest correction branch status — 2026-10-15
 
-PR #54 now includes a CSP header in `nginx/default.conf`, and its root README limitation list has been updated accordingly. The current PR #54 head is `c346a32723e389ae097e2abed6243d6114501670`; CI run `38720599667` was pending at the last check. Treat the CSP as proposed source code, not a verified browser control, until CI and public browser/header checks pass. HSTS remains unverified at the public TLS termination layer.
+PR #54 now includes a CSP header in `nginx/default.conf`, and its root README limitation list has been updated accordingly. CSP code head `c346a32723e389ae097e2abed6243d6114501670` passed all nine jobs in CI run `38720599667`. The current overall PR #54 head `371769b8b0a8694ce3a45c70061688b00b27d93a` adds a documentation-only AWS IAM wording correction; CI run `38721058755` was queued at the latest check. Treat CSP as CI-verified source configuration, not a verified browser control, until public browser/header checks pass. HSTS remains unverified at the public TLS termination layer.
 
 
 ## Current PR #54 CI checkpoint — 2026-10-15
