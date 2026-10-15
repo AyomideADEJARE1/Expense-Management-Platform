@@ -10,6 +10,7 @@ export default function Dashboard({
   transactions = [],
   currency = 'NGN (₦)',
   isDarkMode = false,
+  budgetThreshold = 80,
 }) {
   return (
     <div className="p-4 sm:p-6 lg:p-8 w-full min-h-screen">
@@ -53,6 +54,7 @@ export default function Dashboard({
             budgets={budgets}
             currency={currency}
             isDarkMode={isDarkMode}
+            budgetThreshold={budgetThreshold}
           />
         </div>
       </div>
