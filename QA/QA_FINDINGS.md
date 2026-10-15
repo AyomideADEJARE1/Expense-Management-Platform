@@ -1206,3 +1206,8 @@ Removed the older “Additional source audit — targeted retest notes” append
 ### QA-FIND-050 status update — 2026-10-15
 
 The current PR #54 correction branch adds a Content-Security-Policy header to Nginx. The README follow-up moved PR #54 to head `c346a32723e389ae097e2abed6243d6114501670`. CI run `38720599667` for that head was pending at the latest check; do not mark the source correction as CI-verified until that run (or a later run for the final commit) passes. The README limitation was updated to reflect that CSP is configured in the correction branch. Public response-header capture and browser CSP validation remain open, and HSTS remains an edge/TLS-layer verification item. Upstream `main` still lacks the change until PR #54 is merged.
+
+
+## Current PR #54 CI status — 2026-10-15
+
+CI run `38720599667` passed all nine jobs for correction head `c346a32723e389ae097e2abed6243d6114501670`. Backend lint and 71 tests passed; frontend lint, nine Node tests and build passed; migrations 001–006 and runtime-role checks passed; secret scan, Docker builds for frontend/backend/Nginx, Nginx configuration validation and deployment-order/health-route checks passed. The known in-memory rate-limit storage warning remains. This does not close live AWS deployment, public health, populated-volume migration, browser CSP/HSTS, backup/restore, or shared rate-limit storage findings. Corrections remain proposed in an open PR until merged into upstream main.
