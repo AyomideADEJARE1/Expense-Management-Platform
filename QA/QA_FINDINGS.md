@@ -1205,7 +1205,7 @@ Removed the older “Additional source audit — targeted retest notes” append
 
 ### QA-FIND-050 status update — 2026-10-15
 
-The current PR #54 correction branch adds a Content-Security-Policy header to Nginx. The README follow-up moved PR #54 to head `c346a32723e389ae097e2abed6243d6114501670`. CI run `38720599667` for that head was pending at the latest check; do not mark the source correction as CI-verified until that run (or a later run for the final commit) passes. The README limitation was updated to reflect that CSP is configured in the correction branch. Public response-header capture and browser CSP validation remain open, and HSTS remains an edge/TLS-layer verification item. Upstream `main` still lacks the change until PR #54 is merged.
+The current PR #54 correction branch adds a Content-Security-Policy header to Nginx. The README follow-up moved PR #54 to head `c346a32723e389ae097e2abed6243d6114501670`; CI run `38720599667` passed all nine jobs, including the Nginx image/configuration check. The current PR #54 head `371769b8b0a8694ce3a45c70061688b00b27d93a` adds a documentation-only AWS IAM wording correction; its CI run `38721058755` was queued at the latest check. The CSP source correction is CI-verified, while public browser/header verification and HSTS checks remain pending. The README limitation was updated to reflect that CSP is configured in the correction branch. Public response-header capture and browser CSP validation remain open, and HSTS remains an edge/TLS-layer verification item. Upstream `main` still lacks the change until PR #54 is merged.
 
 
 ## Current PR #54 CI status — 2026-10-15
