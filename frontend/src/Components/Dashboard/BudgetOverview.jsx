@@ -1,12 +1,21 @@
-
 import { PieChart } from 'lucide-react';
 import { formatCurrency } from '../../utils/currency';
+
+const DEFAULT_THRESHOLD = 80;
 
 export default function BudgetOverview({
   budgets = [],
   currency = 'NGN (₦)',
   isDarkMode = false,
+  budgetThreshold = DEFAULT_THRESHOLD,
 }) {
+  // The saved alert threshold is a whole number from 50 to 100 (the backend
+  // enforces the same range). Anything else falls back to the default.
+  const numericThreshold = Number(budgetThreshold);
+  const threshold = Number.isFinite(numericThreshold)
+    ? Math.min(Math.max(Math.round(numericThreshold), 50), 100)
+    : DEFAULT_THRESHOLD;
+
   const cardStyle = isDarkMode
     ? 'bg-slate-800 border-slate-700'
     : 'bg-white border-gray-200/80';
@@ -37,6 +46,7 @@ export default function BudgetOverview({
               ? Math.min(Math.round((spent / limit) * 100), 100)
               : 0;
             const isExceeded = spent > limit;
+            const isNearThreshold = !isExceeded && limit > 0 && pct >= threshold;
 
             return (
               <div key={b.id || b.category} className="space-y-1.5">
@@ -54,13 +64,21 @@ export default function BudgetOverview({
                     className={`h-full rounded-full transition-all duration-500 ${
                       isExceeded
                         ? 'bg-red-500'
-                        : pct >= 80
+                        : isNearThreshold
                           ? 'bg-amber-400'
                           : 'bg-blue-600'
                     }`}
                     style={{ width: `${pct}%` }}
                   />
                 </div>
+
+                {(isExceeded || isNearThreshold) && (
+                  <p className={`text-xs font-semibold ${isExceeded ? 'text-red-500' : 'text-amber-500'}`}>
+                    {isExceeded
+                      ? 'Over budget'
+                      : `Reached your ${threshold}% alert threshold`}
+                  </p>
+                )}
               </div>
             );
           })}
