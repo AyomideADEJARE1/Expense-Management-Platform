@@ -716,3 +716,7 @@ PR #54 owns the root README and architecture documentation because they must sta
 
 
 **Latest CSP note (2026-10-15):** The correction branch adds the CSP, and the root README now describes it accurately. PR #54 head `c346a32723e389ae097e2abed6243d6114501670` has CI run `38720599667` pending at the latest check. CI must pass for that exact head before the code correction is treated as CI-verified. Public browser/header evidence and HSTS verification remain pending.
+
+
+### Latest CI checkpoint — 2026-10-15
+PR #54 correction head `c346a32723e389ae097e2abed6243d6114501670` passed all nine CI jobs in run `38720599667`. The run passed 71 backend tests, nine frontend tests, frontend lint/build, migrations 001–006 and restricted runtime-role checks, secret scanning, backend/frontend/Nginx Docker builds, Nginx configuration validation, and deployment-order/health-route checks. The known Flask-Limiter in-memory storage warning remains. AWS live version/health, populated-volume migration, browser journeys/downloads, public CSP/HSTS, reboot recovery, backup/restore, and shared production rate limiting still need separate evidence. PR #54 is open and unmerged.
