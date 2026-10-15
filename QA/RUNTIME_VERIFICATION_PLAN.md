@@ -787,7 +787,7 @@ Related finding: QA-FIND-089. Owner: DevOps. Priority: High.
 
 **Purpose:** Confirm the CSP introduced in PR #54 protects the deployed React application without breaking required application behavior.
 
-**Source correction:** PR #54 adds a same-origin CSP in `nginx/default.conf`. The current PR #54 head is `c346a32723e389ae097e2abed6243d6114501670`; CI run `38720599667` was pending at the latest check.
+**Source correction:** PR #54 adds a same-origin CSP in `nginx/default.conf`. The current PR #54 head `c346a32723e389ae097e2abed6243d6114501670` passed all nine CI jobs in run `38720599667`. Public AWS response headers and real-browser CSP verification remain pending.
 
 **Procedure:**
 1. Require passing CI for the exact PR #54 head.
@@ -800,3 +800,8 @@ Related finding: QA-FIND-089. Owner: DevOps. Priority: High.
 **Pass criteria:** Required user flows work, no unexplained CSP violations remain, the intended CSP appears on public responses, and HSTS status is explicitly recorded from the public HTTPS endpoint.
 
 **Evidence required:** Tested commit SHA, CI run URL, sanitized response headers, browser screenshots/console evidence, and separate HSTS evidence. Until then, source configuration is present but runtime verification is pending.
+
+
+## Current PR #54 CI checkpoint — 2026-10-15
+
+Run `38720599667` passed all nine jobs for commit `c346a32723e389ae097e2abed6243d6114501670`: 71 backend tests, frontend lint/nine Node tests/build, migrations 001–006 and restricted database-role checks, secret scanning, frontend/backend/Nginx Docker builds, Nginx config validation, and deployment-order/health-route checks. The known in-memory rate-limit warning remains. Keep runtime gates open until separate evidence confirms the deployed AWS commit/image, populated-volume migrations, public health, browser flows/downloads/CSP, HSTS at the public TLS layer, reboot recovery, backup restoration, and production-shared rate-limit storage.
