@@ -186,6 +186,7 @@ function MainAppContent() {
               categorySummary={categorySummary}
               isDarkMode={isDarkMode}
               currency={user?.currency || 'NGN (₦)'} 
+              budgetThreshold={user?.budget_threshold ?? 80}
             />
           )}
           {activeTab === 'transactions' && (
