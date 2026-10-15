@@ -37,7 +37,7 @@ The Capstone requirements are the primary source. PASS is never inferred from co
 | REQ-27 | Category write authorization | TC-CAT-004–005 | FINDING OPEN: upstream main category POST/PUT/DELETE routes do not require authentication/authorization; the intended shared-category policy must be recorded and enforced |
 | REQ-28 | Automated frontend functional coverage | TC-UI-001, TC-CI-004 | Baseline issue on upstream main: no frontend test script and CI can skip it. PR #54 adds mandatory `npm run lint` and `npm test`; CI run 38420803176 passed the required frontend test job with nine Node tests on correction head 8d781f3fb45cdce2a07e50ef3250b99ce0501333. Full browser end-to-end coverage remains open and needs evidence for core user journeys. Current PR #54 README-only follow-up head 425d435f08e1a11a0ca40060db8f285654ab54ad has its own CI run pending |
 | REQ-29 | Reliable authentication rate limiting behind Nginx | TC-RL-001 | PR #54 configures ProxyFix for one trusted proxy and includes a proxy unit test, but the documented Cloudflare→Nginx→Flask chain has not been verified against the live AWS path. Rate-limit storage remains in memory rather than shared; production spoofed-header, per-client, restart, and shared-counter checks remain open. |
-| REQ-30 | Browser security headers | TC-SEC-005, TC-SEC-008–009 | Baseline headers exist in correction branch; CSP/HSTS configuration and public HTTPS verification remain pending |
+| REQ-30 | Browser security headers | TC-SEC-005, TC-SEC-008–009 | PR #54 now adds a same-origin CSP while preserving the existing headers. Current code head `c346a32723e389ae097e2abed6243d6114501670` has CI run `38720599667` pending. Public HTTPS header capture and browser CSP-violation checks remain pending; HSTS must be verified at the TLS termination layer. |
 | REQ-31 | Reproducible local setup | TC-ENV-001–002, TC-DOC-004 | Compose environment configuration and docs updated in PR #54; clean-checkout startup retest pending |
 
 | REQ-32 | Budget spending is derived from recorded expenses | TC-BUD-005 | Correction proposed in PR #54 makes the spending field read-only; browser verification against expense records remains pending |
@@ -305,8 +305,13 @@ The root README and architecture documentation are part of PR #54, which remains
 **Verification still required:** CI passed for the current PR #54 head in run `38424685532`; deploy to AWS staging and verify the running Nginx configuration, public health routes, and expected security headers. CI syntax validation alone does not prove the live VM is running the new image.
 
 
-## Latest correction CI checkpoint — 2026-10-15
+## Previous correction CI checkpoint — 2026-10-13
 
 Current PR #54 head `901349fd3083357db878b2325e2c5efd91b2cb83` passed all nine jobs in CI run `38475440410`. The backend suite passed 71 tests twice; frontend lint/build and nine Node tests passed; migrations 001–006 and restricted runtime-role checks passed; secret scanning, Docker builds, Nginx configuration checks, and the deployment-order guard passed.
 
 This checkpoint updates the CI evidence above. It does not close any row whose status requires AWS runtime, populated-volume migration, public health, browser end-to-end, IAM/network, backup/restore, or monitoring evidence. PR #54 remains open and unmerged; upstream `main` does not yet contain its corrections.
+
+
+## Latest correction branch status — 2026-10-15
+
+PR #54 now includes a CSP header in `nginx/default.conf`, and its root README limitation list has been updated accordingly. The current PR #54 head is `c346a32723e389ae097e2abed6243d6114501670`; CI run `38720599667` was pending at the last check. Treat the CSP as proposed source code, not a verified browser control, until CI and public browser/header checks pass. HSTS remains unverified at the public TLS termination layer.
