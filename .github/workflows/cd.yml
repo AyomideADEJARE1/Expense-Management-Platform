@@ -5,7 +5,7 @@
 #   1. publish - builds the backend and frontend Docker images and pushes them
 #                to GitHub Container Registry (ghcr.io). Services without a
 #                Dockerfile yet are skipped.
-#   2. deploy  - pulls the new images on the Azure VM with Docker Compose and
+#   2. deploy  - pulls the exact tested images on the AWS EC2 VM with Docker Compose and
 #                checks the /health endpoint. Disabled until the repository
 #                variable DEPLOY_ENABLED is set to "true" (see docs/ci-cd.md).
 
@@ -98,7 +98,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
 
   deploy:
-    name: Deploy to Azure VM
+    name: Deploy to AWS EC2
     needs: publish
     if: vars.DEPLOY_ENABLED == 'true' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -108,20 +108,55 @@ jobs:
     steps:
       - name: Pull images and restart services
         uses: appleboy/ssh-action@v1.2.5
+        env:
+          GHCR_READ_USERNAME: ${{ secrets.GHCR_READ_USERNAME }}
+          GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
         with:
-          host: ${{ secrets.AZURE_VM_HOST }}
-          username: ${{ secrets.AZURE_VM_USER }}
-          key: ${{ secrets.AZURE_VM_SSH_KEY }}
+          host: ${{ secrets.AWS_EC2_HOST }}
+          username: ${{ secrets.AWS_EC2_USER }}
+          key: ${{ secrets.AWS_EC2_SSH_KEY }}
+          envs: GHCR_READ_USERNAME,GHCR_READ_TOKEN
           script: |
             set -e
+            cleanup_registry_auth() { docker logout ghcr.io >/dev/null 2>&1 || true; }
+            trap cleanup_registry_auth EXIT
+            if [ -z "$GHCR_READ_USERNAME" ] || [ -z "$GHCR_READ_TOKEN" ]; then
+              echo "GHCR_READ_USERNAME and GHCR_READ_TOKEN are required for the AWS image pull." >&2
+              exit 1
+            fi
+            printf '%s' "$GHCR_READ_TOKEN" | docker login ghcr.io --username "$GHCR_READ_USERNAME" --password-stdin
             cd ${{ vars.DEPLOY_PATH || '~/expense-management-platform' }}
-            git pull --ff-only
-            docker compose pull
-            docker compose up -d --remove-orphans
+            COMMIT_SHA="${{ github.event.workflow_run.head_sha || github.sha }}"
+            SHORT_SHA="$(printf '%s' "$COMMIT_SHA" | cut -c1-7)"
+            git fetch origin "$COMMIT_SHA"
+            git checkout --detach "$COMMIT_SHA"
+            repo_lower=$(printf '%s' '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')
+            export BACKEND_IMAGE="ghcr.io/${repo_lower}-backend:sha-${SHORT_SHA}"
+            export FRONTEND_IMAGE="ghcr.io/${repo_lower}-frontend:sha-${SHORT_SHA}"
+            docker compose pull backend frontend
+            # Nginx is built locally from the checked-out commit, not pulled from GHCR.
+            # Build it before migrations without replacing the running proxy yet.
+            docker compose build nginx
+            # Start only the database first; keep the currently running app version up
+            # until the schema changes have completed successfully.
+            docker compose up -d --wait postgres
+            # These migrations are also applied explicitly for already-initialized volumes.
+            docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -f /docker-entrypoint-initdb.d/002_user_settings.sql'
+            docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -f /docker-entrypoint-initdb.d/003_budget_uniqueness.sql'
+            docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -f /docker-entrypoint-initdb.d/004_restrict_category_budget_delete.sql'
+            docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -f /docker-entrypoint-initdb.d/005_user_phone.sql'
+            docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -f /docker-entrypoint-initdb.d/006_app_runtime_role.sql'
+            # Restart application services only after migrations succeed.
+            docker compose up -d --remove-orphans backend frontend nginx
             docker image prune -f
 
-      - name: Health check
+      - name: Application and database health checks
         run: |
-          url="${{ vars.APP_URL }}/health"
-          echo "Checking $url"
-          curl --fail --silent --show-error --retry 10 --retry-delay 6 --retry-all-errors "$url"
+          app_url="${{ vars.APP_URL }}/api/health"
+          db_url="${{ vars.APP_URL }}/api/health/db"
+
+          echo "Checking application health: $app_url"
+          curl --fail --silent --show-error --retry 10 --retry-delay 6 --retry-all-errors "$app_url"
+
+          echo "Checking database health: $db_url"
+          curl --fail --silent --show-error --retry 10 --retry-delay 6 --retry-all-errors "$db_url"

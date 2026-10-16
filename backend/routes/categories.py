@@ -1,7 +1,11 @@
 from flask import Blueprint, request
+from flask_jwt_extended import jwt_required
+from sqlalchemy.exc import IntegrityError
 
 from extensions import db
 from models.category import ExpenseCategory
+from models.budget import Budget
+from models.expense import Expense
 from utils.responses import success_response, error_response
 
 
@@ -10,6 +14,24 @@ categories_bp = Blueprint(
     __name__,
     url_prefix="/api/categories"
 )
+
+
+def _is_category_name_conflict(error):
+    """Return True only for the database's category-name unique constraint."""
+    diag = getattr(getattr(error, "orig", None), "diag", None)
+    return (
+        getattr(diag, "constraint_name", None)
+        == "uq_expense_category_name"
+    )
+
+
+def _is_category_reference_conflict(error):
+    """Return True for known foreign keys that prevent category deletion."""
+    diag = getattr(getattr(error, "orig", None), "diag", None)
+    return getattr(diag, "constraint_name", None) in {
+        "fk_expenses_category",
+        "fk_budgets_category",
+    }
 
 
 @categories_bp.get("")
@@ -34,10 +56,11 @@ def get_categories():
 
 
 @categories_bp.post("")
+@jwt_required()
 def create_category():
     data = request.get_json(silent=True)
 
-    if not data:
+    if not isinstance(data, dict):
         return error_response(
             "Request body must contain JSON data",
             400
@@ -52,11 +75,29 @@ def create_category():
             400
         )
 
+    if not isinstance(name, str):
+        return error_response(
+            "Category name must be a string",
+            400
+        )
+
+    if description is not None and not isinstance(description, str):
+        return error_response(
+            "Category description must be a string",
+            400
+        )
+
     name = name.strip()
 
     if not name:
         return error_response(
             "Category name cannot be empty",
+            400
+        )
+
+    if len(name) > 100:
+        return error_response(
+            "Category name cannot exceed 100 characters",
             400
         )
 
@@ -75,8 +116,28 @@ def create_category():
         description=description
     )
 
-    db.session.add(category)
-    db.session.commit()
+    try:
+        db.session.add(category)
+        db.session.commit()
+    except IntegrityError as error:
+        db.session.rollback()
+
+        if _is_category_name_conflict(error):
+            return error_response(
+                "A category with this name already exists",
+                409
+            )
+
+        return error_response(
+            "Failed to create category",
+            500
+        )
+    except Exception:
+        db.session.rollback()
+        return error_response(
+            "Failed to create category",
+            500
+        )
 
     return success_response(
         "Category created successfully",
@@ -113,6 +174,7 @@ def get_category(category_id):
 
 
 @categories_bp.put("/<int:category_id>")
+@jwt_required()
 def update_category(category_id):
     category = db.session.get(
         ExpenseCategory,
@@ -127,7 +189,7 @@ def update_category(category_id):
 
     data = request.get_json(silent=True)
 
-    if not data:
+    if not isinstance(data, dict):
         return error_response(
             "Request body must contain JSON data",
             400
@@ -137,11 +199,23 @@ def update_category(category_id):
     description = data.get("description")
 
     if name is not None:
+        if not isinstance(name, str):
+            return error_response(
+                "Category name must be a string",
+                400
+            )
+
         name = name.strip()
 
         if not name:
             return error_response(
                 "Category name cannot be empty",
+                400
+            )
+
+        if len(name) > 100:
+            return error_response(
+                "Category name cannot exceed 100 characters",
                 400
             )
 
@@ -159,9 +233,35 @@ def update_category(category_id):
         category.name = name
 
     if description is not None:
+        if not isinstance(description, str):
+            return error_response(
+                "Category description must be a string",
+                400
+            )
+
         category.description = description
 
-    db.session.commit()
+    try:
+        db.session.commit()
+    except IntegrityError as error:
+        db.session.rollback()
+
+        if _is_category_name_conflict(error):
+            return error_response(
+                "A category with this name already exists",
+                409
+            )
+
+        return error_response(
+            "Failed to update category",
+            500
+        )
+    except Exception:
+        db.session.rollback()
+        return error_response(
+            "Failed to update category",
+            500
+        )
 
     return success_response(
         "Category updated successfully",
@@ -174,6 +274,7 @@ def update_category(category_id):
 
 
 @categories_bp.delete("/<int:category_id>")
+@jwt_required()
 def delete_category(category_id):
     category = db.session.get(
         ExpenseCategory,
@@ -186,17 +287,44 @@ def delete_category(category_id):
             404
         )
 
+    if Expense.query.filter_by(category_id=category.id).first():
+        return error_response(
+            "Category cannot be deleted because it is being used by "
+            "an expense",
+            409
+        )
+
+    if Budget.query.filter_by(category_id=category.id).first():
+        return error_response(
+            "Category cannot be deleted because it is assigned to a budget",
+            409
+        )
+
     try:
         db.session.delete(category)
         db.session.commit()
+
+    except IntegrityError as error:
+        db.session.rollback()
+
+        if _is_category_reference_conflict(error):
+            return error_response(
+                "Category cannot be deleted because it is referenced by "
+                "an expense or budget",
+                409
+            )
+
+        return error_response(
+            "Failed to delete category",
+            500
+        )
 
     except Exception:
         db.session.rollback()
 
         return error_response(
-            "Category cannot be deleted because it is being used by "
-            "an expense",
-            409
+            "Failed to delete category",
+            500
         )
 
     return success_response(

@@ -62,7 +62,7 @@ export default function Header({
           {activeTab === 'dashboard' ? (
             <>
               <h1 className={`text-2xl sm:text-3xl font-bold flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-  {greeting}, {user?.firstName || 'User'} <span className="inline-block animate-bounce">👋</span>
+  {greeting}, {user?.first_name || user?.firstName || 'User'} <span className="inline-block animate-bounce">👋</span>
 </h1>
               <p className={`text-sm font-medium mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                 Here's your financial summary for {currentMonthYear}

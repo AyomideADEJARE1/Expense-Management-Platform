@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { PieChart as PieChartIcon } from 'lucide-react';
+import { formatCurrency } from '../../utils/currency';
 import {
   PieChart,
   Pie,
@@ -7,7 +8,19 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 
-export default function CategoryDonutChart({ budgets = [] }) {
+export default function CategoryDonutChart({
+  budgets = [],
+  currency = 'NGN (₦)',
+  isDarkMode = false,
+}) {
+
+  const cardStyle = isDarkMode
+    ? 'bg-slate-800 border-slate-700'
+    : 'bg-white border-gray-200/80';
+
+  const titleStyle = isDarkMode ? 'text-slate-100' : 'text-gray-900';
+  const textStyle = isDarkMode ? 'text-slate-300' : 'text-gray-700';
+
   const budgetSummary = useMemo(() => {
     const totalLimit = budgets.reduce(
       (total, budget) => total + Number(budget.limit || 0),
@@ -50,12 +63,12 @@ export default function CategoryDonutChart({ budgets = [] }) {
       : '#3B82F6';
 
   return (
-    <div className="bg-white p-6 rounded-2xl border border-gray-200/80 shadow-sm flex flex-col h-full min-h-[360px]">
+    <div className={`${cardStyle} p-6 rounded-2xl border shadow-sm flex flex-col h-full min-h-[360px]`}>
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <PieChartIcon className="w-5 h-5 text-blue-600" />
 
-          <h2 className="text-lg font-bold text-gray-900">
+          <h2 className={`text-lg font-bold ${titleStyle}`}>
             Budget Spending
           </h2>
         </div>
@@ -90,7 +103,7 @@ export default function CategoryDonutChart({ budgets = [] }) {
 
             {/* Center information */}
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-3xl font-extrabold text-gray-900">
+              <span className={`text-3xl font-extrabold ${titleStyle}`}>
                 {Math.round(budgetSummary.percentage)}%
               </span>
 
@@ -107,14 +120,14 @@ export default function CategoryDonutChart({ budgets = [] }) {
                   ? 'text-red-600'
                   : budgetSummary.percentage >= 80
                     ? 'text-orange-500'
-                    : 'text-gray-700'
+                    : textStyle
               }`}
             >
-              ₦{budgetSummary.totalSpent.toLocaleString()} spent
+              {formatCurrency(budgetSummary.totalSpent, currency)} spent
             </p>
 
-            <p className="text-xs text-gray-400 mt-1">
-              of ₦{budgetSummary.totalLimit.toLocaleString()} budget
+            <p className={`text-xs ${textStyle} mt-1`}>
+              of {formatCurrency(budgetSummary.totalLimit, currency)} budget
             </p>
           </div>
 

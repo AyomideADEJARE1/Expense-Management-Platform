@@ -10,15 +10,15 @@ export default function Settings({ isDarkMode }) {
   const [activeTab, setActiveTab] = useState('profile');
 
   const [userProfile, setUserProfile] = useState({
-    firstName: user?.firstName || '',
-    lastName: user?.lastName || '',
+    firstName: user?.first_name || user?.firstName || '',
+    lastName: user?.last_name || user?.lastName || '',
     email: user?.email || '',
-    phone: user?.phone || '+234 812 345 6789',
+    phone: user?.phone || '',
     currency: user?.currency || 'NGN (₦)',
     dateFormat: user?.dateFormat || 'YYYY-MM-DD',
-    budgetThreshold: user?.budgetThreshold || 85,
-    notifications: user?.notifications ?? true,
-    emailAlerts: user?.emailAlerts ?? true,
+    budgetThreshold: user?.budget_threshold ?? user?.budgetThreshold ?? 85,
+    notifications: user?.notifications_enabled ?? user?.notifications ?? true,
+    emailAlerts: user?.email_alerts_enabled ?? user?.emailAlerts ?? true,
     twoFactor: user?.twoFactor ?? false,
   });
 
@@ -28,24 +28,32 @@ export default function Settings({ isDarkMode }) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setUserProfile((prev) => ({
         ...prev,
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
+        firstName: user.first_name || user.firstName || '',
+        lastName: user.last_name || user.lastName || '',
         email: user.email || '',
-        phone: user.phone || prev.phone,
+        phone: user.phone || '',
+        currency: user.currency || 'NGN (₦)',
+        budgetThreshold:
+          user.budget_threshold ?? user.budgetThreshold ?? 85,
+        notifications:
+          user.notifications_enabled ?? user.notifications ?? true,
+        emailAlerts:
+          user.email_alerts_enabled ?? user.emailAlerts ?? true,
       }));
     }
   }, [user]);
 
   const [isSaved, setIsSaved] = useState(false);
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    updateUserProfile({
-      ...user,
-      ...userProfile,
-    });
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 3000);
+
+    const saved = await updateUserProfile(userProfile);
+
+    if (saved) {
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 3000);
+    }
   };
 
   const cardBg = isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900';
@@ -131,7 +139,8 @@ export default function Settings({ isDarkMode }) {
                 <div className="relative">
                   <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
                   <input
-                    type="text"
+                    type="tel"
+                    autoComplete="tel"
                     value={userProfile.phone}
                     onChange={(e) => setUserProfile({ ...userProfile, phone: e.target.value })}
                     className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-xs sm:text-sm outline-none focus:ring-2 focus:ring-blue-500 ${inputBg}`}

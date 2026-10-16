@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify
 from flask_jwt_extended import JWTManager
 from flask_limiter.errors import RateLimitExceeded
+from werkzeug.middleware.proxy_fix import ProxyFix
 from sqlalchemy.engine import URL
 
 from extensions import db, limiter
@@ -18,11 +19,77 @@ from routes.summaries import summaries_bp
 load_dotenv()
 
 
-app = Flask(__name__)
+def configure_trusted_proxy(app):
+    """Trust forwarding headers from exactly one reverse-proxy hop."""
+    app.wsgi_app = ProxyFix(
+        app.wsgi_app,
+        x_for=1,
+        x_proto=1,
+    )
+    return app
 
 
-app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
-app.config["JWT_SECRET_KEY"] = os.getenv("SECRET_KEY")
+def _is_strong_secret(value):
+    if not isinstance(value, str) or len(value.strip()) < 32:
+        return False
+
+    normalized = value.strip().lower()
+    placeholders = (
+        "replace-with",
+        "change-me",
+        "your-secret",
+        "placeholder",
+        "example-secret",
+    )
+    return not any(marker in normalized for marker in placeholders)
+
+
+def debug_mode_enabled(environment):
+    """Enable the Werkzeug debugger only in explicitly non-production modes."""
+    return environment in {"development", "dev", "testing", "test"}
+
+
+def validate_secret_configuration(secret_key, jwt_secret, environment):
+    """Reject unsafe signing keys when running in production."""
+    if environment not in {"production", "prod"}:
+        return
+
+    if not _is_strong_secret(secret_key):
+        raise RuntimeError(
+            "Production SECRET_KEY must be a strong random value "
+            "of at least 32 characters."
+        )
+
+    if not _is_strong_secret(jwt_secret):
+        raise RuntimeError(
+            "Production JWT_SECRET or JWT_SECRET_KEY must be a separate "
+            "strong random value of at least 32 characters."
+        )
+
+    if secret_key == jwt_secret:
+        raise RuntimeError(
+            "Production SECRET_KEY and JWT signing secret must be different."
+        )
+
+
+app = configure_trusted_proxy(Flask(__name__))
+
+app_environment = (
+    os.getenv("APP_ENV")
+    or os.getenv("FLASK_ENV")
+    or "production"
+).strip().lower()
+flask_secret = os.getenv("SECRET_KEY")
+jwt_secret = os.getenv("JWT_SECRET_KEY") or os.getenv("JWT_SECRET")
+
+validate_secret_configuration(
+    flask_secret,
+    jwt_secret,
+    app_environment,
+)
+
+app.config["SECRET_KEY"] = flask_secret
+app.config["JWT_SECRET_KEY"] = jwt_secret or flask_secret
 
 
 database_url = URL.create(
@@ -30,7 +97,7 @@ database_url = URL.create(
     username=os.getenv("POSTGRES_USER"),
     password=os.getenv("POSTGRES_PASSWORD"),
     host=os.getenv("POSTGRES_HOST", "localhost"),
-    port=5432,
+    port=int(os.getenv("POSTGRES_PORT", "5432")),
     database=os.getenv("POSTGRES_DB"),
 )
 
@@ -109,6 +176,8 @@ def database_health():
         })
 
     except Exception:
+        db.session.rollback()
+
         return jsonify({
             "status": "error",
             "database": "disconnected"
@@ -116,4 +185,4 @@ def database_health():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=debug_mode_enabled(app_environment))

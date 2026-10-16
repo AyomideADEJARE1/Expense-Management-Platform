@@ -21,6 +21,11 @@ class User(db.Model):
         unique=True
     )
 
+    phone = db.Column(
+        db.String(30),
+        nullable=True
+    )
+
     password_hash = db.Column(
         db.String(255),
         nullable=False
@@ -36,6 +41,34 @@ class User(db.Model):
         db.DateTime,
         nullable=False,
         server_default=db.func.current_timestamp()
+    )
+
+    currency = db.Column(
+        db.String(20),
+        nullable=False,
+        default="NGN (₦)",
+        server_default="NGN (₦)"
+    )
+
+    budget_threshold = db.Column(
+        db.Integer,
+        nullable=False,
+        default=85,
+        server_default="85"
+    )
+
+    notifications_enabled = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=True,
+        server_default=db.true()
+    )
+
+    email_alerts_enabled = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=True,
+        server_default=db.true()
     )
 
     # Relationships

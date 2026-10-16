@@ -22,7 +22,10 @@ const menuItems = [
 
 export default function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen }) {
   const { user, logout, getInitials } = useAuth();
-  const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || 'User';
+  const fullName = [
+    user?.first_name || user?.firstName,
+    user?.last_name || user?.lastName
+  ].filter(Boolean).join(' ') || 'User';
 
   return (
     <>
@@ -86,7 +89,10 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen }) 
         <div className="pt-4 border-t border-gray-800/80 flex items-center justify-between px-2 mt-auto">
     <div className="flex items-center gap-3 overflow-hidden">
       <div className="w-10 h-10 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-sm ring-2 ring-blue-500/50 shrink-0">
-        {getInitials(user?.firstName, user?.lastName)}
+        {getInitials(
+          user?.first_name || user?.firstName,
+          user?.last_name || user?.lastName
+        )}
       </div>
       <div className="text-left truncate">
         <p className="text-sm font-semibold text-white truncate">{fullName}</p>

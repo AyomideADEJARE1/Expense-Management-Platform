@@ -10,6 +10,12 @@ import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import { ToastProvider, useToast } from './context/ToastContext';
 import { api } from './services/api';
+import { formatCurrency } from './utils/currency';
+import { calculateBudgetSpent } from './utils/budgetSpending';
+import {
+  createBudgetSearchResult,
+  matchesBudgetSearch,
+} from './utils/budgetSearch';
 
 function MainAppContent() {
   const { user, loading: authLoading } = useAuth();
@@ -43,7 +49,10 @@ function MainAppContent() {
     if (!user) return;
 
     try {
-      const currentMonth = new Date().toISOString().slice(0, 7);
+      const now = new Date();
+      const currentMonth = `${now.getFullYear()}-${String(
+        now.getMonth() + 1
+      ).padStart(2, '0')}`;
 
       const [catsRes, expsRes, bdgtsRes, mSumRes, cSumRes] = await Promise.all([
         api.get('/categories'),
@@ -55,31 +64,14 @@ function MainAppContent() {
 
       setCategories(catsRes?.data || []);
       setExpenses(expsRes?.data || []);
+
       
       const expenseData = expsRes?.data || [];
       const budgetData = bdgtsRes?.data || [];
 
       setBudgets(
         budgetData.map((budget) => {
-          const budgetMonth = String(budget.month || '').slice(0, 7);
-
-          const spent = expenseData
-            .filter((expense) => {
-              const expenseCategoryId =
-                expense.category_id ?? expense.category?.id;
-
-              const expenseDate =
-                expense.expense_date ?? expense.date;
-
-              return (
-                Number(expenseCategoryId) === Number(budget.category_id) &&
-                String(expenseDate || '').slice(0, 7) === budgetMonth
-              );
-            })
-            .reduce(
-              (total, expense) => total + Number(expense.amount || 0),
-              0
-            );
+          const spent = calculateBudgetSpent(budget, expenseData);
 
           return {
             ...budget,
@@ -116,7 +108,7 @@ function MainAppContent() {
       if (exp.description?.toLowerCase().includes(query)) {
         results.push({
           sourceType: 'Expense',
-          tab: 'transcations',
+          tab: 'transactions',
           title: exp.description,
           subtitle: `Expense • ${exp.expense_date}`,
           amount: exp.amount,
@@ -124,14 +116,14 @@ function MainAppContent() {
       }
     });
 
-    budgets.forEach((b) => {
-      results.push({
-        sourceType: 'Budget',
-        tab: 'budgets',
-        title: `Category #${b.category_id} Budget`,
-        subtitle: `Month: ${b.month} • Limit: ₦${b.amount?.toLocaleString()}`,
-        amount: b.amount,
-      });
+    budgets.forEach((budget) => {
+      const result = createBudgetSearchResult(
+        budget,
+        categories,
+        user?.currency || 'NGN (₦)',
+        formatCurrency,
+      );
+      if (matchesBudgetSearch(result, query)) results.push(result);
     });
 
     categories.forEach((c) => {
@@ -146,7 +138,7 @@ function MainAppContent() {
     });
 
     return results;
-  }, [searchQuery, expenses, budgets, categories]);
+  }, [searchQuery, expenses, budgets, categories, user?.currency]);
 
   const handleSelectSearchResult = (result) => {
     setActiveTab(result.tab);
@@ -187,21 +179,27 @@ function MainAppContent() {
         <div className="space-y-6">
           {activeTab === 'dashboard' && (
             <Dashboard 
-              budgets={budgets}  
+              budgets={budgets}
+              categories={categories}  
               transactions={expenses} 
               monthlySummary={monthlySummary}
               categorySummary={categorySummary}
-              isDarkMode={isDarkMode} 
+              isDarkMode={isDarkMode}
+              currency={user?.currency || 'NGN (₦)'} 
+              budgetThreshold={user?.budget_threshold ?? 80}
             />
           )}
           {activeTab === 'transactions' && (
             <Transactions
+              currency={user?.currency || 'NGN (₦)'}
               categories={categories}
               onTransactionChange={loadAppData}
+              isDarkMode={isDarkMode}
             />
           )}
           {activeTab === 'budgets' && (
-            <Budgets 
+            <Budgets
+              currency={user?.currency || 'NGN (₦)'}
               categories={categories} 
               budgets={budgets} 
               setBudgets={setBudgets} 
@@ -218,7 +216,8 @@ function MainAppContent() {
             />
           )}
           {activeTab === 'reports' && (
-            <Reports 
+            <Reports
+              currency={user?.currency || 'NGN (₦)'}
               monthlySummary={monthlySummary}
               categorySummary={categorySummary}
               isDarkMode={isDarkMode} 

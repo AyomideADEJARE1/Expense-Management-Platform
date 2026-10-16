@@ -1,0 +1,8 @@
+# Do not send local secrets, host dependencies, or generated output into the image.
+.env
+.env.*
+.git
+node_modules/
+dist/
+coverage/
+*.log

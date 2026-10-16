@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { api } from '../services/api';
+import { formatCurrency } from '../utils/currency';
+import { escapeCsvCell } from '../utils/csv';
 import {
   Calendar,
   TrendingDown,
@@ -9,7 +11,24 @@ import {
   X,
 } from 'lucide-react';
 
-export default function Reports() {
+export default function Reports({
+  currency = 'NGN (₦)',
+  isDarkMode = false,
+}) {
+  const pageStyle = isDarkMode
+    ? 'text-slate-100'
+    : 'text-gray-900';
+
+  const cardStyle = isDarkMode
+    ? 'bg-slate-800 border-slate-700'
+    : 'bg-white border-gray-100';
+
+  const primaryText = isDarkMode ? 'text-slate-100' : 'text-gray-900';
+  const secondaryText = isDarkMode ? 'text-slate-300' : 'text-gray-500';
+
+  const panelStyle = isDarkMode ? 'bg-slate-700' : 'bg-gray-50';
+  const dividerStyle = isDarkMode ? 'border-slate-700' : 'border-gray-100';
+
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedMonthKey, setSelectedMonthKey] = useState(null);
@@ -40,7 +59,7 @@ export default function Reports() {
     transactions.forEach((tx) => {
       if (!tx.expense_date) return;
 
-      const dateObj = new Date(tx.expense_date);
+      const dateObj = new Date(`${tx.expense_date}T00:00:00`);
 
       if (Number.isNaN(dateObj.getTime())) return;
 
@@ -87,32 +106,73 @@ export default function Reports() {
     ? monthlyData[selectedMonthKey]
     : null;
 
+  const exportReport = () => {
+    if (!activeReport) return;
+
+    const headers = [
+      'Date',
+      'Description',
+      'Category',
+      'Amount',
+    ];
+
+    const rows = activeReport.transactions.map((tx) => [
+      tx.expense_date || '',
+      tx.description || 'Expense',
+      tx.category?.name || tx.category || 'Uncategorized',
+      Number(tx.amount || 0),
+    ]);
+
+    const csvContent = [
+      headers,
+      ...rows,
+    ]
+      .map((row) => row.map(escapeCsvCell).join(','))
+      .join('\n');
+
+    const blob = new Blob(['\uFEFF', csvContent], {
+      type: 'text/csv;charset=utf-8;',
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download = `${selectedMonthKey}-expense-report.csv`;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className={`p-6 max-w-7xl mx-auto space-y-6 ${pageStyle}`}>
       {loading ? (
-        <div className="text-center py-12 text-gray-500">
+        <div className={`text-center py-12 ${secondaryText}`}>
           Loading reports...
         </div>
       ) : monthKeys.length === 0 ? (
-        <div className="bg-white rounded-2xl p-12 text-center border border-gray-100 shadow-sm">
+        <div className={`${cardStyle} rounded-2xl p-12 text-center border shadow-sm`}>
           <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
 
-          <h3 className="text-lg font-bold text-gray-800">
+          <h3 className={`text-lg font-bold ${primaryText}`}>
             No Reports Available
           </h3>
 
-          <p className="text-xs text-gray-500 mt-1">
+          <p className={`text-xs ${secondaryText} mt-1`}>
             Add expenses to generate monthly reports.
           </p>
         </div>
       ) : (
         <>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className={`text-2xl font-bold ${primaryText}`}>
               Expense Reports
             </h1>
 
-            <p className="text-sm text-gray-500 mt-1">
+            <p className={`text-sm ${secondaryText} mt-1`}>
               Review your monthly spending and expense categories.
             </p>
           </div>
@@ -124,7 +184,7 @@ export default function Reports() {
               return (
                 <div
                   key={monthKey}
-                  className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between"
+                  className={`${cardStyle} rounded-2xl p-6 border shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between`}
                 >
                   <div>
                     <div className="flex items-center justify-between mb-4">
@@ -133,7 +193,7 @@ export default function Reports() {
                           <Calendar className="w-5 h-5" />
                         </div>
 
-                        <h2 className="font-bold text-gray-800">
+                        <h2 className={`font-bold ${primaryText}`}>
                           {report.label}
                         </h2>
                       </div>
@@ -145,32 +205,32 @@ export default function Reports() {
 
                     <div className="space-y-3 my-4">
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-500 flex items-center gap-1.5">
+                        <span className={`${secondaryText} flex items-center gap-1.5`}>
                           <TrendingDown className="w-4 h-4 text-red-500" />
                           Total Expenses
                         </span>
 
                         <span className="font-semibold text-red-600">
-                          ₦{report.totalExpense.toLocaleString()}
+                          {formatCurrency(report.totalExpense, currency)}
                         </span>
                       </div>
 
-                      <div className="pt-2 border-t border-gray-100 flex justify-between text-sm font-bold">
-                        <span className="text-gray-700">
+                      <div className={`pt-2 border-t ${dividerStyle} flex justify-between text-sm font-bold`}>
+                        <span className={`${secondaryText}`}>
                           Transactions
                         </span>
 
-                        <span className="text-gray-900">
+                        <span className={`${primaryText}`}>
                           {report.transactions.length}
                         </span>
                       </div>
 
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">
+                        <span className={`${secondaryText}`}>
                           Categories
                         </span>
 
-                        <span className="font-semibold text-gray-800">
+                        <span className={`font-semibold ${primaryText}`}>
                           {Object.keys(report.categories).length}
                         </span>
                       </div>
@@ -194,14 +254,14 @@ export default function Reports() {
       {/* Detailed Report Modal */}
       {activeReport && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 space-y-6 shadow-2xl">
+          <div className={`${cardStyle} rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 space-y-6 shadow-2xl`}>
             <div className="flex items-center justify-between border-b pb-4">
               <div>
-                <h2 className="text-xl font-bold text-gray-900">
+                <h2 className={`text-xl font-bold ${primaryText}`}>
                   {activeReport.label} Expense Report
                 </h2>
 
-                <p className="text-xs text-gray-500">
+                <p className={`text-xs ${secondaryText}`}>
                   Detailed overview of your monthly expenses
                 </p>
               </div>
@@ -222,7 +282,7 @@ export default function Reports() {
                 </p>
 
                 <p className="text-xl font-bold text-red-800 mt-1">
-                  ₦{activeReport.totalExpense.toLocaleString()}
+                  {formatCurrency(activeReport.totalExpense, currency)}
                 </p>
               </div>
 
@@ -249,14 +309,14 @@ export default function Reports() {
 
             {/* Expense Breakdown */}
             <div>
-              <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide mb-3 flex items-center gap-2">
+              <h3 className={`text-sm font-bold ${primaryText} uppercase tracking-wide mb-3 flex items-center gap-2`}>
                 <PieIcon className="w-4 h-4 text-blue-600" />
                 Expense Breakdown
               </h3>
 
-              <div className="space-y-3 bg-gray-50 p-4 rounded-xl">
+              <div className={`space-y-3 ${panelStyle} p-4 rounded-xl`}>
                 {Object.keys(activeReport.categories).length === 0 ? (
-                  <p className="text-xs text-gray-500 text-center py-2">
+                  <p className={`text-xs ${secondaryText} text-center py-2`}>
                     No expenses recorded for this month.
                   </p>
                 ) : (
@@ -276,11 +336,11 @@ export default function Reports() {
                           key={categoryName}
                           className="space-y-1"
                         >
-                          <div className="flex justify-between text-xs font-semibold text-gray-700">
+                          <div className={`flex justify-between text-xs font-semibold ${secondaryText}`}>
                             <span>{categoryName}</span>
 
                             <span>
-                              ₦{amount.toLocaleString()} ({percentage}%)
+                              {formatCurrency(amount, currency)} ({percentage}%)
                             </span>
                           </div>
 
@@ -304,22 +364,22 @@ export default function Reports() {
 
             {/* Transactions */}
             <div>
-              <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide mb-3">
+              <h3 className={`text-sm font-bold ${primaryText} uppercase tracking-wide mb-3`}>
                 Transactions
               </h3>
 
-              <div className="border border-gray-100 rounded-xl overflow-hidden">
+              <div className={`border ${dividerStyle} rounded-xl overflow-hidden`}>
                 {activeReport.transactions.map((tx) => (
-                  <div
+                  <div  
                     key={tx.id}
-                    className="flex items-center justify-between gap-4 px-4 py-3 border-b last:border-b-0 border-gray-100"
+                    className={`flex items-center justify-between gap-4 px-4 py-3 border-b last:border-b-0 ${dividerStyle}`}
                   >
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-gray-800 truncate">
+                      <p className={`text-sm font-semibold ${primaryText} truncate`}>
                         {tx.description || 'Expense'}
                       </p>
 
-                      <p className="text-xs text-gray-500">
+                      <p className={`text-xs ${secondaryText}`}>
                         {tx.category?.name ||
                           tx.category ||
                           'Uncategorized'}
@@ -327,7 +387,7 @@ export default function Reports() {
                     </div>
 
                     <span className="text-sm font-bold text-red-600 whitespace-nowrap">
-                      ₦{Number(tx.amount || 0).toLocaleString()}
+                      {formatCurrency(tx.amount, currency)}
                     </span>
                   </div>
                 ))}
@@ -337,8 +397,12 @@ export default function Reports() {
             {/* Actions */}
             <div className="flex justify-end gap-3 border-t pt-4">
               <button
-                onClick={() => window.print()}
-                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium flex items-center gap-2"
+                onClick={exportReport}
+                className={`px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 ${
+                  isDarkMode
+                    ? 'bg-slate-700 hover:bg-slate-600 text-slate-100'
+                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                }`}
               >
                 <Download className="w-4 h-4" />
                 Export Report

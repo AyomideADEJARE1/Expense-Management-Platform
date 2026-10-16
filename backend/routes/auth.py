@@ -1,4 +1,5 @@
 from flask import Blueprint, request
+from sqlalchemy.exc import IntegrityError
 from flask_jwt_extended import (
     create_access_token,
     jwt_required,
@@ -17,13 +18,24 @@ auth_bp = Blueprint(
     url_prefix="/api/auth"
 )
 
+# Password policy for new registrations (QA-FIND-075). Existing accounts are
+# not affected, and sign-in does not re-apply this rule.
+PASSWORD_MIN_LENGTH = 8
+PASSWORD_MAX_LENGTH = 128
+
+
+def _is_user_email_conflict(error):
+    """Return True only for the database's unique users.email constraint."""
+    diag = getattr(getattr(error, "orig", None), "diag", None)
+    return getattr(diag, "constraint_name", None) == "users_email_key"
+
 
 @auth_bp.post("/register")
 @limiter.limit("5 per minute")
 def register():
     data = request.get_json(silent=True)
 
-    if not data:
+    if not isinstance(data, dict):
         return error_response(
             "Request body must contain JSON data",
             400
@@ -33,9 +45,26 @@ def register():
     email = data.get("email")
     password = data.get("password")
 
+    if (
+        not isinstance(full_name, str)
+        or not isinstance(email, str)
+        or not isinstance(password, str)
+    ):
+        return error_response(
+            "Full name, email, and password must be strings",
+            400
+        )
+
     if not full_name or not email or not password:
         return error_response(
             "Full name, email, and password are required",
+            400
+        )
+
+    if not (PASSWORD_MIN_LENGTH <= len(password) <= PASSWORD_MAX_LENGTH):
+        return error_response(
+            f"Password must be between {PASSWORD_MIN_LENGTH} and "
+            f"{PASSWORD_MAX_LENGTH} characters",
             400
         )
 
@@ -48,9 +77,26 @@ def register():
             400
         )
 
+    if len(full_name) > 100:
+        return error_response(
+            "Full name cannot exceed 100 characters",
+            400
+        )
+
     if not email:
         return error_response(
             "Email cannot be empty",
+            400
+        )
+
+    if (
+        len(email) > 255
+        or "@" not in email
+        or "." not in email.rsplit("@", 1)[-1]
+        or any(char.isspace() for char in email)
+    ):
+        return error_response(
+            "A valid email address is required",
             400
         )
 
@@ -76,6 +122,20 @@ def register():
         db.session.add(user)
         db.session.commit()
 
+    except IntegrityError as error:
+        db.session.rollback()
+
+        if _is_user_email_conflict(error):
+            return error_response(
+                "A user with this email already exists",
+                409
+            )
+
+        return error_response(
+            "Failed to register user",
+            500
+        )
+
     except Exception:
         db.session.rollback()
 
@@ -100,7 +160,7 @@ def register():
 def login():
     data = request.get_json(silent=True)
 
-    if not data:
+    if not isinstance(data, dict):
         return error_response(
             "Request body must contain JSON data",
             400
@@ -108,6 +168,12 @@ def login():
 
     email = data.get("email")
     password = data.get("password")
+
+    if not isinstance(email, str) or not isinstance(password, str):
+        return error_response(
+            "Email and password must be strings",
+            400
+        )
 
     if not email or not password:
         return error_response(
@@ -174,6 +240,187 @@ def get_current_user():
         {
             "id": user.id,
             "full_name": user.full_name,
-            "email": user.email
+            "email": user.email,
+            "phone": user.phone,
+            "currency": user.currency,
+            "budget_threshold": user.budget_threshold,
+            "notifications_enabled": user.notifications_enabled,
+            "email_alerts_enabled": user.email_alerts_enabled
+        }
+    )
+
+
+@auth_bp.put("/me")
+@jwt_required()
+def update_current_user():
+    data = request.get_json(silent=True)
+
+    if not isinstance(data, dict):
+        return error_response("Request body must contain JSON data", 400)
+
+    user_id = get_jwt_identity()
+    user = db.session.get(User, user_id)
+
+    if not user:
+        return error_response("User not found", 404)
+
+    # Preserve a name part when a caller updates only the other part.
+    if "first_name" in data or "last_name" in data:
+        current_name_parts = user.full_name.split(maxsplit=1)
+        current_first_name = (
+            current_name_parts[0] if current_name_parts else ""
+        )
+        current_last_name = (
+            current_name_parts[1] if len(current_name_parts) > 1 else ""
+        )
+        first_name_value = data.get("first_name", current_first_name)
+        last_name_value = data.get("last_name", current_last_name)
+
+        if (
+            not isinstance(first_name_value, str)
+            or not isinstance(last_name_value, str)
+        ):
+            return error_response(
+                "First name and last name must be strings",
+                400
+            )
+
+        first_name = first_name_value.strip()
+        last_name = last_name_value.strip()
+
+        if not first_name:
+            return error_response("First name cannot be empty", 400)
+
+        full_name = f"{first_name} {last_name}".strip()
+
+        if len(full_name) > 100:
+            return error_response(
+                "Full name cannot exceed 100 characters",
+                400
+            )
+
+        user.full_name = full_name
+
+    # Update and validate email.
+    if "email" in data:
+        email = data["email"]
+
+        if not isinstance(email, str):
+            return error_response("A valid email address is required", 400)
+
+        email = email.strip().lower()
+
+        if (
+            not email
+            or len(email) > 255
+            or "@" not in email
+            or "." not in email.rsplit("@", 1)[-1]
+            or any(char.isspace() for char in email)
+        ):
+            return error_response("A valid email address is required", 400)
+
+        existing_user = User.query.filter(
+            User.email == email,
+            User.id != user.id
+        ).first()
+
+        if existing_user:
+            return error_response("A user with this email already exists", 409)
+
+        user.email = email
+
+    # Update and validate the optional phone number.
+    if "phone" in data:
+        phone = data["phone"]
+
+        if not isinstance(phone, str):
+            return error_response("Phone number must be a string", 400)
+
+        phone = phone.strip()
+        if len(phone) > 30 or any(ord(char) < 32 for char in phone):
+            return error_response(
+                "Phone number is too long or contains control characters",
+                400
+            )
+
+        user.phone = phone or None
+
+    # Update and validate currency.
+    if "currency" in data:
+        allowed_currencies = {
+            "NGN (₦)",
+            "USD ($)",
+            "EUR (€)",
+            "GBP (£)"
+        }
+
+        if (
+            not isinstance(data["currency"], str)
+            or data["currency"] not in allowed_currencies
+        ):
+            return error_response("Unsupported currency", 400)
+
+        user.currency = data["currency"]
+
+    # Update and validate the budget alert threshold.
+    if "budget_threshold" in data:
+        threshold = data["budget_threshold"]
+
+        if (
+            isinstance(threshold, bool)
+            or not isinstance(threshold, int)
+            or not 50 <= threshold <= 100
+        ):
+            return error_response(
+                "Budget threshold must be an integer between 50 and 100",
+                400
+            )
+
+        user.budget_threshold = threshold
+
+    # Update notification preferences.
+    for field in ("notifications_enabled", "email_alerts_enabled"):
+        if field in data:
+            if not isinstance(data[field], bool):
+                return error_response(
+                    f"{field} must be true or false",
+                    400
+                )
+
+            setattr(user, field, data[field])
+
+    user.updated_at = db.func.current_timestamp()
+
+    try:
+        db.session.commit()
+    except IntegrityError as error:
+        db.session.rollback()
+
+        if _is_user_email_conflict(error):
+            return error_response(
+                "A user with this email already exists",
+                409
+            )
+
+        return error_response("Failed to update profile", 500)
+    except Exception:
+        db.session.rollback()
+        return error_response("Failed to update profile", 500)
+
+    name_parts = user.full_name.split(maxsplit=1)
+
+    return success_response(
+        "Profile updated successfully",
+        {
+            "id": user.id,
+            "full_name": user.full_name,
+            "first_name": name_parts[0],
+            "last_name": name_parts[1] if len(name_parts) > 1 else "",
+            "email": user.email,
+            "phone": user.phone,
+            "currency": user.currency,
+            "budget_threshold": user.budget_threshold,
+            "notifications_enabled": user.notifications_enabled,
+            "email_alerts_enabled": user.email_alerts_enabled
         }
     )

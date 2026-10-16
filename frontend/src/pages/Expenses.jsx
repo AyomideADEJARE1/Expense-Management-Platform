@@ -219,9 +219,9 @@ export default function Expenses({ categories = [], expenses = [], setExpenses, 
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
             <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-4">
-              <h3 className="text-lg font-bold text-gray-900">{editingExpense ? 'Edit Expense' : 'Add Expense'}</h3>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">{editingExpense ? 'Edit Expense' : 'Add Expense'}</h3>
               <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">
                 <X className="w-5 h-5" />
               </button>
@@ -229,34 +229,34 @@ export default function Expenses({ categories = [], expenses = [], setExpenses, 
 
             <form onSubmit={handleSave} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">Description</label>
+                <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Description</label>
                 <input
                   type="text"
                   required
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2 text-sm"
+                  className="w-full bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 rounded-xl px-3.5 py-2 text-sm"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">Amount (₦)</label>
+                  <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Amount (₦)</label>
                   <input
                     type="number"
                     required
                     value={formData.amount}
                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2 text-sm"
+                    className="w-full bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 rounded-xl px-3.5 py-2 text-sm"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">Category</label>
+                  <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Category</label>
                   <select
                     value={formData.category_id}
                     onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2 text-sm"
+                    className="w-full bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 rounded-xl px-3.5 py-2 text-sm"
                   >
                     {categories.map((cat) => (
                       <option key={cat.id} value={cat.id}>{cat.name}</option>
@@ -266,13 +266,13 @@ export default function Expenses({ categories = [], expenses = [], setExpenses, 
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">Date</label>
+                <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Date</label>
                 <input
                   type="date"
                   required
                   value={formData.expense_date}
                   onChange={(e) => setFormData({ ...formData, expense_date: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2 text-sm"
+                  className="w-full bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 rounded-xl px-3.5 py-2 text-sm"
                 />
               </div>
 

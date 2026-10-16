@@ -1,0 +1,13 @@
+BEGIN;
+
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS currency VARCHAR(20)
+        NOT NULL DEFAULT 'NGN (₦)',
+    ADD COLUMN IF NOT EXISTS budget_threshold INTEGER
+        NOT NULL DEFAULT 85,
+    ADD COLUMN IF NOT EXISTS notifications_enabled BOOLEAN
+        NOT NULL DEFAULT TRUE,
+    ADD COLUMN IF NOT EXISTS email_alerts_enabled BOOLEAN
+        NOT NULL DEFAULT TRUE;
+
+COMMIT;

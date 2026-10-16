@@ -11,7 +11,7 @@ name: CI
 
 on:
   pull_request:
-    branches: [main, nginx]
+    branches: [main, nginx, integration/deployable-main]
   push:
     branches: [main, nginx]
   workflow_dispatch:
@@ -105,6 +105,10 @@ jobs:
       PGUSER: ci_user
       PGPASSWORD: ci_password
       PGDATABASE: expense_management_test
+      POSTGRES_DB: expense_management_test
+      POSTGRES_BOOTSTRAP_USER: ci_user
+      POSTGRES_APP_USER: ci_app_user
+      POSTGRES_APP_PASSWORD: ci-app-password-long-enough-for-ci-123456789
     steps:
       - uses: actions/checkout@v7
 
@@ -129,6 +133,128 @@ jobs:
           for t in $expected; do
             echo " $actual " | grep -q " $t " || { echo "::error::Missing table: $t"; exit 1; }
           done
+          delete_rule=$(psql -tA -c "SELECT rc.delete_rule FROM information_schema.referential_constraints AS rc JOIN information_schema.table_constraints AS tc ON tc.constraint_catalog = rc.constraint_catalog AND tc.constraint_schema = rc.constraint_schema AND tc.constraint_name = rc.constraint_name WHERE tc.table_schema = 'public' AND tc.table_name = 'budgets' AND tc.constraint_name = 'fk_budgets_category';")
+          test "$delete_rule" = "RESTRICT" || { echo "::error::Budget category foreign key must use ON DELETE RESTRICT; got '$delete_rule'."; exit 1; }
+          phone_column=$(psql -tA -c "SELECT count(*) FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'users' AND column_name = 'phone';")
+          test "$phone_column" = "1" || { echo "::error::User phone column was not created by migrations."; exit 1; }
+          echo "Category deletion is restricted while budget references exist; users.phone exists."
+
+      - name: Verify the application database role is least-privileged
+        run: |
+          role_flags=$(psql -tA -c "SELECT rolsuper OR rolcreatedb OR rolcreaterole OR rolreplication OR rolbypassrls FROM pg_roles WHERE rolname = '$POSTGRES_APP_USER';")
+          test "$role_flags" = "f" || { echo "::error::Runtime role has administrative privileges: $role_flags"; exit 1; }
+          table_access=$(psql -tA -c "SELECT has_table_privilege('$POSTGRES_APP_USER', 'public.expenses', 'SELECT') AND has_table_privilege('$POSTGRES_APP_USER', 'public.expenses', 'INSERT') AND has_table_privilege('$POSTGRES_APP_USER', 'public.expenses', 'UPDATE') AND has_table_privilege('$POSTGRES_APP_USER', 'public.expenses', 'DELETE');")
+          test "$table_access" = "t" || { echo "::error::Runtime role lacks required expense-table CRUD privileges."; exit 1; }
+          sequence_access=$(psql -tA -c "SELECT has_sequence_privilege('$POSTGRES_APP_USER', 'public.expenses_id_seq', 'USAGE');")
+          test "$sequence_access" = "t" || { echo "::error::Runtime role lacks required sequence privileges."; exit 1; }
+          if PGPASSWORD="$POSTGRES_APP_PASSWORD" psql -h "$PGHOST" -U "$POSTGRES_APP_USER" -d "$PGDATABASE" -v ON_ERROR_STOP=1 -c "CREATE ROLE qa_forbidden_role" >/dev/null 2>&1; then
+            echo "::error::Runtime role unexpectedly created a database role."
+            exit 1
+          fi
+          if PGPASSWORD="$POSTGRES_APP_PASSWORD" psql -h "$PGHOST" -U "$POSTGRES_APP_USER" -d "$PGDATABASE" -v ON_ERROR_STOP=1 -c "CREATE DATABASE qa_forbidden_db" >/dev/null 2>&1; then
+            echo "::error::Runtime role unexpectedly created a database."
+            exit 1
+          fi
+          if PGPASSWORD="$POSTGRES_APP_PASSWORD" psql -h "$PGHOST" -U "$POSTGRES_APP_USER" -d "$PGDATABASE" -v ON_ERROR_STOP=1 -c "CREATE TABLE public.qa_forbidden_table (id integer)" >/dev/null 2>&1; then
+            echo "::error::Runtime role unexpectedly created a table."
+            exit 1
+          fi
+          echo "Runtime role has required CRUD privileges and cannot create roles, databases, or schema objects."
+
+      - name: Verify duplicate legacy budgets block the uniqueness migration
+        run: |
+          createdb budget_duplicate_test
+          for f in database/migrations/001_initial_schema.sql database/migrations/002_user_settings.sql; do
+            psql -d budget_duplicate_test -v ON_ERROR_STOP=1 -q -f "$f"
+          done
+          psql -d budget_duplicate_test -v ON_ERROR_STOP=1 <<'SQL'
+          INSERT INTO users (full_name, email, password_hash)
+          VALUES ('Migration QA', 'migration-qa@example.test', 'not-a-real-hash');
+          INSERT INTO budgets (user_id, category_id, amount, month)
+          VALUES
+            (1, NULL, 100.00, DATE '2026-10-01'),
+            (1, NULL, 200.00, DATE '2026-10-01');
+          SQL
+          if psql -d budget_duplicate_test -v ON_ERROR_STOP=1 -q -f database/migrations/003_budget_uniqueness.sql >migration-duplicate.log 2>&1; then
+            echo "::error::Uniqueness migration unexpectedly accepted duplicate general budgets."
+            exit 1
+          fi
+          if ! grep -q "duplicate user/month budgets with NULL category exist" migration-duplicate.log; then
+            cat migration-duplicate.log
+            echo "::error::Migration failed, but not with the expected duplicate-data diagnostic."
+            exit 1
+          fi
+          echo "Duplicate legacy budgets are rejected with an actionable diagnostic."
+
+      - name: Validate Docker Compose environment configuration
+        run: |
+          cp backend/.env.example backend/.env
+          printf '%s\n' \
+            'POSTGRES_USER=ci_user' \
+            'POSTGRES_PASSWORD=ci-bootstrap-password-for-compose-test' \
+            'POSTGRES_DB=expense_management_test' \
+            'POSTGRES_APP_USER=ci_app_user' \
+            'POSTGRES_APP_PASSWORD=ci-compose-app-password-strong-123456789' > .env
+          env -u POSTGRES_APP_PASSWORD docker compose config --format json > /tmp/compose-resolved.json
+          python - <<'PY'
+          import json
+          with open('/tmp/compose-resolved.json', encoding='utf-8') as handle:
+              config = json.load(handle)
+          backend = config['services']['backend']['environment']
+          postgres = config['services']['postgres']['environment']
+          print('Resolved credential wiring:', {
+              'backend_user': backend.get('POSTGRES_USER'),
+              'backend_password_matches_app': backend.get('POSTGRES_PASSWORD') == 'ci-compose-app-password-strong-123456789',
+              'postgres_user': postgres.get('POSTGRES_USER'),
+              'bootstrap_password_matches': postgres.get('POSTGRES_PASSWORD') == 'ci-bootstrap-password-for-compose-test',
+          })
+          assert backend['POSTGRES_USER'] == 'ci_app_user'
+          assert backend['POSTGRES_PASSWORD'] == 'ci-compose-app-password-strong-123456789'
+          assert postgres['POSTGRES_USER'] == 'ci_user'
+          assert postgres['POSTGRES_PASSWORD'] == 'ci-bootstrap-password-for-compose-test'
+          assert backend['POSTGRES_PASSWORD'] != postgres['POSTGRES_PASSWORD']
+          assert postgres['POSTGRES_APP_USER'] == 'ci_app_user'
+          assert all(service.get('restart') == 'unless-stopped' for service in config['services'].values())
+          print('Compose separates bootstrap credentials from backend runtime credentials.')
+          print('All four services have restart: unless-stopped.')
+          PY
+          if grep -q 'expense_password' /tmp/compose-resolved.json; then
+            echo "::error::Resolved Compose configuration still contains the old fixed password."
+            exit 1
+          fi
+          echo "Compose has separate database roles, no fixed legacy password, and restart policies for all four services."
+
+      - name: Verify public Nginx health-route mappings
+        run: |
+          grep -Fq 'location = /api/health {' nginx/default.conf
+          grep -Fq 'proxy_pass http://backend/health;' nginx/default.conf
+          grep -Fq 'location = /api/health/db {' nginx/default.conf
+          grep -Fq 'proxy_pass http://backend/health/db;' nginx/default.conf
+          grep -Fq '/api/health"' .github/workflows/cd.yml
+          grep -Fq '/api/health/db"' .github/workflows/cd.yml
+          echo "Nginx maps both public health URLs to the matching backend endpoints, and CD checks both."
+
+      - name: Verify deployment migrations run before app restart
+        run: |
+          nginx_build=$(grep -nF 'docker compose build nginx' .github/workflows/cd.yml | cut -d: -f1)
+          db_start=$(grep -nF 'docker compose up -d --wait postgres' .github/workflows/cd.yml | cut -d: -f1)
+          migration_002=$(grep -nF '002_user_settings.sql' .github/workflows/cd.yml | cut -d: -f1)
+          migration_003=$(grep -nF '003_budget_uniqueness.sql' .github/workflows/cd.yml | cut -d: -f1)
+          migration_004=$(grep -nF '004_restrict_category_budget_delete.sql' .github/workflows/cd.yml | cut -d: -f1)
+          migration_005=$(grep -nF '005_user_phone.sql' .github/workflows/cd.yml | cut -d: -f1)
+          migration_006=$(grep -nF '006_app_runtime_role.sql' .github/workflows/cd.yml | cut -d: -f1)
+          app_start=$(grep -nF 'docker compose up -d --remove-orphans backend frontend nginx' .github/workflows/cd.yml | cut -d: -f1)
+          test -n "$nginx_build" && test -n "$db_start" && test -n "$migration_002" && test -n "$migration_003" && test -n "$migration_004" && test -n "$migration_005" && test -n "$migration_006" && test -n "$app_start"
+          if [ "$nginx_build" -ge "$db_start" ] || [ "$db_start" -ge "$migration_002" ] || [ "$migration_002" -ge "$migration_003" ] || [ "$migration_003" -ge "$migration_004" ] || [ "$migration_004" -ge "$migration_005" ] || [ "$migration_005" -ge "$migration_006" ] || [ "$migration_006" -ge "$app_start" ]; then
+            echo "::error::Database migrations must complete before application services are restarted."
+            exit 1
+          fi
+          echo "Deployment builds Nginx from the checked-out commit before migrations and keeps current services running until migrations complete."
+          grep -qF 'docker login ghcr.io' .github/workflows/cd.yml
+          grep -qF 'GHCR_READ_USERNAME' .github/workflows/cd.yml
+          grep -qF 'GHCR_READ_TOKEN' .github/workflows/cd.yml
+          grep -qF 'envs: GHCR_READ_USERNAME,GHCR_READ_TOKEN' .github/workflows/cd.yml
+          echo "AWS deployment is configured to authenticate the VM before pulling GHCR images."
 
   backend:
     name: Backend (lint & test)
@@ -154,9 +280,17 @@ jobs:
           --health-retries 10
     env:
       FLASK_ENV: testing
-      SECRET_KEY: ci-test-secret
-      JWT_SECRET: ci-test-jwt-secret
+      SECRET_KEY: ci-test-secret-key-with-at-least-thirty-two-bytes
+      JWT_SECRET: ci-test-jwt-secret-key-with-at-least-thirty-two-bytes
       DATABASE_URL: postgresql://ci_user:ci_password@localhost:5432/expense_management_test
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: ci_app_user
+      POSTGRES_PASSWORD: ci-app-password-long-enough-for-ci-123456789
+      POSTGRES_BOOTSTRAP_USER: ci_user
+      POSTGRES_APP_USER: ci_app_user
+      POSTGRES_APP_PASSWORD: ci-app-password-long-enough-for-ci-123456789
+      POSTGRES_DB: expense_management_test
     steps:
       - uses: actions/checkout@v7
 
@@ -173,20 +307,26 @@ jobs:
           if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
           pip install flake8 pytest
 
+      - name: Apply database migrations for API tests
+        run: |
+          shopt -s nullglob
+          files=(../database/migrations/*.sql)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "::error::No database migrations found for API tests."
+            exit 1
+          fi
+          for f in "${files[@]}"; do
+            echo "Applying $f"
+            psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$f"
+          done
+
       - name: Lint
         run: flake8 . --count --show-source --statistics --exclude .venv,venv,migrations
 
-      - name: Test
+      - name: Test and verify repeatability
         run: |
-          set +e
           pytest -v
-          status=$?
-          # Exit code 5 means "no tests collected" - allowed while the backend is being scaffolded.
-          if [ $status -eq 5 ]; then
-            echo "::warning::No backend tests found yet."
-            exit 0
-          fi
-          exit $status
+          pytest -v
 
   frontend:
     name: Frontend (lint, test & build)
@@ -208,11 +348,34 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Report dependency audit findings
+        run: |
+          npm audit --json > npm-audit.json || true
+          node <<'NODE'
+          const report = require('./npm-audit.json');
+          const vulnerabilities = report.vulnerabilities || {};
+          for (const [name, item] of Object.entries(vulnerabilities)) {
+            const advisories = (item.via || [])
+              .filter((entry) => typeof entry === 'object')
+              .map((entry) => entry.title || entry.name)
+              .join('; ');
+            console.log(
+              `${item.severity.toUpperCase()} ${name}: range=${item.range}; ` +
+              `direct=${item.isDirect}; fixAvailable=${JSON.stringify(item.fixAvailable)}; ` +
+              `advisories=${advisories}`
+            );
+          }
+          console.log(
+            'Audit totals:',
+            JSON.stringify(report.metadata?.vulnerabilities || {})
+          );
+          NODE
+
       - name: Lint
-        run: npm run lint --if-present
+        run: npm run lint
 
       - name: Test
-        run: npm test --if-present
+        run: npm test
         env:
           CI: true
 
@@ -231,7 +394,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [backend, frontend]
+        service: [backend, frontend, nginx]
     steps:
       - uses: actions/checkout@v7
 
@@ -248,15 +411,53 @@ jobs:
       - uses: docker/setup-buildx-action@v4
         if: steps.dockerfile.outputs.present == 'true'
 
+      - name: Verify Docker build context ignore rules
+        run: |
+          for file in backend/.dockerignore frontend/.dockerignore; do
+            test -f "$file" || { echo "::error::Missing $file"; exit 1; }
+            grep -Fxq '.env' "$file" || { echo "::error::$file must exclude .env"; exit 1; }
+            grep -Fxq '.env.*' "$file" || { echo "::error::$file must exclude .env.*"; exit 1; }
+          done
+          grep -Fxq 'node_modules/' frontend/.dockerignore || {
+            echo "::error::Frontend build context must exclude node_modules."
+            exit 1
+          }
+          echo "Docker build contexts exclude local env files; frontend also excludes host dependencies."
+
+      - name: Add harmless sentinel environment file for build-context test
+        if: steps.dockerfile.outputs.present == 'true' && matrix.service != 'nginx'
+        run: |
+          if [ "${{ matrix.service }}" = "backend" ]; then
+            printf '%s\n' 'SECRET_SENTINEL=do-not-package' > backend/.env
+          else
+            printf '%s\n' 'VITE_SECRET_SENTINEL=do-not-embed' > frontend/.env.local
+          fi
+
       - name: Build image (no push)
         if: steps.dockerfile.outputs.present == 'true'
         uses: docker/build-push-action@v7
         with:
           context: ${{ matrix.service }}
           push: false
+          load: true
           tags: expense-${{ matrix.service }}:ci
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
+      - name: Verify sentinel was excluded from the built image
+        if: steps.dockerfile.outputs.present == 'true' && matrix.service != 'nginx'
+        run: |
+          if [ "${{ matrix.service }}" = "backend" ]; then
+            docker run --rm --entrypoint sh expense-backend:ci -c 'test ! -e /app/.env'
+          else
+            docker run --rm --entrypoint sh expense-frontend:ci -c "test -d /usr/share/nginx/html && ! grep -R -q 'VITE_SECRET_SENTINEL' /usr/share/nginx/html"
+          fi
+          echo "Local environment sentinel was not included in the built image/assets."
+
+      - name: Verify Nginx image configuration
+        if: steps.dockerfile.outputs.present == 'true' && matrix.service == 'nginx'
+        run: |
+          docker run --rm --add-host frontend:127.0.0.1 --add-host backend:127.0.0.1 --entrypoint sh expense-nginx:ci -c 'test -f /etc/nginx/conf.d/default.conf && nginx -t'
 
   ci-success:
     name: ci-success

@@ -1,4 +1,5 @@
 from datetime import date
+import re
 from decimal import Decimal, InvalidOperation
 import csv
 import io
@@ -17,6 +18,16 @@ expenses_bp = Blueprint(
     __name__,
     url_prefix="/api/expenses"
 )
+
+
+def safe_csv_cell(value):
+    """Prevent spreadsheet formula execution in untrusted CSV text cells."""
+    text = "" if value is None else str(value)
+
+    if text.lstrip()[:1] in ("=", "+", "-", "@"):
+        return "'" + text
+
+    return text
 
 
 def build_expense_query(user_id):
@@ -50,6 +61,12 @@ def build_expense_query(user_id):
 
     if month is not None:
         try:
+            if not isinstance(month, str) or re.fullmatch(
+                r"\d{4}-(0[1-9]|1[0-2])",
+                month
+            ) is None:
+                raise ValueError
+
             year, month_number = month.split("-")
 
             year = int(year)
@@ -88,6 +105,46 @@ def build_expense_query(user_id):
             Expense.expense_date < end_date
         )
 
+    start_date_value = request.args.get("start_date")
+    end_date_value = request.args.get("end_date")
+
+    start_date = None
+    end_date = None
+
+    if start_date_value is not None:
+        try:
+            start_date = date.fromisoformat(start_date_value)
+            if start_date.isoformat() != start_date_value:
+                raise ValueError
+        except (TypeError, ValueError):
+            return None, error_response(
+                "start_date must use YYYY-MM-DD format",
+                400
+            )
+
+    if end_date_value is not None:
+        try:
+            end_date = date.fromisoformat(end_date_value)
+            if end_date.isoformat() != end_date_value:
+                raise ValueError
+        except (TypeError, ValueError):
+            return None, error_response(
+                "end_date must use YYYY-MM-DD format",
+                400
+            )
+
+    if start_date and end_date and start_date > end_date:
+        return None, error_response(
+            "start_date cannot be after end_date",
+            400
+        )
+
+    if start_date:
+        query = query.filter(Expense.expense_date >= start_date)
+
+    if end_date:
+        query = query.filter(Expense.expense_date <= end_date)
+
     return query, None
 
 
@@ -98,7 +155,7 @@ def create_expense():
 
     data = request.get_json(silent=True)
 
-    if not data:
+    if not isinstance(data, dict):
         return error_response(
             "Request body must contain JSON data",
             400
@@ -112,6 +169,22 @@ def create_expense():
     if category_id is None:
         return error_response(
             "Category ID is required",
+            400
+        )
+
+    if (
+        isinstance(category_id, bool)
+        or not isinstance(category_id, int)
+        or category_id <= 0
+    ):
+        return error_response(
+            "Category ID must be a positive integer",
+            400
+        )
+
+    if description is not None and not isinstance(description, str):
+        return error_response(
+            "Description must be a string",
             400
         )
 
@@ -147,9 +220,21 @@ def create_expense():
             400
         )
 
+    if not amount.is_finite():
+        return error_response(
+            "Amount must be a finite number",
+            400
+        )
+
     if amount <= 0:
         return error_response(
             "Amount must be greater than zero",
+            400
+        )
+
+    if amount >= Decimal("10000000000"):
+        return error_response(
+            "Amount exceeds the maximum supported value",
             400
         )
 
@@ -162,6 +247,8 @@ def create_expense():
     # Validate expense date
     try:
         parsed_date = date.fromisoformat(expense_date)
+        if parsed_date.isoformat() != expense_date:
+            raise ValueError
     except (TypeError, ValueError):
         return error_response(
             "Expense date must use YYYY-MM-DD format",
@@ -268,9 +355,9 @@ def export_expenses():
     for expense in expenses:
         writer.writerow([
             expense.id,
-            expense.category.name,
+            safe_csv_cell(expense.category.name),
             f"{float(expense.amount):.2f}",
-            expense.description or "",
+            safe_csv_cell(expense.description),
             expense.expense_date.isoformat()
         ])
 
@@ -334,7 +421,7 @@ def update_expense(expense_id):
 
     data = request.get_json(silent=True)
 
-    if not data:
+    if not isinstance(data, dict):
         return error_response(
             "Request body must contain JSON data",
             400
@@ -347,6 +434,16 @@ def update_expense(expense_id):
 
     # Update category
     if category_id is not None:
+        if (
+            isinstance(category_id, bool)
+            or not isinstance(category_id, int)
+            or category_id <= 0
+        ):
+            return error_response(
+                "Category ID must be a positive integer",
+                400
+            )
+
         category = db.session.get(
             ExpenseCategory,
             category_id
@@ -370,9 +467,21 @@ def update_expense(expense_id):
                 400
             )
 
+        if not amount.is_finite():
+            return error_response(
+                "Amount must be a finite number",
+                400
+            )
+
         if amount <= 0:
             return error_response(
                 "Amount must be greater than zero",
+                400
+            )
+
+        if amount >= Decimal("10000000000"):
+            return error_response(
+                "Amount exceeds the maximum supported value",
                 400
             )
 
@@ -386,12 +495,20 @@ def update_expense(expense_id):
 
     # Update description
     if "description" in data:
+        if description is not None and not isinstance(description, str):
+            return error_response(
+                "Description must be a string",
+                400
+            )
+
         expense.description = description
 
     # Update expense date
     if expense_date is not None:
         try:
             parsed_date = date.fromisoformat(expense_date)
+            if parsed_date.isoformat() != expense_date:
+                raise ValueError
         except (TypeError, ValueError):
             return error_response(
                 "Expense date must use YYYY-MM-DD format",

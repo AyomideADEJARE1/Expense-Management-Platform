@@ -10,7 +10,7 @@ The backend is built with **Flask, SQLAlchemy, Psycopg, and PostgreSQL** and is 
 
 ## Technology Stack
 
-- Python
+- Python 3.12
 - Flask
 - Flask-SQLAlchemy
 - SQLAlchemy
@@ -36,7 +36,7 @@ The backend is responsible for:
 - Budget management
 - Monthly expense summaries
 - Category-based expense summaries
-- PostgreSQL database communication
+- PostgreSQL database communication using a restricted runtime account
 - Input validation
 - Error handling
 - API rate limiting
@@ -53,7 +53,7 @@ The backend is part of the following application architecture:
 Browser
    |
    v
-Nginx Reverse Proxy :8080
+Nginx Reverse Proxy :80
    |
    +----------------------+
    |                      |
@@ -102,12 +102,14 @@ Nginx maps:
 
 ```text
 /api/health
+/api/health/db
 ```
 
 to:
 
 ```text
 /health
+/health/db
 ```
 
 on the Flask backend.
@@ -167,31 +169,9 @@ backend/
 
 The backend uses environment variables for application configuration and database credentials.
 
-For local development, create a `.env` file in the `backend/` directory.
+For local development, create a `.env` file in the `backend/` directory from `.env.example`. Set `SECRET_KEY` and `JWT_SECRET` to two different values of at least 32 characters. Do not reuse database passwords as signing keys.
 
-Example:
-
-```text
-SECRET_KEY=your-local-development-secret
-
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-POSTGRES_USER=expense_user
-POSTGRES_PASSWORD=your-database-password
-POSTGRES_DB=expense_db
-```
-
-When running through Docker Compose, the database connection is configured for the PostgreSQL service:
-
-```text
-POSTGRES_HOST=postgres
-POSTGRES_PORT=5432
-POSTGRES_USER=expense_user
-POSTGRES_PASSWORD=expense_password
-POSTGRES_DB=expense_db
-```
-
-The Docker Compose database configuration is intended for local development and integration testing.
+When running through Docker Compose, the database connection is supplied from the root `.env`. The backend receives only the restricted runtime account (`POSTGRES_APP_USER` and `POSTGRES_APP_PASSWORD`). The bootstrap password is not passed to the backend container.
 
 Do not use development credentials in production.
 
@@ -199,24 +179,13 @@ Do not use development credentials in production.
 
 The `.env` file should remain excluded from version control.
 
-A `.env.example` file is provided as a template.
-
 ---
 
 ## Database
 
 The backend uses **PostgreSQL 16**.
 
-The current Docker Compose database configuration is:
-
-```text
-Host: postgres
-Port: 5432
-Database: expense_db
-User: expense_user
-```
-
-The Flask application communicates with PostgreSQL through SQLAlchemy and Psycopg.
+The Flask application communicates with PostgreSQL through SQLAlchemy and Psycopg. The Compose service name is `postgres`, on port `5432`, and it is reachable only inside the Docker network.
 
 The main database entities include:
 
@@ -238,9 +207,9 @@ database/migrations/001_initial_schema.sql
 
 into PostgreSQL's initialization directory.
 
-When a new PostgreSQL volume is created, PostgreSQL automatically executes this migration during database initialization.
+When a new PostgreSQL volume is created, PostgreSQL automatically executes this migration during database initialization. Later migrations are applied by the deployment workflow.
 
-To recreate the local development database from the initial schema:
+To recreate a local development database from the initial schema:
 
 ```bash
 docker compose down -v
@@ -303,7 +272,7 @@ The development server runs at:
 http://127.0.0.1:5000
 ```
 
-> When the complete application is running through Docker Compose, the backend is normally accessed through Nginx at `http://localhost:8080/api/...` rather than directly from the browser.
+> When the complete application is running through Docker Compose, the backend is normally accessed through Nginx at `http://localhost/api/...` rather than directly from the browser.
 
 ---
 
@@ -375,7 +344,7 @@ Returns information about the currently authenticated user.
 | POST | `/api/categories` | Create a category |
 | GET | `/api/categories/<category_id>` | Get one category |
 | PUT | `/api/categories/<category_id>` | Update a category |
-| DELETE | `/api/categories/<category_id>` | Delete a category |
+| DELETE | `/api/categories/<category_id>` | Delete a category. Refused while a budget still references the category |
 
 ---
 
@@ -392,18 +361,14 @@ Returns information about the currently authenticated user.
 
 ### Expense Filtering
 
-Expenses can be filtered by category or month.
+Expenses can be filtered by category, month, or date range. Dates use `YYYY-MM-DD`, and months use `YYYY-MM`.
 
-Example:
+Examples:
 
 ```text
 GET /api/expenses?category_id=1
-```
-
-Example:
-
-```text
 GET /api/expenses?month=2026-10
+GET /api/expenses?start_date=2026-10-01&end_date=2026-10-31
 ```
 
 ---
@@ -418,7 +383,7 @@ GET /api/expenses?month=2026-10
 | PUT | `/api/budgets/<budget_id>` | Update a budget |
 | DELETE | `/api/budgets/<budget_id>` | Delete a budget |
 
-Budgets can be associated with an entire month or a specific expense category.
+Budgets can be associated with an entire month or a specific expense category. Migration `003` allows only one general budget per user and month.
 
 ---
 
@@ -464,7 +429,7 @@ GET /health
 
 Returns a successful response when the Flask application is running.
 
-Through Nginx, the same health check is available at:
+Through Nginx, the same check is available at:
 
 ```text
 GET /api/health
@@ -473,7 +438,7 @@ GET /api/health
 Example:
 
 ```bash
-curl http://localhost:8080/api/health
+curl -i http://localhost/api/health
 ```
 
 Expected response:
@@ -497,6 +462,14 @@ Through Nginx:
 ```text
 GET /api/health/db
 ```
+
+Example:
+
+```bash
+curl -i http://localhost/api/health/db
+```
+
+A healthy local stack should return success for both checks. Live verification through the deployed entry point is still required before release.
 
 ---
 
@@ -526,9 +499,7 @@ The backend handles:
 
 Passwords are hashed before being stored in the database.
 
-There is currently no server-side logout endpoint because JWT authentication is stateless.
-
-Client-side logout is performed by removing the stored authentication token.
+There is currently no server-side logout endpoint because JWT authentication is stateless. Client-side logout is performed by removing the stored authentication token.
 
 ---
 
@@ -551,8 +522,9 @@ Validation includes:
 
 Expense and budget amounts must:
 
-- Be valid numbers
+- Be valid, finite numbers
 - Be greater than zero
+- Be below the supported maximum
 - Contain no more than two decimal places
 
 For example:
@@ -581,10 +553,13 @@ Security measures implemented in the backend include:
 - JWT authentication
 - Authentication-protected endpoints
 - User-specific data access
-- Environment-based secrets
+- Environment-based secrets, with separate Flask and JWT signing keys
+- Production startup checks that reject weak or shared signing keys
+- The Werkzeug debugger disabled outside explicit development or test modes
 - `.env` excluded from Git
 - Authentication rate limiting
 - Input validation
+- CSV formula protection on exported text cells
 - Database transaction rollback on errors
 
 Users can only access their own authenticated expense and budget data.
@@ -619,30 +594,15 @@ The backend uses a consistent response structure.
 
 # Testing and Verification
 
-The backend and integrated application have been verified during development for:
+Automated backend tests run in CI on each pull request. CI fails if no tests are collected, and it runs the suite twice to check repeatability.
 
-- Application health
-- Database connectivity
-- User registration
-- User login
-- JWT authentication
-- Authentication protection
-- Category CRUD operations
-- Expense CRUD operations
-- Expense filtering
-- CSV export
-- Budget operations
-- Monthly summaries
-- Category summaries
-- Input validation
+Development checks are listed in the QA documents, in `QA/TEST_CASES.md`. Source and CI checks do not replace live verification through the deployed Nginx entry point.
 
 The backend source can also be checked for Python compilation errors using:
 
 ```bash
 python -m compileall routes models utils app.py extensions.py
 ```
-
-The complete Docker Compose environment has also been verified through the Nginx entry point.
 
 ---
 
@@ -693,3 +653,14 @@ backend/docs/troubleshooting.md
 ```
 
 The troubleshooting documentation contains development problems, investigation steps, solutions, verification results, and lessons learned.
+
+---
+
+## Database credential separation
+
+The root `.env` contains two different PostgreSQL accounts:
+
+- `POSTGRES_USER` / `POSTGRES_PASSWORD`: bootstrap/migration account.
+- `POSTGRES_APP_USER` / `POSTGRES_APP_PASSWORD`: restricted account used by the Flask runtime.
+
+The Compose configuration maps only the restricted account to the backend container. Migration 006 provisions its role and grants the required table and sequence permissions. The bootstrap password must not be passed into the backend. On an existing AWS database, add the runtime credentials to the protected environment file before deployment, then verify normal application operations and that administrative actions are refused.

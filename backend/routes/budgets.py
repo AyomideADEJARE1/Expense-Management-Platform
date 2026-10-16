@@ -3,6 +3,7 @@ from decimal import Decimal, InvalidOperation
 
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from sqlalchemy.exc import IntegrityError
 
 from extensions import db
 from models.budget import Budget
@@ -17,6 +18,16 @@ budgets_bp = Blueprint(
 )
 
 
+def _is_budget_uniqueness_violation(error):
+    """Return True only for the two database-enforced budget unique indexes."""
+    diag = getattr(getattr(error, "orig", None), "diag", None)
+    constraint_name = getattr(diag, "constraint_name", None)
+    return constraint_name in {
+        "uq_budgets_user_month_category",
+        "uq_budgets_user_month_no_category",
+    }
+
+
 # ============================================================
 # Create Budget
 # ============================================================
@@ -28,7 +39,7 @@ def create_budget():
 
     data = request.get_json(silent=True)
 
-    if not data:
+    if not isinstance(data, dict):
         return error_response(
             "Request body must contain JSON data",
             400
@@ -61,6 +72,16 @@ def create_budget():
     category = None
 
     if category_id is not None:
+        if (
+            isinstance(category_id, bool)
+            or not isinstance(category_id, int)
+            or category_id <= 0
+        ):
+            return error_response(
+                "Category ID must be a positive integer",
+                400
+            )
+
         category = db.session.get(
             ExpenseCategory,
             category_id
@@ -84,9 +105,21 @@ def create_budget():
             400
         )
 
+    if not amount.is_finite():
+        return error_response(
+            "Amount must be a finite number",
+            400
+        )
+
     if amount <= 0:
         return error_response(
             "Amount must be greater than zero",
+            400
+        )
+
+    if amount >= Decimal("10000000000"):
+        return error_response(
+            "Amount exceeds the maximum supported value",
             400
         )
 
@@ -102,6 +135,8 @@ def create_budget():
 
     try:
         parsed_month = date.fromisoformat(month)
+        if parsed_month.isoformat() != month:
+            raise ValueError
 
     except (TypeError, ValueError):
         return error_response(
@@ -155,6 +190,20 @@ def create_budget():
     try:
         db.session.add(budget)
         db.session.commit()
+
+    except IntegrityError as error:
+        db.session.rollback()
+
+        if _is_budget_uniqueness_violation(error):
+            return error_response(
+                "A budget already exists for this month and category",
+                409
+            )
+
+        return error_response(
+            "Failed to create budget",
+            500
+        )
 
     except Exception:
         db.session.rollback()
@@ -287,7 +336,7 @@ def update_budget(budget_id):
 
     data = request.get_json(silent=True)
 
-    if not data:
+    if not isinstance(data, dict):
         return error_response(
             "Request body must contain JSON data",
             400
@@ -306,6 +355,16 @@ def update_budget(budget_id):
         category = None
 
         if category_id is not None:
+            if (
+                isinstance(category_id, bool)
+                or not isinstance(category_id, int)
+                or category_id <= 0
+            ):
+                return error_response(
+                    "Category ID must be a positive integer",
+                    400
+                )
+
             category = db.session.get(
                 ExpenseCategory,
                 category_id
@@ -333,9 +392,21 @@ def update_budget(budget_id):
                 400
             )
 
+        if not amount.is_finite():
+            return error_response(
+                "Amount must be a finite number",
+                400
+            )
+
         if amount <= 0:
             return error_response(
                 "Amount must be greater than zero",
+                400
+            )
+
+        if amount >= Decimal("10000000000"):
+            return error_response(
+                "Amount exceeds the maximum supported value",
                 400
             )
 
@@ -355,6 +426,8 @@ def update_budget(budget_id):
 
         try:
             parsed_month = date.fromisoformat(month)
+            if parsed_month.isoformat() != month:
+                raise ValueError
 
         except (TypeError, ValueError):
             return error_response(
@@ -405,6 +478,20 @@ def update_budget(budget_id):
 
     try:
         db.session.commit()
+
+    except IntegrityError as error:
+        db.session.rollback()
+
+        if _is_budget_uniqueness_violation(error):
+            return error_response(
+                "A budget already exists for this month and category",
+                409
+            )
+
+        return error_response(
+            "Failed to update budget",
+            500
+        )
 
     except Exception:
         db.session.rollback()

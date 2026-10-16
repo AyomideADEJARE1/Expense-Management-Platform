@@ -1,10 +1,12 @@
-# System Architecture
+# Expense Tracker — System Architecture
 
-The implemented platform consists of React, Nginx, Flask, PostgreSQL 16, and Docker Compose.
+The Enhanced Personal Expense Management Platform is a React, Nginx, Flask, PostgreSQL 16, and Docker Compose application. AWS EC2 is the approved deployment target.
 
-Current production runs on AWS EC2 Ubuntu. Cloudflare provides the public DNS/proxy layer and HTTPS is active.
+The approved deployment target is AWS EC2 Ubuntu. The documented topology places Cloudflare in front of the application for public DNS/proxying and HTTPS. The current live deployment, DNS, certificate status, and public health responses must be verified before they are reported as operational.
 
 ## Architecture
+
+![Expense Tracker system architecture](Expense%20Platform%20System%20Architecture.png)
 
     Internet
        |
@@ -43,12 +45,13 @@ The /api/health route maps to backend /health.
 
 ## Database
 
-Database: expense_db
-User: expense_user
-Host: postgres
-Port: 5432
+Database: configured by `POSTGRES_DB` in the protected root `.env`
+Bootstrap/migration user: configured by `POSTGRES_USER`
+Application runtime user: configured separately by `POSTGRES_APP_USER`
+Host: `postgres`
+Port: `5432`
 Version: PostgreSQL 16
-Volume: postgres_data
+Volume: `postgres_data`
 
 Initial schema: database/migrations/001_initial_schema.sql.
 
@@ -61,10 +64,16 @@ Initial schema: database/migrations/001_initial_schema.sql.
 
 ## Production
 
-Cloudflare -> expense-tracker.live -> AWS EC2 Ubuntu -> Docker Compose -> Nginx/React/Flask/PostgreSQL.
+Documented target topology (not live-runtime proof): Cloudflare -> expense-tracker.live -> AWS EC2 Ubuntu -> Docker Compose -> Nginx/React/Flask/PostgreSQL.
 
-Let's Encrypt/Certbot manages the production certificate in the deployment environment.
+Deployment notes identify Let's Encrypt/Certbot as the certificate-management approach. Verify the active certificate, expiry, and renewal status on the live environment before claiming HTTPS is currently verified.
 
 The repository Nginx container is HTTP-only on port 80; production TLS/domain handling is surrounding infrastructure.
 
-The main branch is the source of truth for the implemented application. Azure is not the current production target.
+The browser reaches the app through Nginx. Nginx serves React and routes `/api/*` to Flask. PostgreSQL remains private to the Docker Compose network. Only Nginx is published on host port `80` by the current Compose file.
+
+## CI/CD release path
+
+GitHub Actions validates the source, applies database migration checks, runs backend and frontend checks, and builds backend, frontend, and Nginx images. The configurable CD workflow publishes commit-tagged backend/frontend images to GHCR and can deploy to AWS EC2 when `DEPLOY_ENABLED=true` and the required protected AWS/GHCR credentials are configured. After checking out the tested commit, the deployment host rebuilds Nginx locally from that commit, waits for PostgreSQL, applies migrations `002` through `006`, restarts application services only after migrations succeed, and checks both public health endpoints.
+
+A passing CI run does not prove that the latest commit is live. Release evidence should record the deployed commit/image and successful public health and browser checks.
